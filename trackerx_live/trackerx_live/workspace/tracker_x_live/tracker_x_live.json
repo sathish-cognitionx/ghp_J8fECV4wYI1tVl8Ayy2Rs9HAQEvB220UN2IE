@@ -1,6 +1,6 @@
 {
  "charts": [],
- "content": "[{\"id\":\"wEraUGxgW9\",\"type\":\"header\",\"data\":{\"text\":\"<span class=\\\"h4\\\">Tracker X Live</span>\",\"col\":12}}]",
+ "content": "[{\"id\":\"wEraUGxgW9\",\"type\":\"header\",\"data\":{\"text\":\"<span class=\\\"h4\\\">Tracker X Live</span>\",\"col\":12}},{\"id\":\"u42L1tGvpG\",\"type\":\"paragraph\",\"data\":{\"text\":\"Welcome to Tracker X Live<br><br>\",\"col\":12}},{\"id\":\"yBQyGmGXdP\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"View Work Order Activation Status\",\"col\":3}}]",
  "creation": "2025-07-09 19:07:06.909604",
  "custom_blocks": [],
  "docstatus": 0,
@@ -9,11 +9,11 @@
  "hide_custom": 0,
  "icon": "scan",
  "idx": 0,
- "indicator_color": "green",
+ "indicator_color": "",
  "is_hidden": 0,
  "label": "Tracker X Live",
  "links": [],
- "modified": "2025-07-09 19:16:38.078098",
+ "modified": "2025-07-09 20:09:03.519970",
  "modified_by": "Administrator",
  "module": "TrackerX Live",
  "name": "Tracker X Live",
@@ -24,6 +24,15 @@
  "quick_lists": [],
  "roles": [],
  "sequence_id": 39.0,
- "shortcuts": [],
+ "shortcuts": [
+  {
+   "color": "Grey",
+   "doc_view": "List",
+   "label": "View Work Order Activation Status",
+   "link_to": "Work Order",
+   "stats_filter": "[[\"Work Order\",\"status\",\"in\",[\"Not Started\",\"In Process\",null],false]]",
+   "type": "DocType"
+  }
+ ],
  "title": "Tracker X Live"
 }
