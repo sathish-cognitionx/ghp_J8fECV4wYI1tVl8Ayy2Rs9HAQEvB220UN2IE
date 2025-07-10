@@ -5,6 +5,14 @@ app_description = "Shop floor Live Tracking "
 app_email = "support@cognitionx.tech"
 app_license = "mit"
 
+
+fixtures = [
+         {
+             "doctype": "Custom Field",
+		"filters": [["dt", "=", "Work Order"]]
+         }
+     ]
+
 # Apps
 # ------------------
 
