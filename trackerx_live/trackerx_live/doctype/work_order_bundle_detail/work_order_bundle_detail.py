@@ -5,5 +5,5 @@
 from frappe.model.document import Document
 
 
-class BundleConfiguration(Document):
+class WorkOrderBundleDetail(Document):
 	pass
