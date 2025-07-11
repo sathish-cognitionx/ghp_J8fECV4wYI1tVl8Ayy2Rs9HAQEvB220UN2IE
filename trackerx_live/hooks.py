@@ -18,7 +18,8 @@ fixtures = [
         "filters": [
             ["dt", "=", "Sales Order Item"]
         ]
-    }
+    },
+    {"dt": "Property Setter", "filters": [["doc_type", "=", "Sales Order Item"]]},
 ]
 
 # Apps
