@@ -7,11 +7,19 @@ app_license = "mit"
 
 
 fixtures = [
-         {
-             "doctype": "Custom Field",
-		"filters": [["dt", "=", "Work Order"]]
-         }
-     ]
+    {
+        "dt": "Client Script",
+        "filters": [
+            ["dt", "=", "Sales Order"]
+        ]
+    },
+    {
+        "dt": "Custom Field",
+        "filters": [
+            ["dt", "=", "Sales Order Item"]
+        ]
+    }
+]
 
 # Apps
 # ------------------
