@@ -1,0 +1,89 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "autoname": "hash",
+ "creation": "2025-07-11 19:22:40.003473",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "factory_prod_id",
+  "style",
+  "style_description",
+  "colour",
+  "colour_number",
+  "colour_description",
+  "brand"
+ ],
+ "fields": [
+  {
+   "description": "If you do not have this, leave this empty, we will generate based on style|colour|brand",
+   "fieldname": "factory_prod_id",
+   "fieldtype": "Data",
+   "label": "Factory Prod Id",
+   "unique": 1
+  },
+  {
+   "fieldname": "style",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Style",
+   "reqd": 1
+  },
+  {
+   "fieldname": "style_description",
+   "fieldtype": "Data",
+   "label": "Style Description"
+  },
+  {
+   "fieldname": "colour",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Colour",
+   "reqd": 1
+  },
+  {
+   "fieldname": "colour_number",
+   "fieldtype": "Data",
+   "label": "Colour Number"
+  },
+  {
+   "fieldname": "colour_description",
+   "fieldtype": "Data",
+   "label": "Colour Description"
+  },
+  {
+   "fieldname": "brand",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Brand",
+   "reqd": 1
+  }
+ ],
+ "grid_page_length": 50,
+ "index_web_pages_for_search": 1,
+ "links": [],
+ "modified": "2025-07-11 21:17:10.894059",
+ "modified_by": "Administrator",
+ "module": "TrackerX Live",
+ "name": "Factory Prod Id",
+ "naming_rule": "Random",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "row_format": "Dynamic",
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}
