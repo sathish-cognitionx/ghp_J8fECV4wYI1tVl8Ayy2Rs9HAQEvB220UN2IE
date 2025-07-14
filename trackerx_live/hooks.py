@@ -162,11 +162,6 @@ fixtures = [
 # 	}
 # }
 
-doc_events = {
-    "Work Order": {
-        "validate": "trackerx_live.hooks_other.work_order_hooks.validate_bundle_logic"
-    }
-}
 
 # Scheduled Tasks
 # ---------------
