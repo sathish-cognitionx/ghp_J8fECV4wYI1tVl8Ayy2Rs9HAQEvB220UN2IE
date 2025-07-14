@@ -2,7 +2,6 @@
  "charts": [],
  "content": "[{\"id\":\"wEraUGxgW9\",\"type\":\"header\",\"data\":{\"text\":\"<span class=\\\"h4\\\">Tracker X Live</span>\",\"col\":12}},{\"id\":\"u42L1tGvpG\",\"type\":\"paragraph\",\"data\":{\"text\":\"Welcome to Tracker X Live<br><br>\",\"col\":12}},{\"id\":\"yBQyGmGXdP\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"View Work Order Activation Status\",\"col\":3}}]",
  "creation": "2025-07-09 19:07:06.909604",
- "custom": 0,
  "custom_blocks": [],
  "docstatus": 0,
  "doctype": "Workspace",
@@ -14,8 +13,8 @@
  "is_hidden": 0,
  "label": "Tracker X Live",
  "links": [],
- "modified": "2025-07-09 20:09:03.519970",
- "modified_by": "Administrator",
+ "modified": "2025-07-14 12:04:39.654355",
+ "modified_by": "vishal@cognitionx.tech",
  "module": "TrackerX Live",
  "name": "Tracker X Live",
  "number_cards": [],
@@ -24,7 +23,7 @@
  "public": 1,
  "quick_lists": [],
  "roles": [],
- "sequence_id": 39.0,
+ "sequence_id": 36.0,
  "shortcuts": [
   {
    "color": "Grey",
