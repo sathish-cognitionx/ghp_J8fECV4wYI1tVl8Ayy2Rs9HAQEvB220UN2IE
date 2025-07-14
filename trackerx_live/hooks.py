@@ -5,6 +5,23 @@ app_description = "Shop floor Live Tracking "
 app_email = "support@cognitionx.tech"
 app_license = "mit"
 
+
+fixtures = [
+    {
+        "dt": "Client Script",
+        "filters": [
+            ["dt", "=", "Sales Order"]
+        ]
+    },
+    {
+        "dt": "Custom Field",
+        "filters": [
+            ["dt", "=", "Sales Order Item"]
+        ]
+    },
+    {"dt": "Property Setter", "filters": [["doc_type", "=", "Sales Order Item"]]},
+]
+
 # Apps
 # ------------------
 
@@ -144,6 +161,7 @@ app_license = "mit"
 # 		"on_trash": "method"
 # 	}
 # }
+
 
 # Scheduled Tasks
 # ---------------
