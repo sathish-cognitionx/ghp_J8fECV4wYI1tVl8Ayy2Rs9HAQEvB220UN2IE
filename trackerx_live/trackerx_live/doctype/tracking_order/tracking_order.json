@@ -1,0 +1,115 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "creation": "2025-07-15 13:16:21.083424",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "section_break_vdnw",
+  "amended_from",
+  "tracking_order",
+  "reference_order",
+  "item",
+  "quantity",
+  "production_type",
+  "bundle_configurations",
+  "single_unit_size"
+ ],
+ "fields": [
+  {
+   "fieldname": "section_break_vdnw",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "amended_from",
+   "fieldtype": "Link",
+   "label": "Amended From",
+   "no_copy": 1,
+   "options": "Tracking Order",
+   "print_hide": 1,
+   "read_only": 1,
+   "search_index": 1
+  },
+  {
+   "fieldname": "tracking_order",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Tracking Order",
+   "reqd": 1
+  },
+  {
+   "fieldname": "reference_order",
+   "fieldtype": "Data",
+   "label": "Reference Order",
+   "placeholder": "Sales Order number of Work order number"
+  },
+  {
+   "fieldname": "item",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Item",
+   "options": "Item",
+   "reqd": 1
+  },
+  {
+   "fieldname": "quantity",
+   "fieldtype": "Int",
+   "in_list_view": 1,
+   "label": "Quantity",
+   "non_negative": 1,
+   "reqd": 1
+  },
+  {
+   "fieldname": "production_type",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "label": "Production Type",
+   "options": "\nSingle Unit\nBundle",
+   "reqd": 1
+  },
+  {
+   "allow_bulk_edit": 1,
+   "allow_in_quick_entry": 1,
+   "depends_on": "eval: doc.production_type=='Bundle'",
+   "fieldname": "bundle_configurations",
+   "fieldtype": "Table",
+   "label": "Bundle Configuration",
+   "options": "Bundle Configuration"
+  },
+  {
+   "depends_on": "eval: doc.production_type=='Single Unit'",
+   "fieldname": "single_unit_size",
+   "fieldtype": "Data",
+   "label": "Size",
+   "reqd": 1
+  }
+ ],
+ "grid_page_length": 50,
+ "index_web_pages_for_search": 1,
+ "is_submittable": 1,
+ "links": [],
+ "modified": "2025-07-15 21:05:22.506892",
+ "modified_by": "Administrator",
+ "module": "TrackerX Live",
+ "name": "Tracking Order",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "submit": 1,
+   "write": 1
+  }
+ ],
+ "row_format": "Dynamic",
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}
