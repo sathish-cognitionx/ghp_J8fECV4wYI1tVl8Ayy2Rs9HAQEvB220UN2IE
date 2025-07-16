@@ -8,7 +8,8 @@
   "section_break_vdnw",
   "amended_from",
   "tracking_order",
-  "reference_order",
+  "reference_order_type",
+  "reference_order_number",
   "item",
   "quantity",
   "production_type",
@@ -36,12 +37,6 @@
    "in_list_view": 1,
    "label": "Tracking Order",
    "reqd": 1
-  },
-  {
-   "fieldname": "reference_order",
-   "fieldtype": "Data",
-   "label": "Reference Order",
-   "placeholder": "Sales Order number of Work order number"
   },
   {
    "fieldname": "item",
@@ -82,13 +77,27 @@
    "fieldtype": "Data",
    "label": "Size",
    "reqd": 1
+  },
+  {
+   "fieldname": "reference_order_type",
+   "fieldtype": "Select",
+   "label": "Reference Order Type",
+   "options": "\nCut Order\nWork Order\nSales Order",
+   "reqd": 1
+  },
+  {
+   "fieldname": "reference_order_number",
+   "fieldtype": "Data",
+   "label": "Reference Order Number",
+   "placeholder": "Sales Order number or Work order number or Cut Order Number",
+   "reqd": 1
   }
  ],
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
  "is_submittable": 1,
  "links": [],
- "modified": "2025-07-15 21:05:22.506892",
+ "modified": "2025-07-16 13:04:10.402822",
  "modified_by": "Administrator",
  "module": "TrackerX Live",
  "name": "Tracking Order",

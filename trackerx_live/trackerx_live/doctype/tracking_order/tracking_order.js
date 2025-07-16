@@ -7,5 +7,49 @@ frappe.ui.form.on('Tracking Order', {
         console.log("Tracking Order form refreshed."); // Debugging log
         // We no longer need to attach a handler here for bundle_configurations_add
         // as we'll use the child DocType's after_add event.
-    }
+        set_reference_order_number_placeholder(frm);
+    },
+    reference_order_type: function(frm) {
+        console.log("Reference Order Type changed.");
+        set_reference_order_number_placeholder(frm);
+    },
 });
+
+
+ // Event handler for when 'reference_order_type' field changes
+    
+
+
+
+function set_reference_order_number_placeholder(frm) {
+    const referenceOrderType = frm.doc.reference_order_type;
+    const referenceOrderNumberField = frm.get_field('reference_order_number');
+
+    let placeholderText = "Enter Reference Order Number"; // Default
+
+    if (referenceOrderType) {
+        switch (referenceOrderType) {
+            case "Sales Order":
+                placeholderText = "Enter Sales Order Number (SO-XXXXX)";
+                break;
+            case "Work Order":
+                placeholderText = "Enter Work Order Number (WO-XXXXX)";
+                break;
+            case "Cut Order":
+                placeholderText = "Enter Cut Order Number (CO-XXXXX)";
+                break;
+            default:
+                placeholderText = "Enter Reference Order Number";
+        }
+    }
+
+    // Set the placeholder property
+    // Directly target the input element and set its placeholder attribute
+    if (referenceOrderNumberField && referenceOrderNumberField.$input) {
+        referenceOrderNumberField.$input.attr('placeholder', placeholderText);
+        console.log(`Placeholder set to: "${placeholderText}" via direct DOM manipulation.`);
+    } else {
+        console.warn("Reference Order Number field or its input element not found.");
+    }
+}
+
