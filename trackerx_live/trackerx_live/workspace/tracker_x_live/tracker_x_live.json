@@ -13,8 +13,8 @@
  "is_hidden": 0,
  "label": "Tracker X Live",
  "links": [],
- "modified": "2025-07-14 12:04:39.654355",
- "modified_by": "vishal@cognitionx.tech",
+ "modified": "2025-07-17 10:44:01.940868",
+ "modified_by": "Administrator",
  "module": "TrackerX Live",
  "name": "Tracker X Live",
  "number_cards": [],
@@ -29,8 +29,8 @@
    "color": "Grey",
    "doc_view": "List",
    "label": "View Work Order Activation Status",
-   "link_to": "Work Order",
-   "stats_filter": "[[\"Work Order\",\"status\",\"in\",[\"Not Started\",\"In Process\",null],false]]",
+   "link_to": "Tracking Order",
+   "stats_filter": "[]",
    "type": "DocType"
   }
  ],
