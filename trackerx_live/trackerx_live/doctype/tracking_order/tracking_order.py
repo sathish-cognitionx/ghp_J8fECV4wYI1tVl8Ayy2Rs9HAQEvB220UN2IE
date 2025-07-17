@@ -76,5 +76,3 @@ class TrackingOrder(Document):
     def set_production_type_on_children(self):
         for row in self.bundle_configurations:
             row.production_type = self.production_type
-
-    
