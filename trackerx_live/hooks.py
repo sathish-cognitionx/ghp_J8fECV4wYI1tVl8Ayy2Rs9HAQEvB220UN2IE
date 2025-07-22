@@ -7,25 +7,13 @@ app_license = "mit"
 
 
 fixtures = [
-    {
-        "dt": "Client Script",
-        "filters": [
-            ["dt", "=", "Sales Order"]
-        ]
-    },
-    {
-        "dt": "Custom Field",
-        "filters": [
-            ["dt", "=", "Sales Order Item"]
-        ]
-    },
-    {"dt": "Property Setter", "filters": [["doc_type", "=", "Sales Order Item"]]},
+    
 ]
 
 # Apps
 # ------------------
 
-# required_apps = []
+required_apps = ["erpnext","erpnext_trackerx_customization"]
 
 # Each item in the list will be shown as an app in the apps page
 # add_to_apps_screen = [
