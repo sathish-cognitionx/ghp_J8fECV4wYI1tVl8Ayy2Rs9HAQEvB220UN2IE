@@ -1,20 +1,25 @@
 {
  "actions": [],
  "allow_rename": 1,
+ "autoname": "naming_series:",
  "creation": "2025-07-15 13:16:21.083424",
  "doctype": "DocType",
  "engine": "InnoDB",
  "field_order": [
   "section_break_vdnw",
   "amended_from",
-  "tracking_order",
+  "naming_series",
   "reference_order_type",
   "reference_order_number",
   "item",
   "quantity",
   "production_type",
   "bundle_configurations",
-  "single_unit_size"
+  "single_unit_size",
+  "components_section_break",
+  "tracking_components",
+  "section_break_op_map",
+  "operation_map"
  ],
  "fields": [
   {
@@ -30,13 +35,6 @@
    "print_hide": 1,
    "read_only": 1,
    "search_index": 1
-  },
-  {
-   "fieldname": "tracking_order",
-   "fieldtype": "Data",
-   "in_list_view": 1,
-   "label": "Tracking Order",
-   "reqd": 1
   },
   {
    "fieldname": "item",
@@ -69,6 +67,7 @@
    "fieldname": "bundle_configurations",
    "fieldtype": "Table",
    "label": "Bundle Configuration",
+   "mandatory_depends_on": "eval: doc.production_type=='Bundle'",
    "options": "Bundle Configuration"
   },
   {
@@ -76,7 +75,7 @@
    "fieldname": "single_unit_size",
    "fieldtype": "Data",
    "label": "Size",
-   "reqd": 1
+   "mandatory_depends_on": "eval: doc.production_type=='Single Unit'"
   },
   {
    "fieldname": "reference_order_type",
@@ -91,16 +90,48 @@
    "label": "Reference Order Number",
    "placeholder": "Sales Order number or Work order number or Cut Order Number",
    "reqd": 1
+  },
+  {
+   "fieldname": "naming_series",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "label": "Tracking Order Number",
+   "options": "TRK-ORD-.YYYY.-",
+   "reqd": 1
+  },
+  {
+   "fieldname": "components_section_break",
+   "fieldtype": "Section Break",
+   "label": "Tracking Components"
+  },
+  {
+   "fieldname": "operation_map",
+   "fieldtype": "Table",
+   "label": "Operation Map",
+   "options": "Operation Map",
+   "reqd": 1
+  },
+  {
+   "fieldname": "section_break_op_map",
+   "fieldtype": "Section Break"
+  },
+  {
+   "allow_in_quick_entry": 1,
+   "fieldname": "tracking_components",
+   "fieldtype": "Table",
+   "label": "Components",
+   "options": "Tracking Component"
   }
  ],
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
  "is_submittable": 1,
  "links": [],
- "modified": "2025-07-16 13:04:10.402822",
+ "modified": "2025-07-30 13:29:34.113036",
  "modified_by": "Administrator",
  "module": "TrackerX Live",
  "name": "Tracking Order",
+ "naming_rule": "By \"Naming Series\" field",
  "owner": "Administrator",
  "permissions": [
   {
