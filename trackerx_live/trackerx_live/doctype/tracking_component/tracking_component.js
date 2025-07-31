@@ -25,5 +25,6 @@ frappe.ui.form.on('Tracking Component', {
 
             frm.refresh_field("tracking_components");
         }
+        console.log("added new component");
     }
 });

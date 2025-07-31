@@ -13,18 +13,13 @@ frappe.ui.form.on('Tracking Order', {
         console.log("Reference Order Type changed.");
         set_reference_order_number_placeholder(frm);
     },
-    component_name: function(frm, cdt, cdn) {
-        let current_row = locals[cdt][cdn];
-
-        // Gather all sibling component names
-        let options = frm.doc.tracking_components
-            .filter(row => row.name !== current_row.name && row.component_name)
-            .map(row => row.component_name);
-
-        // Set dynamic options on parent_component
-        frappe.meta.get_docfield('Tracking Component', 'parent_component', frm.doc.name).options = options.join('\n');
-        frm.refresh_field('tracking_components'); // Refresh the grid
-    }
+    // onload: function(frm) {
+    //     frm.fields_dict['tracking_components'].grid.editable_fields = [
+    //         'component_name',
+    //         'parent_component',
+    //         'is_main'
+    //     ];
+    // }
 });
 
 

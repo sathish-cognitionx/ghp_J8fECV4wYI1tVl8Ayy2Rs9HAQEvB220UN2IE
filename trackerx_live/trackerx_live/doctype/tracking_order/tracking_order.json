@@ -41,6 +41,7 @@
    "fieldtype": "Link",
    "in_list_view": 1,
    "label": "Item",
+   "link_filters": "[[\"Item\",\"custom_select_master\",\"=\",\"Style\"]]",
    "options": "Item",
    "reqd": 1
   },
@@ -101,8 +102,7 @@
   },
   {
    "fieldname": "components_section_break",
-   "fieldtype": "Section Break",
-   "label": "Tracking Components"
+   "fieldtype": "Section Break"
   },
   {
    "fieldname": "operation_map",
@@ -116,7 +116,6 @@
    "fieldtype": "Section Break"
   },
   {
-   "allow_in_quick_entry": 1,
    "fieldname": "tracking_components",
    "fieldtype": "Table",
    "label": "Components",
@@ -127,7 +126,7 @@
  "index_web_pages_for_search": 1,
  "is_submittable": 1,
  "links": [],
- "modified": "2025-07-30 13:29:34.113036",
+ "modified": "2025-07-31 12:33:42.030777",
  "modified_by": "Administrator",
  "module": "TrackerX Live",
  "name": "Tracking Order",

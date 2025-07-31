@@ -12,7 +12,6 @@
  "fields": [
   {
    "allow_in_quick_entry": 1,
-   "columns": 4,
    "fieldname": "component_name",
    "fieldtype": "Data",
    "in_list_view": 1,
@@ -21,14 +20,13 @@
   },
   {
    "allow_in_quick_entry": 1,
-   "columns": 4,
    "fieldname": "parent_component",
    "fieldtype": "Select",
    "in_list_view": 1,
    "label": "Parent Component"
   },
   {
-   "columns": 2,
+   "allow_in_quick_entry": 1,
    "default": "0",
    "fieldname": "is_main",
    "fieldtype": "Check",
@@ -40,7 +38,7 @@
  "index_web_pages_for_search": 1,
  "istable": 1,
  "links": [],
- "modified": "2025-07-30 13:28:28.995085",
+ "modified": "2025-07-30 16:24:35.510068",
  "modified_by": "Administrator",
  "module": "TrackerX Live",
  "name": "Tracking Component",
