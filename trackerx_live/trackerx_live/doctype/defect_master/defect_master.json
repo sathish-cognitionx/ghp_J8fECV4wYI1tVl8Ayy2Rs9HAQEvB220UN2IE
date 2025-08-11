@@ -6,6 +6,7 @@
  "engine": "InnoDB",
  "field_order": [
   "defect_type",
+  "defect_code",
   "defect_category",
   "severity",
   "defect_description"
@@ -33,12 +34,17 @@
    "fieldname": "defect_description",
    "fieldtype": "Data",
    "label": "Defect Description"
+  },
+  {
+   "fieldname": "defect_code",
+   "fieldtype": "Data",
+   "label": "Defect Code"
   }
  ],
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2025-07-29 20:33:07.086418",
+ "modified": "2025-08-11 12:32:42.685625",
  "modified_by": "Administrator",
  "module": "TrackerX Live",
  "name": "Defect Master",
