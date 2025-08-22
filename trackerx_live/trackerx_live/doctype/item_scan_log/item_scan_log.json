@@ -56,7 +56,7 @@
    "fieldname": "status",
    "fieldtype": "Select",
    "label": "Status",
-   "options": "Pass\nFail\nRework\nRejected",
+   "options": "Pass\nFail\nRework\nRejected\nCounted",
    "reqd": 1
   },
   {
@@ -68,8 +68,8 @@
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2025-07-29 20:28:38.694799",
- "modified_by": "Administrator",
+ "modified": "2025-08-22 16:29:10.779513",
+ "modified_by": "system@gmail.com",
  "module": "TrackerX Live",
  "name": "Item Scan Log",
  "owner": "Administrator",
