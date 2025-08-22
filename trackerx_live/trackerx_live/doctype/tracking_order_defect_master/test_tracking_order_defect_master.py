@@ -5,5 +5,5 @@
 from frappe.tests.utils import FrappeTestCase
 
 
-class TestDefectMaster(FrappeTestCase):
+class TestTrackingOrderDefectMaster(FrappeTestCase):
 	pass

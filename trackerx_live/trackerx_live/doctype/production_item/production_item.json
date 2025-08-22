@@ -31,8 +31,7 @@
    "fieldtype": "Link",
    "in_list_view": 1,
    "label": "Bundle Configuration",
-   "options": "Bundle Configuration",
-   "reqd": 1
+   "options": "Bundle Configuration"
   },
   {
    "fieldname": "component",
@@ -103,8 +102,8 @@
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2025-08-12 12:04:22.871330",
- "modified_by": "system@gmail.com",
+ "modified": "2025-08-20 12:32:54.060603",
+ "modified_by": "abhinav@cognitionx.tech",
  "module": "TrackerX Live",
  "name": "Production Item",
  "owner": "Administrator",
