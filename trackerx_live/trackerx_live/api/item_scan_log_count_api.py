@@ -24,10 +24,33 @@ def create_item_scan_log():
         if not tag_number:
             return {"status": "error", "message": _("Tag number is required")}
 
+        # Get Production Item by Production Item Number
+        prod_item = frappe.get_all(
+            "Production Item",
+            filters={"production_item_number": production_item_number},
+            fields=["name"]
+        )
+        if not prod_item:
+            return {"status": "error", "message": f"No Production Item found for number {production_item_number}"}
+
+        production_item_id = prod_item[0].name
+
+
+        # Get tag nummber's id
+        tag = frappe.get_all(
+            "Tracking Tag",
+            filters={"tag_number": tag_number},
+            fields=["name"]
+        )
+        if not tag:
+            return {"status": "error", "message": f"No Tracking Tag found for number {tag_number}"}
+
+        tag_id = tag[0].name
+
         # Check if tag exists
         tag_map = frappe.db.get_value(
             "Production Item Tag Map",
-            {"tracking_tag": tag_number},
+            {"tracking_tag": tag_id},
             ["name", "is_active", "production_item"],
             as_dict=True
         )
@@ -43,7 +66,7 @@ def create_item_scan_log():
         # Validate- tag is linked with production item number
         mapping_valid = frappe.db.exists(
             "Production Item Tag Map",
-            {"production_item": production_item_number, "tracking_tag": tag_number, "is_active": 1}
+            {"production_item": production_item_id, "tracking_tag": tag_id, "is_active": 1}
         )
         if not mapping_valid:
             return {
