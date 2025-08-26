@@ -15,9 +15,9 @@ def create_item_scan_log():
         production_item = data.get("production_item")
         operation = data.get("operation")
         workstation = data.get("workstation")
-        scanned_by = data.get("scanned_by")
-        scan_time = data.get("scan_time")
-        status = data.get("status")
+        scanned_by = frappe.session.user
+        scan_time =frappe.utils.now_datetime()
+        status = "Pass"
         remarks = data.get("remarks")
         tag_number = data.get("tag_number")
 
