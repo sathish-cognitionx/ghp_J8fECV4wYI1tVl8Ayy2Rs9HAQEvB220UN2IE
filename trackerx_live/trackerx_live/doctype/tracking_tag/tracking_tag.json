@@ -1,0 +1,82 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "creation": "2025-07-29 20:19:31.168291",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "tag_number",
+  "tag_type",
+  "status",
+  "activation_time",
+  "last_used_on",
+  "remarks"
+ ],
+ "fields": [
+  {
+   "fieldname": "tag_number",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Tag Number",
+   "reqd": 1,
+   "unique": 1
+  },
+  {
+   "fieldname": "tag_type",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "label": "Tag Type",
+   "options": "RFID\nQR Code\nBarcode\nNFC",
+   "reqd": 1
+  },
+  {
+   "fieldname": "status",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "label": "Status",
+   "options": "Active\nInactive\nLost\nCorrupted",
+   "reqd": 1
+  },
+  {
+   "fieldname": "activation_time",
+   "fieldtype": "Datetime",
+   "label": "Activation Time"
+  },
+  {
+   "fieldname": "last_used_on",
+   "fieldtype": "Datetime",
+   "label": "Last Used On"
+  },
+  {
+   "fieldname": "remarks",
+   "fieldtype": "Data",
+   "label": "Remarks"
+  }
+ ],
+ "grid_page_length": 50,
+ "index_web_pages_for_search": 1,
+ "links": [],
+ "modified": "2025-07-29 20:22:16.375092",
+ "modified_by": "Administrator",
+ "module": "TrackerX Live",
+ "name": "Tracking Tag",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "row_format": "Dynamic",
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}

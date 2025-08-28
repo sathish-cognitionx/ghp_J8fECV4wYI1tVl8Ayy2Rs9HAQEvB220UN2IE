@@ -13,6 +13,13 @@ frappe.ui.form.on('Tracking Order', {
         console.log("Reference Order Type changed.");
         set_reference_order_number_placeholder(frm);
     },
+    // onload: function(frm) {
+    //     frm.fields_dict['tracking_components'].grid.editable_fields = [
+    //         'component_name',
+    //         'parent_component',
+    //         'is_main'
+    //     ];
+    // }
 });
 
 

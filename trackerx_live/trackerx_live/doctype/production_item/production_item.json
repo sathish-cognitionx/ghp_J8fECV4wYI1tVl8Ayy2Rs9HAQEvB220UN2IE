@@ -1,0 +1,128 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "creation": "2025-07-29 20:05:39.941476",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "production_item_number",
+  "tracking_order",
+  "bundle_configuration",
+  "component",
+  "size",
+  "quantity",
+  "status",
+  "current_operation",
+  "next_operation",
+  "current_workstation",
+  "next_workstation"
+ ],
+ "fields": [
+  {
+   "fieldname": "tracking_order",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Tracking Order",
+   "options": "Tracking Order",
+   "reqd": 1
+  },
+  {
+   "fieldname": "bundle_configuration",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Bundle Configuration",
+   "options": "Bundle Configuration"
+  },
+  {
+   "fieldname": "component",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Component",
+   "options": "FG Components",
+   "reqd": 1
+  },
+  {
+   "fieldname": "size",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Size",
+   "reqd": 1
+  },
+  {
+   "fieldname": "quantity",
+   "fieldtype": "Int",
+   "label": "Quantity",
+   "non_negative": 1,
+   "reqd": 1
+  },
+  {
+   "fieldname": "status",
+   "fieldtype": "Select",
+   "label": "Status",
+   "options": "Activated\nIn Production\nCompleted\nSwitched\nRejected",
+   "reqd": 1
+  },
+  {
+   "fieldname": "current_operation",
+   "fieldtype": "Link",
+   "label": "Current Operation",
+   "options": "Operation",
+   "reqd": 1
+  },
+  {
+   "fieldname": "next_operation",
+   "fieldtype": "Link",
+   "label": "Next Operation",
+   "options": "Operation",
+   "reqd": 1
+  },
+  {
+   "fieldname": "current_workstation",
+   "fieldtype": "Link",
+   "label": "Current Workstation",
+   "options": "Workstation",
+   "reqd": 1
+  },
+  {
+   "fieldname": "next_workstation",
+   "fieldtype": "Link",
+   "label": "Next Workstation",
+   "options": "Workstation",
+   "reqd": 1
+  },
+  {
+   "fieldname": "production_item_number",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Production Item Number",
+   "options": "Tracking Order",
+   "reqd": 1
+  }
+ ],
+ "grid_page_length": 50,
+ "index_web_pages_for_search": 1,
+ "links": [],
+ "modified": "2025-08-20 12:32:54.060603",
+ "modified_by": "abhinav@cognitionx.tech",
+ "module": "TrackerX Live",
+ "name": "Production Item",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "row_format": "Dynamic",
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}
