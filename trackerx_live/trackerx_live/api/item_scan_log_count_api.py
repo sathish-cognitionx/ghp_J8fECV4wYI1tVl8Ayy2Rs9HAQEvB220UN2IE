@@ -2,7 +2,7 @@ import frappe
 import json
 from frappe import _
 
-@frappe.whitelist(allow_guest=False)
+@frappe.whitelist()
 def create_item_scan_log():
     try:
         #JSON body from request

@@ -2,7 +2,7 @@ import frappe
 import json
 from frappe import _
 
-@frappe.whitelist(allow_guest=False)
+@frappe.whitelist()
 def switch_tag():
     try:
         # Parse input
