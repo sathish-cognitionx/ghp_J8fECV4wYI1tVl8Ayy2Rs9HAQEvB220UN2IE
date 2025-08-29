@@ -15,6 +15,7 @@
   "quantity",
   "production_type",
   "bundle_configurations",
+  "component_bundle_configuration",
   "single_unit_size",
   "components_section_break",
   "tracking_components",
@@ -119,13 +120,20 @@
    "fieldtype": "Table",
    "label": "Components",
    "options": "Tracking Component"
+  },
+  {
+   "fieldname": "component_bundle_configuration",
+   "fieldtype": "Table",
+   "hidden": 1,
+   "label": "Component Bundle Configuration",
+   "options": "Tracking Order Bundle Configuration"
   }
  ],
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
  "is_submittable": 1,
  "links": [],
- "modified": "2025-08-22 13:25:08.746694",
+ "modified": "2025-08-29 18:08:55.585076",
  "modified_by": "Administrator",
  "module": "TrackerX Live",
  "name": "Tracking Order",

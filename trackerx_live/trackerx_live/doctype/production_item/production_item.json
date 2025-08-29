@@ -38,10 +38,10 @@
   },
   {
    "fieldname": "component",
-   "fieldtype": "Data",
+   "fieldtype": "Link",
    "in_list_view": 1,
    "label": "Component",
-   "options": "FG Components",
+   "options": "Tracking Component",
    "reqd": 1
   },
   {
@@ -118,8 +118,8 @@
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2025-08-22 16:37:56.161452",
- "modified_by": "system@gmail.com",
+ "modified": "2025-08-29 17:46:11.486213",
+ "modified_by": "Administrator",
  "module": "TrackerX Live",
  "name": "Production Item",
  "owner": "Administrator",

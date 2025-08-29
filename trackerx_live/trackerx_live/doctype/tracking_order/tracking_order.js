@@ -60,3 +60,37 @@ function set_reference_order_number_placeholder(frm) {
     }
 }
 
+
+
+
+// Handle item location changes
+frappe.ui.form.on('Tracking Component', {
+    component_name: function(frm, cdt, cdn) {
+        
+        set_parent_component_options(frm, cdt, cdn);
+    },
+    
+});
+
+// A helper function to fetch the component names and set the options.
+function set_parent_component_options(frm) {
+    // Collect all the component names from the "custom_fg_components" child table.
+    let component_names = frm.doc.tracking_components.filter(row => row.component_name).map(row => row.component_name)
+
+    frm.doc.tracking_components.forEach(function(row, index) {
+            let field = frm.fields_dict.tracking_components.grid.grid_rows[index].docfields.find(f => f.fieldname === 'parent_component');
+            if (field) {
+                field.options = [''].concat(component_names);
+            }
+        });
+
+     frm.doc.operation_map.forEach(function(row, index) {
+            let field = frm.fields_dict.operation_map.grid.grid_rows[index].docfields.find(f => f.fieldname === 'component');
+            if (field) {
+                field.options = component_names;
+            }
+        });
+    
+   
+    frm.refresh_fields('operation_map');
+}

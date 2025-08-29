@@ -11,7 +11,9 @@
   "size",
   "bundle_quantity",
   "number_of_bundles",
-  "production_type"
+  "production_type",
+  "component",
+  "parent_component"
  ],
  "fields": [
   {
@@ -59,13 +61,25 @@
    "fieldname": "production_type",
    "fieldtype": "Read Only",
    "label": "Production Type"
+  },
+  {
+   "default": "__Default__",
+   "fieldname": "component",
+   "fieldtype": "Data",
+   "label": "Component"
+  },
+  {
+   "fieldname": "parent_component",
+   "fieldtype": "Link",
+   "label": "Parent",
+   "options": "Tracking Order Bundle Configuration"
   }
  ],
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
  "istable": 1,
  "links": [],
- "modified": "2025-07-16 12:07:59.621844",
+ "modified": "2025-08-29 18:16:48.186507",
  "modified_by": "Administrator",
  "module": "TrackerX Live",
  "name": "Tracking Order Bundle Configuration",
