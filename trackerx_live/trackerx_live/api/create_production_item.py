@@ -2,7 +2,7 @@ import frappe
 from frappe import _
 
 @frappe.whitelist()
-def create_production_item(production_item_number, tracking_order, component, tracking_tags, size, quantity,
+def create_production_item(production_item_number, tracking_order, component_name, tracking_tags, size, quantity,
                            device_id, current_operation, current_workstation,
                            next_operation, next_workstation, bundle_configuration):
     try:
@@ -49,7 +49,11 @@ def create_production_item(production_item_number, tracking_order, component, tr
             # Ensure bundle_config belongs to given tracking_order
             exists_in_order = frappe.get_all(
                 "Tracking Order Bundle Configuration",
-                filters={"parent": tracking_order, "name": bundle_configuration},
+                filters={"parent": tracking_order,
+                         "parenttype": "Tracking Order",
+                         "parentfield": "component_bundle_configuration",
+                         "name": bundle_configuration
+                        },
                 fields=["number_of_bundles"]
             )
             if not exists_in_order:
@@ -63,7 +67,7 @@ def create_production_item(production_item_number, tracking_order, component, tr
             # Count already activated items for this bundle configuration
             activated_count = frappe.db.count(
                 "Production Item",
-                {"tracking_order": tracking_order, "bundle_configuration": bundle_configuration, "status": "Activated"}
+                {"tracking_order": tracking_order, "bundle_configuration": bundle_configuration}
             )
 
             # set limit for number_of_bundles that can be linked
@@ -72,6 +76,20 @@ def create_production_item(production_item_number, tracking_order, component, tr
                     "status": "error",
                     "message": _(f"Bundle Configuration {bundle_configuration} has limit {number_of_bundles}, already activated {activated_count}")
                 }
+
+        # Find component_id from tracking_components
+        tracking_order_doc = frappe.get_doc("Tracking Order", tracking_order)
+        component_id = None
+        for row in tracking_order_doc.tracking_components:
+            if row.component_name == component_name:
+                component_id = row.name
+                break
+
+        if not component_id:
+            return {
+                "status": "error",
+                "message": f"No Component found with name {component_name} in Tracking Order {tracking_order}"
+            }       
 
         # Status always "Activated"
         status = "Activated"
@@ -84,9 +102,9 @@ def create_production_item(production_item_number, tracking_order, component, tr
             # Create Production Item (let frappe generate unique name)
             doc = frappe.get_doc({
                 "doctype": "Production Item",
-                "production_item_number": production_item_number,  # keep original number, same for all
+                "production_item_number": production_item_number, 
                 "tracking_order": tracking_order,
-                "component": component,
+                "component": component_id,
                 "device_id": device_id,
                 "size": size,
                 "quantity": quantity,
@@ -99,16 +117,6 @@ def create_production_item(production_item_number, tracking_order, component, tr
                 "tracking_tag": tag_id
             })
             doc.insert()
-
-            # Link in Production Item Tag Map
-            frappe.get_doc({
-                "doctype": "Production Item Tag Map",
-                "production_item": doc.name,
-                "tracking_tag": tag_id,
-                "is_active": 1,
-                "linked_on": frappe.utils.now()
-            }).insert()
-
             created_items.append(doc.name)
 
         frappe.db.commit()
@@ -116,7 +124,7 @@ def create_production_item(production_item_number, tracking_order, component, tr
         return {
             "status": "success",
             "message": _("Production Items created successfully"),
-            "names": created_items
+            "Production Item names": created_items
         }
 
     except Exception as e:
