@@ -1,7 +1,7 @@
 // Copyright (c) 2025, CognitionX and contributors
 // For license information, please see license.txt
 
-// frappe.ui.form.on("Defect Master", {
+// frappe.ui.form.on("Tracking Order Defect Master", {
 // 	refresh(frm) {
 
 // 	},
