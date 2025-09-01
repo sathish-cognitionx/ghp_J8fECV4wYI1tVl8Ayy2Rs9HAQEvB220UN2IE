@@ -15,6 +15,7 @@
   "quantity",
   "production_type",
   "bundle_configurations",
+  "component_bundle_configuration",
   "single_unit_size",
   "components_section_break",
   "tracking_components",
@@ -68,7 +69,7 @@
    "fieldtype": "Table",
    "label": "Bundle Configuration",
    "mandatory_depends_on": "eval: doc.production_type=='Bundle'",
-   "options": "Bundle Configuration"
+   "options": "Tracking Order Bundle Configuration"
   },
   {
    "depends_on": "eval: doc.production_type=='Single Unit'",
@@ -119,14 +120,21 @@
    "fieldtype": "Table",
    "label": "Components",
    "options": "Tracking Component"
+  },
+  {
+   "fieldname": "component_bundle_configuration",
+   "fieldtype": "Table",
+   "hidden": 1,
+   "label": "Component Bundle Configuration",
+   "options": "Tracking Order Bundle Configuration"
   }
  ],
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
  "is_submittable": 1,
  "links": [],
- "modified": "2025-08-13 17:52:14.036038",
- "modified_by": "system@gmail.com",
+ "modified": "2025-08-29 18:08:55.585076",
+ "modified_by": "Administrator",
  "module": "TrackerX Live",
  "name": "Tracking Order",
  "naming_rule": "By \"Naming Series\" field",
