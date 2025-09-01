@@ -1,0 +1,64 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "creation": "2025-08-28 15:35:19.321180",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "defect_type",
+  "defect_code",
+  "defect_description",
+  "severity",
+  "defect"
+ ],
+ "fields": [
+  {
+   "fetch_from": "defect.defect_type",
+   "fieldname": "defect_type",
+   "fieldtype": "Data",
+   "label": "Defect Type",
+   "read_only": 1
+  },
+  {
+   "fetch_from": "defect.defect_code",
+   "fieldname": "defect_code",
+   "fieldtype": "Data",
+   "label": "Defect Code",
+   "read_only": 1
+  },
+  {
+   "fetch_from": "defect.defect_description",
+   "fieldname": "defect_description",
+   "fieldtype": "Data",
+   "label": "Defect Description",
+   "read_only": 1
+  },
+  {
+   "fetch_from": "defect.severity",
+   "fieldname": "severity",
+   "fieldtype": "Select",
+   "label": "Severity",
+   "options": "Low\nMedium\nHigh"
+  },
+  {
+   "fieldname": "defect",
+   "fieldtype": "Link",
+   "label": "Defect",
+   "options": "Tracking Order Defect Master"
+  }
+ ],
+ "grid_page_length": 50,
+ "index_web_pages_for_search": 1,
+ "istable": 1,
+ "links": [],
+ "modified": "2025-08-30 17:06:22.357215",
+ "modified_by": "Administrator",
+ "module": "TrackerX Live",
+ "name": "Item Scan Log Defect",
+ "owner": "Administrator",
+ "permissions": [],
+ "row_format": "Dynamic",
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}

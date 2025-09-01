@@ -11,7 +11,8 @@
   "scanned_by",
   "scan_time",
   "status",
-  "remarks"
+  "remarks",
+  "defect_list"
  ],
  "fields": [
   {
@@ -56,20 +57,26 @@
    "fieldname": "status",
    "fieldtype": "Select",
    "label": "Status",
-   "options": "Pass\nFail\nRework\nRejected\nCounted",
+   "options": "Pass\nFail\nRework\nRejected",
    "reqd": 1
   },
   {
    "fieldname": "remarks",
    "fieldtype": "Data",
    "label": "Remarks"
+  },
+  {
+   "fieldname": "defect_list",
+   "fieldtype": "Table",
+   "label": "Defect List",
+   "options": "Item Scan Log Defect"
   }
  ],
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2025-08-22 16:29:10.779513",
- "modified_by": "system@gmail.com",
+ "modified": "2025-08-28 15:42:33.883367",
+ "modified_by": "Administrator",
  "module": "TrackerX Live",
  "name": "Item Scan Log",
  "owner": "Administrator",
