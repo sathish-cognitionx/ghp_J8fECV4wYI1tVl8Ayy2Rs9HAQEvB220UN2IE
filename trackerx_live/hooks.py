@@ -10,13 +10,15 @@ fixtures = [
     {
         "dt": "Custom Field",
         "filters": [
-            ["dt", "in", ["Operation"]]
+            ["dt", "in", ["Operation"]],
+            ["module", "=", "TrackerX Live"]
         ]
     },
     {
         "dt": "Property Setter",
         "filters": [
-            ["doc_type", "in", ["Operation"]]
+            ["doc_type", "in", ["Operation"]],
+            ["module", "=", "TrackerX Live"]
         ]
     }
 ]
