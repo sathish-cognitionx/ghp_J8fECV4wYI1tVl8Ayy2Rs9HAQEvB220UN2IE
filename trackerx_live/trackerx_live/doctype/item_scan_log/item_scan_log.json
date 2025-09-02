@@ -10,8 +10,12 @@
   "workstation",
   "scanned_by",
   "scan_time",
+  "logged_time",
   "status",
-  "remarks"
+  "log_status",
+  "log_type",
+  "remarks",
+  "defect_list"
  ],
  "fields": [
   {
@@ -56,20 +60,44 @@
    "fieldname": "status",
    "fieldtype": "Select",
    "label": "Status",
-   "options": "Pass\nFail\nRework\nRejected\nCounted",
-   "reqd": 1
+   "options": "\nPass\nFail\nRework\nRejected"
   },
   {
    "fieldname": "remarks",
    "fieldtype": "Data",
    "label": "Remarks"
+  },
+  {
+   "fieldname": "defect_list",
+   "fieldtype": "Table",
+   "label": "Defect List",
+   "options": "Item Scan Log Defect"
+  },
+  {
+   "fieldname": "logged_time",
+   "fieldtype": "Datetime",
+   "label": "Logged Time"
+  },
+  {
+   "fieldname": "log_status",
+   "fieldtype": "Select",
+   "label": "Log Status",
+   "options": "Draft\nCompleted\nCancelled",
+   "reqd": 1
+  },
+  {
+   "fieldname": "log_type",
+   "fieldtype": "Select",
+   "label": "Log Type",
+   "options": "User Scanned\nSkip Adjusted",
+   "reqd": 1
   }
  ],
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2025-08-22 16:29:10.779513",
- "modified_by": "system@gmail.com",
+ "modified": "2025-09-01 13:37:51.202331",
+ "modified_by": "Administrator",
  "module": "TrackerX Live",
  "name": "Item Scan Log",
  "owner": "Administrator",
