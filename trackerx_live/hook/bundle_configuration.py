@@ -1,0 +1,344 @@
+# -*- coding: utf-8 -*-
+# Copyright (c) 2025, Your Company
+# For license information, please see license.txt
+
+import frappe
+from frappe.model.document import Document
+
+def create_tracking_order_from_bundle_creation(doc, method=None):
+    """
+    Auto-create Tracking Order when Bundle Creation is submitted
+    This function should be called via a hook in hooks.py
+    """
+    try:
+        # Create new Tracking Order document
+        tracking_order = frappe.new_doc("Tracking Order")
+        
+        # Set basic fields
+        tracking_order.reference_order_type = "Cut Order"  # Based on Bundle Creation coming from Cut Docket
+        tracking_order.reference_order_number = doc.name  # Bundle Creation ID
+        tracking_order.item = doc.fg_item
+        tracking_order.production_type = "Bundle"  # Since this is from Bundle Creation
+        
+        # Calculate total quantity from Bundle Creation Items
+        total_quantity = 0
+        for item in doc.table_bundle_creation_item:
+            if item.unitsbundle and item.no_of_bundles:
+                total_quantity += item.no_of_bundles * item.unitsbundle
+        
+        tracking_order.quantity = total_quantity
+        
+        # Create Bundle Configurations from Bundle Creation Items
+        for bundle_item in doc.table_bundle_creation_item:
+            if bundle_item.no_of_bundles and bundle_item.unitsbundle:
+                # Use proper child table creation method
+                bundle_config_row = frappe.new_doc("Tracking Order Bundle Configuration")
+                bundle_config_row.bc_name = f"BC-{bundle_item.size}-{bundle_item.shade}"
+                bundle_config_row.size = bundle_item.size
+                bundle_config_row.bundle_quantity = bundle_item.unitsbundle
+                bundle_config_row.number_of_bundles = bundle_item.no_of_bundles
+                bundle_config_row.component = "__Default__"
+                bundle_config_row.production_type = "Bundle"
+                bundle_config_row.parent = tracking_order.name
+                bundle_config_row.parenttype = "Tracking Order"
+                bundle_config_row.parentfield = "bundle_configurations"
+                
+                # Append to the parent document
+                tracking_order.bundle_configurations.append(bundle_config_row)
+        
+        # Create Tracking Components based on Bundle Details
+        components_added = set()  # To avoid duplicate components
+        
+        for bundle_detail in doc.table_bundle_details:
+            component_key = bundle_detail.component if bundle_detail.component else "__Default__"
+            
+            if component_key not in components_added:
+                component_row = frappe.new_doc("Tracking Component")
+                component_row.component_name = component_key
+                component_row.is_main = 1 if component_key == "__Default__" else 0
+                component_row.parent = tracking_order.name
+                component_row.parenttype = "Tracking Order"
+                component_row.parentfield = "tracking_components"
+                
+                tracking_order.tracking_components.append(component_row)
+                components_added.add(component_key)
+        
+        # If no components found, add default
+        if not components_added:
+            component_row = frappe.new_doc("Tracking Component")
+            component_row.component_name = "__Default__"
+            component_row.is_main = 1
+            component_row.parent = tracking_order.name
+            component_row.parenttype = "Tracking Order"
+            component_row.parentfield = "tracking_components"
+            
+            tracking_order.tracking_components.append(component_row)
+        
+        # Create basic operation map
+        operation_row = frappe.new_doc("Operation Map")
+        operation_row.operation = "Sewing QC"
+        operation_row.component = "__Default__"
+        operation_row.next_operation = "Sewing QC"
+        operation_row.sequence_no = 1
+        operation_row.parent = tracking_order.name
+        operation_row.parenttype = "Tracking Order"
+        operation_row.parentfield = "operation_map"
+        
+        tracking_order.operation_map.append(operation_row)
+        
+        # Insert the document
+        tracking_order.insert(ignore_permissions=True)
+        
+        # Submit the Tracking Order
+        tracking_order.submit()
+
+        is_auto_activation_required = doc.tracking_tech in ('Barcode', 'QR Code')
+
+        if is_auto_activation_required:
+            create_production_items(doc, tracking_order)
+        
+        # Add a comment or log
+        frappe.msgprint(f"Tracking Order {tracking_order.name} created successfully from Bundle Creation {doc.name}")
+        
+        # Log the creation
+        frappe.logger().info(f"Auto-created Tracking Order {tracking_order.name} from Bundle Creation {doc.name}")
+        
+    except Exception as e:
+        frappe.log_error(f"Error creating Tracking Order from Bundle Creation {doc.name}: {str(e)}")
+        frappe.throw(f"Failed to create Tracking Order: {str(e)}")
+
+
+def create_production_items(doc, tracking_order):
+    try:
+        # Create bundle configurations for each component
+        component_bc_dict = {}
+        
+        for bundle_configuration in tracking_order.bundle_configurations:
+            for component in tracking_order.tracking_components:
+                key = f'{bundle_configuration.size}---{component.component_name}'
+                
+                # Check if this combination already exists
+                if key not in component_bc_dict:
+                    component_bundle_configuration = frappe.new_doc("Tracking Order Bundle Configuration")
+                    component_bundle_configuration.bc_name = bundle_configuration.bc_name
+                    component_bundle_configuration.size = bundle_configuration.size
+                    component_bundle_configuration.bundle_quantity = bundle_configuration.bundle_quantity
+                    component_bundle_configuration.number_of_bundles = bundle_configuration.number_of_bundles
+                    component_bundle_configuration.production_type = bundle_configuration.production_type
+                    component_bundle_configuration.component = component.component_name  # Fixed this
+                    component_bundle_configuration.parent_component = bundle_configuration.name
+                    component_bundle_configuration.parent = tracking_order.name
+                    component_bundle_configuration.parenttype = "Tracking Order"
+                    component_bundle_configuration.parentfield = "component_bundle_configuration"
+
+                    component_bundle_configuration.insert(ignore_permissions=True)
+                    component_bc_dict[key] = component_bundle_configuration
+
+        component_by_name = {}
+
+        for comp in tracking_order.tracking_components:
+            component_by_name[comp.component_name] = comp.name
+
+        for bundle in doc.table_bundle_details:
+            # Create tracking tag
+            tag = frappe.new_doc("Tracking Tag")
+            tag.tag_number = bundle.bundle_id
+            tag.tag_type = doc.tracking_tech
+            tag.status = 'Active'
+            tag.activation_time = frappe.utils.now()
+            tag.last_used_on = frappe.utils.now()
+            tag.remarks = None
+            tag.activation_source = 'Cut Bundle'
+            tag.insert(ignore_permissions=True)
+
+            # Build the key for component lookup
+            key = f'{bundle.size}---{bundle.component}'
+            
+            # Check if the key exists in our dictionary
+            if key not in component_bc_dict:
+                frappe.log_error(f"Component bundle configuration not found for key: {key}")
+                continue  # Skip this bundle or handle the error as appropriate
+            
+            # Create production item
+            production_item = frappe.new_doc("Production Item")
+            production_item.production_item_number = bundle.bundle_id
+            production_item.tracking_order = tracking_order.name
+            production_item.bundle_configuration = component_bc_dict[key].name  # Use .name
+            production_item.tracking_tag = tag.name
+            production_item.component = component_by_name[bundle.component]
+            production_item.device_id = 'None'
+            production_item.size = bundle.size
+            production_item.quantity = bundle.unitsbundle
+            production_item.status = 'Activated'
+            production_item.current_operation = 'Activation'
+            production_item.next_operation = 'Activation'
+            production_item.current_workstation = 'Activation WS'
+            production_item.next_workstation = 'Activation WS'
+
+            production_item.insert(ignore_permissions=True)
+
+            # Create production item tag map
+            production_item_tag_map = frappe.new_doc("Production Item Tag Map")
+            production_item_tag_map.production_item = production_item.name
+            production_item_tag_map.tracking_tag = tag.name
+            production_item_tag_map.linked_on = frappe.utils.now()
+            production_item_tag_map.is_active = True
+            production_item_tag_map.activated_source = 'Cut Bundle'
+            production_item_tag_map.insert(ignore_permissions=True)
+            
+    except Exception as e:
+        frappe.log_error(f"Error in create_production_items: {str(e)}")
+        frappe.throw(f"Failed to create production items: {str(e)}")
+
+        
+
+
+
+       
+    
+
+def create_tracking_order_from_bundle_creation_v2(doc, method=None):
+    """
+    Alternative approach using dictionary method but with proper initialization
+    """
+    try:
+        # Create new Tracking Order document
+        tracking_order = frappe.new_doc("Tracking Order")
+        
+        # Set basic fields
+        tracking_order.reference_order_type = "Cut Order"
+        tracking_order.reference_order_number = doc.name
+        tracking_order.item = doc.fg_item
+        tracking_order.production_type = "Bundle"
+        
+        # Calculate total quantity
+        total_quantity = 0
+        for item in doc.table_bundle_creation_item:
+            if item.unitsbundle and item.no_of_bundles:
+                total_quantity += item.no_of_bundles * item.unitsbundle
+        
+        tracking_order.quantity = total_quantity
+        
+        # Initialize child tables as empty lists first
+        tracking_order.bundle_configurations = []
+        tracking_order.tracking_components = []
+        tracking_order.operation_map = []
+        
+        # Save the document first to get a name
+        tracking_order.save(ignore_permissions=True)
+        
+        # Now add child table entries using append method
+        for bundle_item in doc.table_bundle_creation_item:
+            if bundle_item.no_of_bundles and bundle_item.unitsbundle:
+                bundle_config = tracking_order.append("bundle_configurations")
+                bundle_config.bc_name = f"BC-{bundle_item.size}-{bundle_item.shade}"
+                bundle_config.size = bundle_item.size
+                bundle_config.bundle_quantity = bundle_item.unitsbundle
+                bundle_config.number_of_bundles = bundle_item.no_of_bundles
+                bundle_config.component = "__Default__"
+                bundle_config.production_type = "Bundle"
+        
+        # Add components
+        components_added = set()
+        for bundle_detail in doc.table_bundle_details:
+            component_key = bundle_detail.component if bundle_detail.component else "__Default__"
+            
+            if component_key not in components_added:
+                component = tracking_order.append("tracking_components")
+                component.component_name = component_key
+                component.is_main = 1 if component_key == "__Default__" else 0
+                components_added.add(component_key)
+        
+        # If no components, add default
+        if not components_added:
+            component = tracking_order.append("tracking_components")
+            component.component_name = "__Default__"
+            component.is_main = 1
+        
+        # Add operation map
+        operation = tracking_order.append("operation_map")
+        operation.operation = "Sewing QC"
+        operation.component = "__Default__"
+        operation.next_operation = "Sewing QC"
+        operation.sequence_no = 1
+        
+        # Save again with child tables
+        tracking_order.save(ignore_permissions=True)
+        
+        # Submit the document
+        tracking_order.submit()
+        
+        frappe.msgprint(f"Tracking Order {tracking_order.name} created successfully from Bundle Creation {doc.name}")
+        frappe.logger().info(f"Auto-created Tracking Order {tracking_order.name} from Bundle Creation {doc.name}")
+        
+    except Exception as e:
+        frappe.log_error(f"Error creating Tracking Order from Bundle Creation {doc.name}: {str(e)}")
+        frappe.throw(f"Failed to create Tracking Order: {str(e)}")
+
+
+# Alternative: If you want to add this as a custom method to Bundle Creation doctype
+class BundleCreation(Document):
+    def on_submit(self):
+        """Override the on_submit method of Bundle Creation"""
+        # Call the function to create Tracking Order
+        create_tracking_order_from_bundle_creation_v2(self)
+
+
+def validate_bundle_creation_data(doc):
+    """
+    Validation function to ensure Bundle Creation has required data
+    """
+    if not doc.fg_item:
+        frappe.throw("FG Item is required to create Tracking Order")
+    
+    if not doc.table_bundle_creation_item:
+        frappe.throw("Bundle Configuration items are required")
+    
+    # Validate that each bundle item has required fields
+    for item in doc.table_bundle_creation_item:
+        if not item.size:
+            frappe.throw("Size is required for all bundle configuration items")
+        if not item.unitsbundle or item.unitsbundle <= 0:
+            frappe.throw("Units/Bundle must be greater than 0")
+        if not item.no_of_bundles or item.no_of_bundles <= 0:
+            frappe.throw("Number of Bundles must be greater than 0")
+
+
+def create_tracking_order_with_validation(doc, method=None):
+    """
+    Enhanced version with validation and error handling
+    """
+    # Validate data first
+    validate_bundle_creation_data(doc)
+    
+    try:
+        # Check if Tracking Order already exists for this Bundle Creation
+        existing_tracking_order = frappe.db.exists("Tracking Order", {
+            "reference_order_number": doc.name,
+            "reference_order_type": "Cut Order"
+        })
+        
+        if existing_tracking_order:
+            frappe.msgprint(f"Tracking Order already exists: {existing_tracking_order}")
+            return
+        
+        # Use the v2 method which saves first then adds child tables
+        create_tracking_order_from_bundle_creation_v2(doc, method)
+        
+    except Exception as e:
+        frappe.log_error(f"Error in create_tracking_order_with_validation: {str(e)}")
+        frappe.throw(f"Failed to create Tracking Order: {str(e)}")
+
+
+# Hook configuration for hooks.py
+"""
+Add this to your app's hooks.py file:
+
+doc_events = {
+    "Bundle Creation": {
+        "on_submit": "your_app.your_module.bundle_creation.create_tracking_order_with_validation"
+    }
+}
+
+Replace 'your_app.your_module.bundle_creation' with the actual path to this file.
+"""

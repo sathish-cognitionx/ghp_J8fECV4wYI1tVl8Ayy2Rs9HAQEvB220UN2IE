@@ -8,7 +8,9 @@
   "production_item",
   "tracking_tag",
   "linked_on",
-  "is_active"
+  "is_active",
+  "activated_source",
+  "deactivated_source"
  ],
  "fields": [
   {
@@ -41,12 +43,24 @@
    "in_list_view": 1,
    "label": "Is Active",
    "reqd": 1
+  },
+  {
+   "fieldname": "activated_source",
+   "fieldtype": "Select",
+   "label": "Activated Source",
+   "options": "\nApp\nCut Bundle"
+  },
+  {
+   "fieldname": "deactivated_source",
+   "fieldtype": "Select",
+   "label": "Deactivated Source",
+   "options": "\nFinal Operation\nEOL UnLink\nTag Switch\nUnlink Link\nPartial Bundle Unlink"
   }
  ],
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2025-07-29 20:25:00.931129",
+ "modified": "2025-09-03 23:15:10.452463",
  "modified_by": "Administrator",
  "module": "TrackerX Live",
  "name": "Production Item Tag Map",

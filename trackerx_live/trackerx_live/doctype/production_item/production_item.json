@@ -95,7 +95,7 @@
   },
   {
    "fieldname": "production_item_number",
-   "fieldtype": "Link",
+   "fieldtype": "Data",
    "in_list_view": 1,
    "label": "Production Item Number",
    "options": "Tracking Order",
@@ -118,7 +118,7 @@
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2025-08-29 17:46:11.486213",
+ "modified": "2025-09-04 00:20:22.231090",
  "modified_by": "Administrator",
  "module": "TrackerX Live",
  "name": "Production Item",

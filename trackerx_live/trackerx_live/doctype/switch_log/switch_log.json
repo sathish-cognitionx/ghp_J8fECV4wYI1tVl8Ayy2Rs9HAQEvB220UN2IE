@@ -5,30 +5,14 @@
  "doctype": "DocType",
  "engine": "InnoDB",
  "field_order": [
-  "from_production_item",
-  "to_production_item",
+  "switch_type",
+  "from_production_items",
+  "to_production_items",
   "switched_on",
   "switched_by",
-  "switch_type",
   "remarks"
  ],
  "fields": [
-  {
-   "fieldname": "from_production_item",
-   "fieldtype": "Link",
-   "in_list_view": 1,
-   "label": "From Production Item",
-   "options": "Production Item",
-   "reqd": 1
-  },
-  {
-   "fieldname": "to_production_item",
-   "fieldtype": "Link",
-   "in_list_view": 1,
-   "label": "To Production Item",
-   "options": "Production Item",
-   "reqd": 1
-  },
   {
    "fieldname": "switched_on",
    "fieldtype": "Datetime",
@@ -48,19 +32,31 @@
    "fieldname": "switch_type",
    "fieldtype": "Select",
    "label": "Switch Type",
-   "options": "Bundle to Single Unit\nTag to Tag",
+   "options": "\nBundle to Single Unit\nTag to Tag\nBundle to Bundle\nPartial Bundle",
    "reqd": 1
   },
   {
    "fieldname": "remarks",
    "fieldtype": "Data",
    "label": "Remarks"
+  },
+  {
+   "fieldname": "from_production_items",
+   "fieldtype": "Table MultiSelect",
+   "label": "From Production Items",
+   "options": "Switch Log Production Item"
+  },
+  {
+   "fieldname": "to_production_items",
+   "fieldtype": "Table MultiSelect",
+   "label": "To Production Items",
+   "options": "Switch Log Production Item"
   }
  ],
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2025-07-29 20:39:26.543780",
+ "modified": "2025-09-03 23:31:00.736588",
  "modified_by": "Administrator",
  "module": "TrackerX Live",
  "name": "Switch Log",

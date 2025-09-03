@@ -162,6 +162,11 @@ required_apps = ["erpnext"]
 # 		"on_trash": "method"
 # 	}
 # }
+doc_events = {
+    "Bundle Creation": {
+        "on_submit": "trackerx_live.hook.bundle_configuration.create_tracking_order_from_bundle_creation"
+    }
+}
 
 
 # Scheduled Tasks

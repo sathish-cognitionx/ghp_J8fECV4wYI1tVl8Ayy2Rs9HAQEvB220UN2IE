@@ -13,7 +13,7 @@
   "number_of_bundles",
   "production_type",
   "component",
-  "parent_component"
+  "parent_bundle_configuration"
  ],
  "fields": [
   {
@@ -69,7 +69,7 @@
    "label": "Component"
   },
   {
-   "fieldname": "parent_component",
+   "fieldname": "parent_bundle_configuration",
    "fieldtype": "Link",
    "label": "Parent",
    "options": "Tracking Order Bundle Configuration"
@@ -79,7 +79,7 @@
  "index_web_pages_for_search": 1,
  "istable": 1,
  "links": [],
- "modified": "2025-08-29 18:16:48.186507",
+ "modified": "2025-09-03 23:43:42.869339",
  "modified_by": "Administrator",
  "module": "TrackerX Live",
  "name": "Tracking Order Bundle Configuration",

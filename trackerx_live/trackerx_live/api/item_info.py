@@ -17,7 +17,6 @@ def get_item_information(tag_number):
         "is_active": 1
     })
 
-tag get info at this utis on this sos t
     if not mapping:
         frappe.throw(_("No active production item linked with this tag"))
 

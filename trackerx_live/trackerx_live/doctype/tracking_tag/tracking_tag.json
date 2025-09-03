@@ -10,7 +10,8 @@
   "status",
   "activation_time",
   "last_used_on",
-  "remarks"
+  "remarks",
+  "activation_source"
  ],
  "fields": [
   {
@@ -51,12 +52,18 @@
    "fieldname": "remarks",
    "fieldtype": "Data",
    "label": "Remarks"
+  },
+  {
+   "fieldname": "activation_source",
+   "fieldtype": "Select",
+   "label": "Activation Source",
+   "options": "\nApp\nCut Bundle"
   }
  ],
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2025-07-29 20:22:16.375092",
+ "modified": "2025-09-03 23:11:40.186200",
  "modified_by": "Administrator",
  "module": "TrackerX Live",
  "name": "Tracking Tag",
