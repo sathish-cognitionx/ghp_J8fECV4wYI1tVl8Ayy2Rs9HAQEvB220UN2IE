@@ -23,7 +23,7 @@
    "fieldtype": "Link",
    "in_list_view": 1,
    "label": "Production Item",
-   "options": "Product Bundle Item",
+   "options": "Production Item",
    "reqd": 1
   },
   {
@@ -96,7 +96,7 @@
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2025-09-01 13:37:51.202331",
+ "modified": "2025-09-03 21:08:33.883067",
  "modified_by": "Administrator",
  "module": "TrackerX Live",
  "name": "Item Scan Log",
