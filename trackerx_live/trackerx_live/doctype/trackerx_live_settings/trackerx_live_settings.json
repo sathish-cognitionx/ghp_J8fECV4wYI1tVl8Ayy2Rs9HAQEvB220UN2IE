@@ -12,7 +12,14 @@
   "progressive_production_flow_section",
   "progressive_defective_unit_tagging",
   "progressive_allow_partial_bundle_flow",
-  "tab_2_tab"
+  "tab_2_tab",
+  "defect_location_section",
+  "show_defect_location_selection_while_qc",
+  "production_operation_and_operator_section",
+  "show_operator_name_while_qc",
+  "show_operation_while_qc",
+  "display_previous_defect_section",
+  "display_previously_logged_defects_for_the_unit"
  ],
  "fields": [
   {
@@ -26,7 +33,7 @@
    "label": "Component Production Flow"
   },
   {
-   "default": "0",
+   "default": "1",
    "fieldname": "component_defective_unit_tagging",
    "fieldtype": "Check",
    "label": "Defective Unit Tagging"
@@ -43,7 +50,7 @@
    "label": "Progressive Production Flow"
   },
   {
-   "default": "0",
+   "default": "1",
    "fieldname": "progressive_defective_unit_tagging",
    "fieldtype": "Check",
    "label": "Defective Unit Tagging"
@@ -57,14 +64,55 @@
   {
    "fieldname": "tab_2_tab",
    "fieldtype": "Tab Break",
-   "label": "Tab 2"
+   "label": "Defects"
+  },
+  {
+   "fieldname": "defect_location_section",
+   "fieldtype": "Section Break",
+   "label": "Defect Location"
+  },
+  {
+   "default": "0",
+   "fieldname": "show_defect_location_selection_while_qc",
+   "fieldtype": "Check",
+   "label": "Show Defect location selection while QC"
+  },
+  {
+   "fieldname": "production_operation_and_operator_section",
+   "fieldtype": "Section Break",
+   "label": "Production Operation and Operator"
+  },
+  {
+   "default": "0",
+   "description": "This will show the list of production operators name so that QC can choose the operator produced the defect",
+   "fieldname": "show_operator_name_while_qc",
+   "fieldtype": "Check",
+   "label": "Show Operator Name while QC"
+  },
+  {
+   "default": "0",
+   "description": "This will show all the previous production operations so that QC can choose the operation that caused the defect",
+   "fieldname": "show_operation_while_qc",
+   "fieldtype": "Check",
+   "label": "Show Operation while QC"
+  },
+  {
+   "fieldname": "display_previous_defect_section",
+   "fieldtype": "Section Break",
+   "label": "Display Previous Defect"
+  },
+  {
+   "default": "0",
+   "fieldname": "display_previously_logged_defects_for_the_unit",
+   "fieldtype": "Check",
+   "label": "Display previously logged defects for the unit"
   }
  ],
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
  "issingle": 1,
  "links": [],
- "modified": "2025-09-04 18:16:28.737777",
+ "modified": "2025-09-04 23:12:45.971562",
  "modified_by": "Administrator",
  "module": "TrackerX Live",
  "name": "TrackerX Live Settings",
