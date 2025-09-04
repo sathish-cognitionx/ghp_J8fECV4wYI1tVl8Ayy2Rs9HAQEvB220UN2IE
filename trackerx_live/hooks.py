@@ -10,13 +10,15 @@ fixtures = [
     {
         "dt": "Custom Field",
         "filters": [
-            ["dt", "in", ["Operation"]]
+            ["dt", "in", ["Operation"]],
+            ["module", "=", "TrackerX Live"]
         ]
     },
     {
         "dt": "Property Setter",
         "filters": [
-            ["doc_type", "in", ["Operation"]]
+            ["doc_type", "in", ["Operation"]],
+            ["module", "=", "TrackerX Live"]
         ]
     }
 ]
@@ -160,6 +162,11 @@ required_apps = ["erpnext"]
 # 		"on_trash": "method"
 # 	}
 # }
+doc_events = {
+    "Bundle Creation": {
+        "on_submit": "trackerx_live.hook.bundle_configuration.create_tracking_order_from_bundle_creation"
+    }
+}
 
 
 # Scheduled Tasks

@@ -59,7 +59,7 @@ import json
 from frappe import _
 
 @frappe.whitelist(allow_guest=True)
-def log_defect_api(production_item_id, process_id, ws_id, defects):
+def log_defect_api(production_item_id, process_id, ws_id, defects, scan_log_id):
     """
     API to log defects into Item Scan Log (parent) and Item Scan Log Defect (child table).
     User only sends defect_id, rest details fetched from Tracking Order Defect Master.

@@ -15,8 +15,13 @@
   "quantity",
   "production_type",
   "bundle_configurations",
-  "component_bundle_configuration",
+  "component_bundle_configurations",
   "single_unit_size",
+  "order_status",
+  "activation_status",
+  "produced_quantity",
+  "pending_production_quantity",
+  "rejected_qty",
   "components_section_break",
   "tracking_components",
   "section_break_op_map",
@@ -122,18 +127,49 @@
    "options": "Tracking Component"
   },
   {
-   "fieldname": "component_bundle_configuration",
+   "fieldname": "component_bundle_configurations",
    "fieldtype": "Table",
    "hidden": 1,
-   "label": "Component Bundle Configuration",
+   "label": "Component Bundle Configurations",
    "options": "Tracking Order Bundle Configuration"
+  },
+  {
+   "fieldname": "order_status",
+   "fieldtype": "Select",
+   "label": "Order Status",
+   "options": "Created\nIn Production\nCompleted\nOn Hold\nCancelled"
+  },
+  {
+   "allow_on_submit": 1,
+   "fieldname": "activation_status",
+   "fieldtype": "Select",
+   "label": "Activation Status",
+   "options": "Ready\nIn Progress\nCompleted"
+  },
+  {
+   "fieldname": "produced_quantity",
+   "fieldtype": "Int",
+   "label": "Produced Quantity",
+   "non_negative": 1
+  },
+  {
+   "fieldname": "pending_production_quantity",
+   "fieldtype": "Int",
+   "label": "Pending Production Quantity",
+   "non_negative": 1
+  },
+  {
+   "fieldname": "rejected_qty",
+   "fieldtype": "Int",
+   "label": "Rejected Qty",
+   "non_negative": 1
   }
  ],
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
  "is_submittable": 1,
  "links": [],
- "modified": "2025-08-29 18:08:55.585076",
+ "modified": "2025-09-04 12:44:42.095482",
  "modified_by": "Administrator",
  "module": "TrackerX Live",
  "name": "Tracking Order",
