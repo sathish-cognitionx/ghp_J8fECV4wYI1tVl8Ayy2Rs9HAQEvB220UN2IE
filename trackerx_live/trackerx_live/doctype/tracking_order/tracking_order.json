@@ -134,6 +134,7 @@
    "options": "Tracking Order Bundle Configuration"
   },
   {
+   "allow_on_submit": 1,
    "fieldname": "order_status",
    "fieldtype": "Select",
    "label": "Order Status",
@@ -147,18 +148,21 @@
    "options": "Ready\nIn Progress\nCompleted"
   },
   {
+   "allow_on_submit": 1,
    "fieldname": "produced_quantity",
    "fieldtype": "Int",
    "label": "Produced Quantity",
    "non_negative": 1
   },
   {
+   "allow_on_submit": 1,
    "fieldname": "pending_production_quantity",
    "fieldtype": "Int",
    "label": "Pending Production Quantity",
    "non_negative": 1
   },
   {
+   "allow_on_submit": 1,
    "fieldname": "rejected_qty",
    "fieldtype": "Int",
    "label": "Rejected Qty",
@@ -169,7 +173,7 @@
  "index_web_pages_for_search": 1,
  "is_submittable": 1,
  "links": [],
- "modified": "2025-09-04 12:44:42.095482",
+ "modified": "2025-09-04 18:44:43.560606",
  "modified_by": "Administrator",
  "module": "TrackerX Live",
  "name": "Tracking Order",

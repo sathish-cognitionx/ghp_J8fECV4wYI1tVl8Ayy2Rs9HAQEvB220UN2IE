@@ -1,0 +1,88 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "creation": "2025-09-04 18:10:55.641287",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "production_flow_tab",
+  "component_production_flow_section",
+  "component_defective_unit_tagging",
+  "component_allow_partial_bundle_flow",
+  "progressive_production_flow_section",
+  "progressive_defective_unit_tagging",
+  "progressive_allow_partial_bundle_flow",
+  "tab_2_tab"
+ ],
+ "fields": [
+  {
+   "fieldname": "production_flow_tab",
+   "fieldtype": "Tab Break",
+   "label": "Production Flow"
+  },
+  {
+   "fieldname": "component_production_flow_section",
+   "fieldtype": "Section Break",
+   "label": "Component Production Flow"
+  },
+  {
+   "default": "0",
+   "fieldname": "component_defective_unit_tagging",
+   "fieldtype": "Check",
+   "label": "Defective Unit Tagging"
+  },
+  {
+   "default": "0",
+   "fieldname": "component_allow_partial_bundle_flow",
+   "fieldtype": "Check",
+   "label": "Allow Partial Bundle Flow"
+  },
+  {
+   "fieldname": "progressive_production_flow_section",
+   "fieldtype": "Section Break",
+   "label": "Progressive Production Flow"
+  },
+  {
+   "default": "0",
+   "fieldname": "progressive_defective_unit_tagging",
+   "fieldtype": "Check",
+   "label": "Defective Unit Tagging"
+  },
+  {
+   "default": "0",
+   "fieldname": "progressive_allow_partial_bundle_flow",
+   "fieldtype": "Check",
+   "label": "Allow Partial Bundle Flow"
+  },
+  {
+   "fieldname": "tab_2_tab",
+   "fieldtype": "Tab Break",
+   "label": "Tab 2"
+  }
+ ],
+ "grid_page_length": 50,
+ "index_web_pages_for_search": 1,
+ "issingle": 1,
+ "links": [],
+ "modified": "2025-09-04 18:16:28.737777",
+ "modified_by": "Administrator",
+ "module": "TrackerX Live",
+ "name": "TrackerX Live Settings",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "print": 1,
+   "read": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "row_format": "Dynamic",
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}

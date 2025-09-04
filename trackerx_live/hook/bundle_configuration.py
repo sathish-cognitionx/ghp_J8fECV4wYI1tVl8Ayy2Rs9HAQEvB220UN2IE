@@ -4,6 +4,21 @@
 
 import frappe
 from frappe.model.document import Document
+from frappe.utils import flt
+
+def cuttingx_bundle_configuration_on_submit(doc, method=None):
+    create_tracking_order_from_bundle_creation(doc, method=None)
+
+def cuttingx_bundle_configuration_before_cancel(doc, method=None):
+    check_tracking_order_status_before_cancel(doc, method)
+    pass
+    
+
+def cuttingx_bundle_configuration_before_on_cancel(doc, method=None):
+    cancel_tracking_order(doc, method)
+
+def cuttingx_bundle_configuration_before_delete(doc, method=None):
+    delete_tracking_order(doc,method)
 
 def create_tracking_order_from_bundle_creation(doc, method=None):
     """
@@ -31,6 +46,14 @@ def create_tracking_order_from_bundle_creation(doc, method=None):
         
         tracking_order.quantity = total_quantity
         tracking_order.pending_production_quantity = total_quantity
+
+        main_component = None
+        fg_item = frappe.get_doc("Item", tracking_order.item )
+        if fg_item.custom_fg_components:
+            for fg_component in fg_item.custom_fg_components:
+                if fg_component.is_main_component:
+                    main_component = fg_component.component_name
+
         
         # Create Bundle Configurations from Bundle Creation Items
         for bundle_item in doc.table_bundle_creation_item:
@@ -59,7 +82,7 @@ def create_tracking_order_from_bundle_creation(doc, method=None):
             if component_key not in components_added:
                 component_row = frappe.new_doc("Tracking Component")
                 component_row.component_name = component_key
-                component_row.is_main = 1 if component_key == "__Default__" else 0
+                component_row.is_main = 1 if component_key == main_component else 0
                 component_row.parent = tracking_order.name
                 component_row.parenttype = "Tracking Order"
                 component_row.parentfield = "tracking_components"
@@ -80,9 +103,9 @@ def create_tracking_order_from_bundle_creation(doc, method=None):
         
         # Create basic operation map
         operation_row = frappe.new_doc("Operation Map")
-        operation_row.operation = "Sewing QC"
+        operation_row.operation = "Activation"
         operation_row.component = "__Default__"
-        operation_row.next_operation = "Sewing QC"
+        operation_row.next_operation = "Activation"
         operation_row.sequence_no = 1
         operation_row.parent = tracking_order.name
         operation_row.parenttype = "Tracking Order"
@@ -201,8 +224,131 @@ def create_production_items(doc, tracking_order):
         
 
 
+def check_tracking_order_status_before_cancel(doc, method):
+    """
+    Hook that runs before canceling Bundle Creation
+    Checks if related Tracking Order is in Production or Completed status
+    """
+    # Find related tracking order
+    tracking_orders = frappe.get_all("Tracking Order", 
+        filters={"reference_order_number": doc.name},
+        fields=["name", "order_status", "produced_quantity", "quantity"]
+    )
+    
+    if not tracking_orders:
+        return
+    
+    tracking_order = tracking_orders[0]
+    
+    # Check if tracking order status requires confirmation
+    if tracking_order.order_status in ["In Production", "Completed"]:
+        # Get full tracking order document to get more details
+        tracking_doc = frappe.get_doc("Tracking Order", tracking_order.name)
+        
+        produced_qty = flt(tracking_doc.get("produced_quantity", 0))
+        total_qty = flt(tracking_doc.get("quantity", 0))
+        
+        # Create confirmation message
+        if tracking_order.status == "Completed":
+            message = f"This Bundle Creation has a completed Tracking Order ({tracking_order.name}). All {produced_qty or total_qty} units have been produced."
+        else:
+            message = f"This Bundle Creation has a Tracking Order ({tracking_order.name}) that is currently 'In Production'. {produced_qty} out of {total_qty} units have been produced."
+        
+        # Show confirmation dialog - this needs to be handled on the client side
+        # We'll throw an exception with a specific message that can be caught by client-side JS
+        frappe.throw(
+            msg=message,
+            title="Cancellation Not Allowed",
+            exc=frappe.ValidationError
+        )
 
-       
+
+
+def cancel_tracking_order(doc, method):
+    """
+    Hook that runs after canceling Bundle Creation
+    Cancels the related Tracking Order
+    """
+    # Find and cancel related tracking order
+    tracking_orders = frappe.get_all("Tracking Order", 
+        filters={"reference_order_number": doc.name, "docstatus": 1},
+        fields=["name"]
+    )
+    
+    for tracking_order in tracking_orders:
+        tracking_doc = frappe.get_doc("Tracking Order", tracking_order.name)
+        if tracking_doc.docstatus == 1:  # Only cancel if submitted
+            tracking_doc.cancel()
+            frappe.msgprint(f"Related Tracking Order {tracking_order.name} has been cancelled")
+
+def delete_tracking_order(doc, method):
+    """
+    Hook that runs before deleting Bundle Creation
+    Updates related Tracking Order status to 'Cancelled'
+    """
+    # Find related tracking orders
+    tracking_orders = frappe.get_all("Tracking Order", 
+        filters={"reference_order_number": doc.name},
+        fields=["name", "docstatus"]
+    )
+    
+    for tracking_order in tracking_orders:
+        tracking_doc = frappe.get_doc("Tracking Order", tracking_order.name)
+        
+        # If tracking order is in draft, we can delete it
+        if tracking_doc.docstatus == 0:
+            frappe.delete_doc("Tracking Order", tracking_order.name)
+            frappe.msgprint(f"Related draft Tracking Order {tracking_order.name} has been deleted")
+        
+        # If tracking order is submitted, we need to cancel it first, then we can set status
+        elif tracking_doc.docstatus == 1:
+            # Cancel if not already cancelled
+            if tracking_doc.docstatus == 1:
+                tracking_doc.cancel()
+            
+            # Update status to cancelled (this works even on cancelled docs)
+            frappe.db.set_value("Tracking Order", tracking_order.name, "status", "Cancelled")
+            frappe.msgprint(f"Related Tracking Order {tracking_order.name} status has been set to Cancelled")
+
+# Alternative approach for client-side confirmation
+# Create a client script for Bundle Creation doctype
+
+# bundle_creation.js - Client Script for Bundle Creation doctype
+
+
+
+# Additional server-side method for checking status
+@frappe.whitelist()
+def check_tracking_order_status(bundle_creation_name):
+    """
+    Method to check if confirmation is needed before cancelling
+    """
+    tracking_orders = frappe.get_all("Tracking Order", 
+        filters={"reference_order_number": bundle_creation_name},
+        fields=["name", "order_status", "produced_quantity", "quantity"]
+    )
+    
+    if not tracking_orders:
+        return {"needs_confirmation": False}
+    
+    tracking_order = tracking_orders[0]
+    
+    if tracking_order.order_status in ["In Production", "Completed"]:
+        tracking_doc = frappe.get_doc("Tracking Order", tracking_order.name)
+        produced_qty = flt(tracking_doc.get("produced_quantity", 0))
+        total_qty = flt(tracking_doc.get("quantity", 0))
+        
+        if tracking_order.order_status == "Completed":
+            message = f"This Bundle Creation has a completed Tracking Order ({tracking_order.name}). All {produced_qty or total_qty} units have been produced. Are you sure you want to cancel?"
+        else:
+            message = f"This Bundle Creation has a Tracking Order ({tracking_order.name}) that is currently 'In Production'. {produced_qty} out of {total_qty} units have been produced. Are you sure you want to cancel?"
+        
+        return {
+            "needs_confirmation": True,
+            "confirmation_message": message
+        }
+    
+    return {"needs_confirmation": False}
     
 
 def create_tracking_order_from_bundle_creation_v2(doc, method=None):
