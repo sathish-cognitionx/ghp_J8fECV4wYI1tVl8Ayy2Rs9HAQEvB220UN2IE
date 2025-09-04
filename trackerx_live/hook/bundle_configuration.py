@@ -19,6 +19,9 @@ def create_tracking_order_from_bundle_creation(doc, method=None):
         tracking_order.reference_order_number = doc.name  # Bundle Creation ID
         tracking_order.item = doc.fg_item
         tracking_order.production_type = "Bundle"  # Since this is from Bundle Creation
+        tracking_order.order_status = "Created"
+        tracking_order.activation_status = "Ready"
+
         
         # Calculate total quantity from Bundle Creation Items
         total_quantity = 0
@@ -27,6 +30,7 @@ def create_tracking_order_from_bundle_creation(doc, method=None):
                 total_quantity += item.no_of_bundles * item.unitsbundle
         
         tracking_order.quantity = total_quantity
+        tracking_order.pending_production_quantity = total_quantity
         
         # Create Bundle Configurations from Bundle Creation Items
         for bundle_item in doc.table_bundle_creation_item:
@@ -130,6 +134,7 @@ def create_production_items(doc, tracking_order):
                     component_bundle_configuration.parent = tracking_order.name
                     component_bundle_configuration.parenttype = "Tracking Order"
                     component_bundle_configuration.parentfield = "component_bundle_configuration"
+                    component_bundle_configuration.source = "Activation"
 
                     component_bundle_configuration.insert(ignore_permissions=True)
                     component_bc_dict[key] = component_bundle_configuration
@@ -185,6 +190,9 @@ def create_production_items(doc, tracking_order):
             production_item_tag_map.is_active = True
             production_item_tag_map.activated_source = 'Cut Bundle'
             production_item_tag_map.insert(ignore_permissions=True)
+
+        tracking_order.activation_status = "Completed"
+        tracking_order.save()
             
     except Exception as e:
         frappe.log_error(f"Error in create_production_items: {str(e)}")
