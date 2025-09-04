@@ -22,53 +22,55 @@ def log_defect_api(scan_log_id=None, production_item_id=None, process_id=None, w
         if isinstance(defects, str):
             defects = json.loads(defects)
 
-        parent_doc = None
+        item_scan_log = None 
 
         # -------------------------
         # CASE 1: scan_log_id explicitly provided
         # -------------------------
         if scan_log_id:
-            parent_doc = frappe.get_doc("Item Scan Log", scan_log_id)
+            item_scan_log = frappe.get_doc("Item Scan Log", scan_log_id)
 
         # -------------------------
         # CASE 2: Check if existing log present for same production_item + process + ws
         # -------------------------
         elif production_item_id and process_id and ws_id:
-            existing_log = frappe.db.get_value(
+            parent_log = frappe.db.get_value( 
                 "Item Scan Log",
                 {"production_item": production_item_id, "operation": process_id, "workstation": ws_id},
                 "name"
             )
-            if existing_log:
-                parent_doc = frappe.get_doc("Item Scan Log", existing_log)
+            if parent_log:
+                item_scan_log = frappe.get_doc("Item Scan Log", parent_log)
 
         # -------------------------
         # CASE 3: Create new log
         # -------------------------
-        if not parent_doc:
+        if not item_scan_log:
             if not production_item_id or not process_id or not ws_id:
                 return {"error": "Missing required fields for new log creation"}
 
-            parent_doc = frappe.get_doc({
+            item_scan_log = frappe.get_doc({
                 "doctype": "Item Scan Log",
                 "production_item": production_item_id,
                 "operation": process_id,
                 "workstation": ws_id,
                 "scanned_by": frappe.session.user,
-                "scan_time": frappe.utils.now_datetime(),
+                "logged_time": frappe.utils.now_datetime(), 
+                "log_type": "User Scanned",     
                 "status": "Fail",
                 "remarks": None,
-                "log_status": "Completed"
+                "log_status": "Draft"                  
             })
 
         # -------------------------
         # Update / Reset Defects
         # -------------------------
-        parent_doc.status = "Fail"
-        if hasattr(parent_doc, "log_status"):
-            parent_doc.log_status = "Completed"
+        item_scan_log.status = "Fail"
+        item_scan_log.log_status = "Draft" 
+        item_scan_log.logged_time = frappe.utils.now_datetime()  
 
-        parent_doc.set("defect_list", [])
+
+        item_scan_log.set("defect_list", [])
         skipped = []
 
         for defect in defects:
@@ -78,7 +80,7 @@ def log_defect_api(scan_log_id=None, production_item_id=None, process_id=None, w
 
             if frappe.db.exists("Tracking Order Defect Master", defect_id):
                 defect_doc = frappe.get_doc("Tracking Order Defect Master", defect_id)
-                parent_doc.append("defect_list", {
+                item_scan_log.append("defect_list", {
                     "defect": defect_doc.name,
                     "defect_type": defect_doc.defect_type,
                     "defect_description": defect_doc.defect_description,
@@ -88,18 +90,16 @@ def log_defect_api(scan_log_id=None, production_item_id=None, process_id=None, w
                 skipped.append(defect_id)
 
         # Save changes (insert or update)
-        if parent_doc.is_new():
-            parent_doc.insert(ignore_permissions=True)
+        if item_scan_log.is_new():
+            item_scan_log.insert(ignore_permissions=True)
         else:
-            parent_doc.save(ignore_permissions=True)
-
-        frappe.db.commit()
+            item_scan_log.save(ignore_permissions=True)
 
         # -------------------------
         # Response
         # -------------------------
         response_defects = []
-        for d in parent_doc.defect_list:
+        for d in item_scan_log.defect_list:
             response_defects.append({
                 "row_id": d.name,
                 "defect_id": d.defect,
@@ -111,7 +111,7 @@ def log_defect_api(scan_log_id=None, production_item_id=None, process_id=None, w
         return {
             "status": "success",
             "message": f"{len(defects)} defects processed successfully",
-            "item_scan_log_id": parent_doc.name,
+            "item_scan_log_id": item_scan_log.name,
             "defects": response_defects,
             "skipped_defects": skipped
         }
