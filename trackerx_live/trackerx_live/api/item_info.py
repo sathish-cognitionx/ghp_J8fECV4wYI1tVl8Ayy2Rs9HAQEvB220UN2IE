@@ -1,7 +1,7 @@
 import frappe
 from frappe import _
 
-@frappe.whitelist(allow_guest=True)
+@frappe.whitelist()
 def get_item_information(tag_number):
     if not tag_number:
         frappe.throw(_("Tag Number is required"))
