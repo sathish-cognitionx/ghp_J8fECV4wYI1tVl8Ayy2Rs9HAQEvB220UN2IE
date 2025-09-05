@@ -58,31 +58,19 @@ def create_production_item(tracking_order, component_name, tracking_tags,
                     "parentfield": "component_bundle_configurations",  
                     "name": bundle_configuration
                 },
-                fields=["bundle_quantity", "number_of_bundles", "size"]
+                fields=["bundle_quantity", "number_of_bundles", "size", "component"]
             )
             if not exists_in_order:
                 return {
                     "status": "error",
                     "message": _(f"Bundle Configuration {bundle_configuration} does not belong to Tracking Order {tracking_order}")
                 }
-            # Datas for the fileds  
             bundle_row = exists_in_order[0]
             size = bundle_row.size
             bundle_qty = bundle_row.bundle_quantity or 1  
 
-            activated_count = frappe.db.count(
-                "Production Item",
-                {"tracking_order": tracking_order, "bundle_configuration": bundle_configuration}
-            )
-
-            if activated_count >= bundle_row.number_of_bundles:
-                return {
-                    "status": "error",
-                    "message": _(f"Bundle Configuration {bundle_configuration} has limit {bundle_row.number_of_bundles}, already activated {activated_count}")
-                }
-
         # ---------------------------
-        # Validation 3 – check Component with tracking order
+        # Validation 3 – check Component with bundle and tracking order
         tracking_order_doc = frappe.get_doc("Tracking Order", tracking_order)
 
         component_id = None
@@ -97,6 +85,24 @@ def create_production_item(tracking_order, component_name, tracking_tags,
                 "message": f"No Component found with name {component_name} in Tracking Order {tracking_order}"
             }
 
+        if bundle_row and bundle_row.component and bundle_row.component != component_id:
+            return {
+                "status": "error",
+                "message": _(f"Bundle Configuration {bundle_configuration} is not assigned to Component {component_name}")
+            }
+
+        if bundle_row:
+            # Check activation limit
+            activated_count = frappe.db.count(
+                "Production Item",
+                {"tracking_order": tracking_order, "bundle_configuration": bundle_configuration}
+            )
+            if activated_count >= bundle_row.number_of_bundles:
+                return {
+                    "status": "error",
+                    "message": _(f"Bundle Configuration {bundle_configuration} has limit {bundle_row.number_of_bundles} to activate, already activated bundle are {activated_count}")
+                }
+   
         # ---------------------------
         # Validation 4 – Operations from operation_map
         current_operation = None
