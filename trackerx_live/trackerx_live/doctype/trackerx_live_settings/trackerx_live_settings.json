@@ -19,7 +19,9 @@
   "show_operator_name_while_qc",
   "show_operation_while_qc",
   "display_previous_defect_section",
-  "display_previously_logged_defects_for_the_unit"
+  "display_previously_logged_defects_for_the_unit",
+  "tracking_tag_tab",
+  "auto_unlink_at_final_operation"
  ],
  "fields": [
   {
@@ -106,13 +108,25 @@
    "fieldname": "display_previously_logged_defects_for_the_unit",
    "fieldtype": "Check",
    "label": "Display previously logged defects for the unit"
+  },
+  {
+   "fieldname": "tracking_tag_tab",
+   "fieldtype": "Tab Break",
+   "label": "Tracking Tag"
+  },
+  {
+   "default": "True",
+   "description": "If you check this, RFID and NFC Tag will be automatically unlinked from the product after producing (scanning) in the last operation of the production flow,  So these tags can be reused for other production items (bundles/units)",
+   "fieldname": "auto_unlink_at_final_operation",
+   "fieldtype": "Check",
+   "label": "Auto Unlink Tag (only if its RFID/NFC) at the final operation of the production flow"
   }
  ],
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
  "issingle": 1,
  "links": [],
- "modified": "2025-09-04 23:12:45.971562",
+ "modified": "2025-09-05 11:42:02.087571",
  "modified_by": "Administrator",
  "module": "TrackerX Live",
  "name": "TrackerX Live Settings",
