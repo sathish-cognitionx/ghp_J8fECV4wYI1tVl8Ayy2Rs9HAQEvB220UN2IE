@@ -1,0 +1,150 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "creation": "2025-09-04 18:10:55.641287",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "production_flow_tab",
+  "component_production_flow_section",
+  "component_defective_unit_tagging",
+  "component_allow_partial_bundle_flow",
+  "progressive_production_flow_section",
+  "progressive_defective_unit_tagging",
+  "progressive_allow_partial_bundle_flow",
+  "tab_2_tab",
+  "defect_location_section",
+  "show_defect_location_selection_while_qc",
+  "production_operation_and_operator_section",
+  "show_operator_name_while_qc",
+  "show_operation_while_qc",
+  "display_previous_defect_section",
+  "display_previously_logged_defects_for_the_unit",
+  "tracking_tag_tab",
+  "auto_unlink_at_final_operation"
+ ],
+ "fields": [
+  {
+   "fieldname": "production_flow_tab",
+   "fieldtype": "Tab Break",
+   "label": "Production Flow"
+  },
+  {
+   "fieldname": "component_production_flow_section",
+   "fieldtype": "Section Break",
+   "label": "Component Production Flow"
+  },
+  {
+   "default": "1",
+   "fieldname": "component_defective_unit_tagging",
+   "fieldtype": "Check",
+   "label": "Defective Unit Tagging"
+  },
+  {
+   "default": "0",
+   "fieldname": "component_allow_partial_bundle_flow",
+   "fieldtype": "Check",
+   "label": "Allow Partial Bundle Flow"
+  },
+  {
+   "fieldname": "progressive_production_flow_section",
+   "fieldtype": "Section Break",
+   "label": "Progressive Production Flow"
+  },
+  {
+   "default": "1",
+   "fieldname": "progressive_defective_unit_tagging",
+   "fieldtype": "Check",
+   "label": "Defective Unit Tagging"
+  },
+  {
+   "default": "0",
+   "fieldname": "progressive_allow_partial_bundle_flow",
+   "fieldtype": "Check",
+   "label": "Allow Partial Bundle Flow"
+  },
+  {
+   "fieldname": "tab_2_tab",
+   "fieldtype": "Tab Break",
+   "label": "Defects"
+  },
+  {
+   "fieldname": "defect_location_section",
+   "fieldtype": "Section Break",
+   "label": "Defect Location"
+  },
+  {
+   "default": "0",
+   "fieldname": "show_defect_location_selection_while_qc",
+   "fieldtype": "Check",
+   "label": "Show Defect location selection while QC"
+  },
+  {
+   "fieldname": "production_operation_and_operator_section",
+   "fieldtype": "Section Break",
+   "label": "Production Operation and Operator"
+  },
+  {
+   "default": "0",
+   "description": "This will show the list of production operators name so that QC can choose the operator produced the defect",
+   "fieldname": "show_operator_name_while_qc",
+   "fieldtype": "Check",
+   "label": "Show Operator Name while QC"
+  },
+  {
+   "default": "0",
+   "description": "This will show all the previous production operations so that QC can choose the operation that caused the defect",
+   "fieldname": "show_operation_while_qc",
+   "fieldtype": "Check",
+   "label": "Show Operation while QC"
+  },
+  {
+   "fieldname": "display_previous_defect_section",
+   "fieldtype": "Section Break",
+   "label": "Display Previous Defect"
+  },
+  {
+   "default": "0",
+   "fieldname": "display_previously_logged_defects_for_the_unit",
+   "fieldtype": "Check",
+   "label": "Display previously logged defects for the unit"
+  },
+  {
+   "fieldname": "tracking_tag_tab",
+   "fieldtype": "Tab Break",
+   "label": "Tracking Tag"
+  },
+  {
+   "default": "True",
+   "description": "If you check this, RFID and NFC Tag will be automatically unlinked from the product after producing (scanning) in the last operation of the production flow,  So these tags can be reused for other production items (bundles/units)",
+   "fieldname": "auto_unlink_at_final_operation",
+   "fieldtype": "Check",
+   "label": "Auto Unlink Tag (only if its RFID/NFC) at the final operation of the production flow"
+  }
+ ],
+ "grid_page_length": 50,
+ "index_web_pages_for_search": 1,
+ "issingle": 1,
+ "links": [],
+ "modified": "2025-09-05 11:42:02.087571",
+ "modified_by": "Administrator",
+ "module": "TrackerX Live",
+ "name": "TrackerX Live Settings",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "print": 1,
+   "read": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "row_format": "Dynamic",
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}

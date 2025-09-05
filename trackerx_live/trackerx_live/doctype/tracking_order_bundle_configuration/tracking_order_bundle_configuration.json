@@ -14,7 +14,8 @@
   "production_type",
   "component",
   "parent_bundle_configuration",
-  "source"
+  "source",
+  "activation_status"
  ],
  "fields": [
   {
@@ -60,8 +61,9 @@
   {
    "fetch_from": "parent.production_type",
    "fieldname": "production_type",
-   "fieldtype": "Read Only",
-   "label": "Production Type"
+   "fieldtype": "Select",
+   "label": "Production Type",
+   "options": "Bundle\nSingle Unit"
   },
   {
    "default": "__Default__",
@@ -79,14 +81,20 @@
    "fieldname": "source",
    "fieldtype": "Select",
    "label": "Source",
-   "options": "Configuration\nActivation\nUnlink Link\nPartial Unlink Link\nPartial Bundle Flow\nRecut Order Configuration\nRecut Order Activation\nUnlink Scrap\nPartial Bundle Flow L1 Approver"
+   "options": "Configuration\nActivation\nUnlink Link\nDefective Unit Tagging\nRecut Order Configuration\nRecut Order Activation\nUnlink Scrap\nPartial Bundle Flow L1 Approver"
+  },
+  {
+   "fieldname": "activation_status",
+   "fieldtype": "Select",
+   "label": "Activation status",
+   "options": "Ready\nIn Progress\nCompleted"
   }
  ],
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
  "istable": 1,
  "links": [],
- "modified": "2025-09-04 10:25:14.273207",
+ "modified": "2025-09-05 12:43:22.414800",
  "modified_by": "Administrator",
  "module": "TrackerX Live",
  "name": "Tracking Order Bundle Configuration",

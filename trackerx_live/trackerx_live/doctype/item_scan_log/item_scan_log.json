@@ -15,7 +15,9 @@
   "log_status",
   "log_type",
   "remarks",
-  "defect_list"
+  "defect_list",
+  "production_item_type",
+  "dut"
  ],
  "fields": [
   {
@@ -91,12 +93,24 @@
    "label": "Log Type",
    "options": "User Scanned\nSkip Adjusted",
    "reqd": 1
+  },
+  {
+   "fieldname": "production_item_type",
+   "fieldtype": "Select",
+   "label": "Production Item Type",
+   "options": "Unit\nBundle"
+  },
+  {
+   "fieldname": "dut",
+   "fieldtype": "Select",
+   "label": "DUT",
+   "options": "ON\nOFF"
   }
  ],
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2025-09-03 21:08:33.883067",
+ "modified": "2025-09-05 12:15:49.534421",
  "modified_by": "Administrator",
  "module": "TrackerX Live",
  "name": "Item Scan Log",
