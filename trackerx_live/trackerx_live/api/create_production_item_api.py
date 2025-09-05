@@ -1,6 +1,7 @@
 import frappe
 from frappe import _
 import json
+from frappe.model.naming import make_autoname
 
 @frappe.whitelist()
 def create_production_item(tracking_order, component_name, tracking_tags, 
@@ -45,7 +46,8 @@ def create_production_item(tracking_order, component_name, tracking_tags,
         # ---------------------------
         # Validation 2 – Bundle Configuration
         size = None
-        quantity = None
+        bundle_qty = 1  
+        bundle_row = None   
 
         if bundle_configuration:
             exists_in_order = frappe.get_all(
@@ -53,34 +55,22 @@ def create_production_item(tracking_order, component_name, tracking_tags,
                 filters={
                     "parent": tracking_order,
                     "parenttype": "Tracking Order",
-                    "parentfield": "component_bundle_configuration",
+                    "parentfield": "component_bundle_configurations",  
                     "name": bundle_configuration
                 },
-                fields=["bundle_quantity", "number_of_bundles", "size"]
+                fields=["bundle_quantity", "number_of_bundles", "size", "component"]
             )
             if not exists_in_order:
                 return {
                     "status": "error",
                     "message": _(f"Bundle Configuration {bundle_configuration} does not belong to Tracking Order {tracking_order}")
                 }
-
             bundle_row = exists_in_order[0]
             size = bundle_row.size
-            quantity = (bundle_row.bundle_quantity or 0) * (bundle_row.number_of_bundles or 0)
-
-            activated_count = frappe.db.count(
-                "Production Item",
-                {"tracking_order": tracking_order, "bundle_configuration": bundle_configuration}
-            )
-
-            if activated_count >= bundle_row.number_of_bundles:
-                return {
-                    "status": "error",
-                    "message": _(f"Bundle Configuration {bundle_configuration} has limit {bundle_row.number_of_bundles}, already activated {activated_count}")
-                }
+            bundle_qty = bundle_row.bundle_quantity or 1  
 
         # ---------------------------
-        # Validation 3 – Component
+        # Validation 3 – check Component with bundle and tracking order
         tracking_order_doc = frappe.get_doc("Tracking Order", tracking_order)
 
         component_id = None
@@ -95,6 +85,24 @@ def create_production_item(tracking_order, component_name, tracking_tags,
                 "message": f"No Component found with name {component_name} in Tracking Order {tracking_order}"
             }
 
+        if bundle_row and bundle_row.component and bundle_row.component != component_id:
+            return {
+                "status": "error",
+                "message": _(f"Bundle Configuration {bundle_configuration} is not assigned to Component {component_name}")
+            }
+
+        if bundle_row:
+            # Check activation limit
+            activated_count = frappe.db.count(
+                "Production Item",
+                {"tracking_order": tracking_order, "bundle_configuration": bundle_configuration}
+            )
+            if activated_count >= bundle_row.number_of_bundles:
+                return {
+                    "status": "error",
+                    "message": _(f"Bundle Configuration {bundle_configuration} has limit {bundle_row.number_of_bundles} to activate, already activated bundle are {activated_count}")
+                }
+   
         # ---------------------------
         # Validation 4 – Operations from operation_map
         current_operation = None
@@ -109,10 +117,9 @@ def create_production_item(tracking_order, component_name, tracking_tags,
         if not current_operation or not next_operation:
             return {
                 "status": "error",
-                "message": f"Missing current/next operation for component {component_name} in Tracking Order {tracking_order}"
+                "message": f"Missing current/next operation in Tracking Order {tracking_order}"
             }
 
-        # ---------------------------
         # Status always "Activated"
         status = "Activated"
 
@@ -121,26 +128,26 @@ def create_production_item(tracking_order, component_name, tracking_tags,
         created_items = []
 
         for tag_id in tag_ids:
+            production_item_number = make_autoname("PRD-ITEM-.YYYY.-.####") 
+
             doc = frappe.get_doc({
                 "doctype": "Production Item",
-                "production_item_number": tracking_order,  # Link to Tracking Order
+                "production_item_number": production_item_number,
                 "tracking_order": tracking_order,
                 "component": component_id,
                 "device_id": device_id,
                 "size": size,
-                "quantity": quantity,
+                "quantity": bundle_qty,  
                 "status": status,
                 "current_operation": current_operation,
                 "next_operation": next_operation,
-                "current_workstation": current_workstation,
+                "current_workstation": current_workstation,  
                 "next_workstation": next_workstation,
                 "bundle_configuration": bundle_configuration,
                 "tracking_tag": tag_id
             })
             doc.insert()
             created_items.append(doc.name)
-
-        frappe.db.commit()
 
         return {
             "status": "success",
