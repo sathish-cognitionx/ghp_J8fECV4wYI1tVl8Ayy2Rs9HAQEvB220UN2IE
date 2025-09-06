@@ -2,7 +2,7 @@ import frappe
 from frappe import _
 
 @frappe.whitelist()
-def get_tracking_orders():
+def get_tracking_orders_pending_activation():
     """
     Fetch all Tracking Orders with activation_status in (Ready, In Progress)
     along with their components.

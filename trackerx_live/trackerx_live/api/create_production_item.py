@@ -1,7 +1,6 @@
 import frappe
 from frappe import _
 import json
-from frappe.model.naming import make_autoname
 
 #------------------------------------------------
 # function for production_item_number autoname 
@@ -59,11 +58,13 @@ def update_activation_status(tracking_order, bundle_configuration,
     )
     if total_rows > 0 and total_rows == completed_rows:
         frappe.db.set_value(
-                "Tracking Order", tracking_order,
-                "activation_status", "Completed"
-            )
+            "Tracking Order", tracking_order,
+            "activation_status", "Completed"
+        )
 
 
+#----------------------
+# Main function
 
 @frappe.whitelist()
 def create_production_item(tracking_order, component_name, tracking_tags,
@@ -76,7 +77,7 @@ def create_production_item(tracking_order, component_name, tracking_tags,
             tracking_tags = json.loads(tracking_tags)
 
         if not isinstance(tracking_tags, list) or not tracking_tags:
-            return {"status": "error", "message": _("tracking_tags must be a non-empty list")}
+            return {"status": "error", "message": _("Invalid tags input")}
 
         # ---------------------------
         # Validation 1 – Handle Tags
@@ -84,34 +85,34 @@ def create_production_item(tracking_order, component_name, tracking_tags,
         for tag_number in tracking_tags:
             tag_doc = frappe.get_all("Tracking Tag", filters={"tag_number": tag_number}, fields=["name"])
             if not tag_doc:
-                return {
-                    "status": "error",
-                    "message": _(f"Tracking Tag '{tag_number}' does not exist.")
-                }
+                return {"status": "error", "message": _(f"Tag {tag_number} not found")}
 
             tag_id = tag_doc[0].name
 
-            # Check if already mapped
+            # Check if already mapped in Tag Map
             existing_mapping = frappe.get_all(
                 "Production Item Tag Map",
                 filters={"tracking_tag": tag_id, "is_active": 1},
-                fields=["name", "production_item"]
+                fields=["production_item"]
             )
             if existing_mapping:
-                return {
-                    "status": "error",
-                    "message": _(f"Tracking Tag '{tag_number}' is already mapped to Production Item {existing_mapping[0].production_item}")
-                }
+                return {"status": "error", "message": _(f"Tag {tag_number} already in use")}
+
+            # Check if already linked to another Production Item
+            existing_pi = frappe.get_all(
+                "Production Item",
+                filters={"tracking_tag": tag_id},
+                fields=["production_item_number"]
+            )
+            if existing_pi:
+                return {"status": "error", "message": _(f"Tag {tag_number} already linked")}
 
             tag_ids.append(tag_id)
 
         # ---------------------------
         # Validation 2 – Bundle Configuration (required always)
         if not bundle_configuration:
-            return {
-                "status": "error",
-                "message": _("Bundle Configuration is required")
-            }
+            return {"status": "error", "message": _("Bundle configuration required")}
 
         bundle_row = frappe.get_all(
             "Tracking Order Bundle Configuration",
@@ -124,10 +125,7 @@ def create_production_item(tracking_order, component_name, tracking_tags,
             fields=["bundle_quantity", "number_of_bundles", "size", "component", "production_type"]
         )
         if not bundle_row:
-            return {
-                "status": "error",
-                "message": _(f"Bundle Configuration {bundle_configuration} does not belong to Tracking Order {tracking_order}")
-            }
+            return {"status": "error", "message": _("Invalid bundle configuration")}
         bundle_row = bundle_row[0]
 
         # ---------------------------
@@ -140,16 +138,10 @@ def create_production_item(tracking_order, component_name, tracking_tags,
                 break
 
         if not component_id:
-            return {
-                "status": "error",
-                "message": _(f"No Component found with name {component_name} in Tracking Order {tracking_order}")
-            }
+            return {"status": "error", "message": _("Component not found in order")}
 
         if bundle_row.component and bundle_row.component != component_id:
-            return {
-                "status": "error",
-                "message": _(f"Bundle Configuration {bundle_configuration} is not assigned to Component {component_name}")
-            }
+            return {"status": "error", "message": _("Bundle not linked to component")}
 
         # ---------------------------
         # Validation 4 – Activation limit
@@ -158,10 +150,7 @@ def create_production_item(tracking_order, component_name, tracking_tags,
             {"tracking_order": tracking_order, "bundle_configuration": bundle_configuration}
         )
         if activated_count >= bundle_row.number_of_bundles:
-            return {
-                "status": "error",
-                "message": _(f"Bundle Configuration {bundle_configuration} has limit {bundle_row.number_of_bundles}, already activated {activated_count}")
-            }
+            return {"status": "error", "message": _("Bundle activation limit reached")}
 
         # ---------------------------
         # Validation 5 – Size handling
@@ -172,10 +161,7 @@ def create_production_item(tracking_order, component_name, tracking_tags,
             size = tracking_order_doc.single_unit_size
 
         if not size:
-            return {
-                "status": "error",
-                "message": _("Size must be set (either from bundle or single unit)")
-            }
+            return {"status": "error", "message": _("Size not defined")}
 
         # ---------------------------
         # Validation 6 – Operation Map
@@ -186,10 +172,7 @@ def create_production_item(tracking_order, component_name, tracking_tags,
             next_operation = first_row.get("next_operation")
 
         if not current_operation or not next_operation:
-            return {
-                "status": "error",
-                "message": _(f"Missing current/next operation in Tracking Order {tracking_order}")
-            }
+            return {"status": "error", "message": _("Operation map missing")}
 
         # ---------------------------
         # Status always "Activated"
@@ -227,11 +210,10 @@ def create_production_item(tracking_order, component_name, tracking_tags,
         # Validation 7- Call function for Post-Activation Status Updates
         update_activation_status(tracking_order, bundle_configuration, activated_count, len(tag_ids))
 
-
         return {
             "status": "success",
-            "message": _("Production Items created successfully"),
-            "Production Item names": created_items
+            "message": _("Production items created"),
+            "Production Items": created_items
         }
 
     except Exception as e:

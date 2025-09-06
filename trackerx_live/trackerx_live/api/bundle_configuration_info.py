@@ -7,11 +7,17 @@ def activate_component_bundle_configuration(tracking_order, component_id):
     tracking_order_doc = frappe.get_doc("Tracking Order", tracking_order)
 
     for row in tracking_order_doc.bundle_configurations:
-        # Skip if already linked to this component
-        if row.component and row.component == component_id:
-            continue  
+        # Always ensure parent rows have source="Configuration"
+        frappe.db.set_value(
+            "Tracking Order Bundle Configuration",
+            row.name,
+            {
+                "component": component_id,
+                "source": "Configuration"
+            }
+        )
 
-        # Avoid duplicate insertions
+        # Avoid duplicate insertions in component_bundle_configurations
         existing = frappe.db.exists("Tracking Order Bundle Configuration", {
             "parent": tracking_order,
             "parenttype": "Tracking Order",
@@ -21,7 +27,7 @@ def activate_component_bundle_configuration(tracking_order, component_id):
         })
 
         if not existing:
-            # Insert into component_bundle_configurations
+            # Insert into component_bundle_configurations with Activation + Ready
             frappe.get_doc({
                 "doctype": "Tracking Order Bundle Configuration",
                 "parent": tracking_order,
@@ -33,18 +39,11 @@ def activate_component_bundle_configuration(tracking_order, component_id):
                 "number_of_bundles": row.number_of_bundles,
                 "production_type": row.production_type,
                 "component": component_id,
-                "parent_bundle_configuration": row.name
+                "parent_bundle_configuration": row.name,
+                "source": "Activation",
+                "activation_status": "Ready"
             }).insert()
 
-        # Update the existing row's component
-        frappe.db.set_value(
-            "Tracking Order Bundle Configuration",
-            row.name,
-            "component",
-            component_id
-        )
-
-    frappe.db.commit()
 
 
 # ------------------
@@ -88,7 +87,7 @@ def get_bundle_configuration_info(tracking_order, component_name):
         # If not found, create component_bundle_configurations
         if not bundle_configs:
             activate_component_bundle_configuration(tracking_order, component_id)
-            tracking_order_doc.reload()  
+            tracking_order_doc.reload()
 
         # Get all component_bundle_configurations rows
         all_component_bcs = frappe.get_all(
@@ -101,7 +100,8 @@ def get_bundle_configuration_info(tracking_order, component_name):
             },
             fields=[
                 "name", "bc_name", "size", "bundle_quantity", "number_of_bundles",
-                "production_type", "component", "parent_bundle_configuration"
+                "production_type", "component", "parent_bundle_configuration",
+                "source", "activation_status"
             ]
         )
 
@@ -145,6 +145,8 @@ def get_bundle_configuration_info(tracking_order, component_name):
                 "production_type": bc.get("production_type"),
                 "component": bc.get("component"),
                 "parent_bundle_configuration": bc.get("parent_bundle_configuration"),
+                "source": bc.get("source"),
+                "activation_status": bc.get("activation_status"),
                 "activated_count": activated_count,
                 "pending_activation": pending_activation,
                 "completed_count": completed_count
@@ -157,7 +159,7 @@ def get_bundle_configuration_info(tracking_order, component_name):
             "bundle_configurations": bundle_info_list,
             "total_activated_count": total_activated_count,
             "total_pending_activation": total_pending_activation,
-            "total_completed_count":total_completed_count,
+            "total_completed_count": total_completed_count,
             "total_number_of_bundles": total_number_of_bundles
         }
 
