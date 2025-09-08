@@ -62,8 +62,7 @@ def update_activation_status(tracking_order, bundle_configuration,
             "activation_status", "Completed"
         )
 
-
-#----------------------
+#---------------------
 # Main function
 
 @frappe.whitelist()
