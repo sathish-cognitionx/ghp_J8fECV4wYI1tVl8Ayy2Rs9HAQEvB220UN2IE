@@ -5,7 +5,7 @@ from frappe import _
 def get_tracking_orders_pending_activation():
     """
     Fetch all Tracking Orders with activation_status in (Ready, In Progress)
-    along with their components.
+    along with their components and reference order details.
     """
     try:
         result = []
@@ -14,7 +14,11 @@ def get_tracking_orders_pending_activation():
         tracking_orders = frappe.get_all(
             "Tracking Order",
             filters={"activation_status": ["in", ["Ready", "In Progress"]]},
-            fields=["name", "item", "quantity", "activation_status", "order_status"]
+            fields=[
+                "name",
+                "reference_order_type",
+                "reference_order_number"
+            ]
         )
 
         for order in tracking_orders:
@@ -27,6 +31,8 @@ def get_tracking_orders_pending_activation():
 
             result.append({
                 "tracking_order": order.name,
+                "reference_order_type": order.reference_order_type,
+                "reference_order_number": order.reference_order_number,
                 "components": components
             })
 
