@@ -4,14 +4,14 @@
 import frappe
 from frappe.model.document import Document
 
-class BundleConfiguration(Document):
+class TrackingOrderBundleConfiguration(Document):
     def before_insert(self):
         """
         This method is called before a new Bundle Configuration row is inserted into the database.
         It ensures that the 'production_type' is copied from the parent 'Tracking Order'.
         """
         self._set_production_type_from_parent()
-        frappe.log_error("BundleConfiguration before_insert triggered", f"Parent: {self.parent}, Parent Type: {self.parenttype}, Production Type: {self.production_type}")
+        frappe.log_error("TrackingOrderBundleConfiguration before_insert triggered", f"Parent: {self.parent}, Parent Type: {self.parenttype}, Production Type: {self.production_type}")
 
     def before_save(self):
         """
@@ -19,7 +19,7 @@ class BundleConfiguration(Document):
         It acts as a fallback to ensure 'production_type' is always in sync with the parent.
         """
         self._set_production_type_from_parent()
-        frappe.log_error("BundleConfiguration before_save triggered", f"Parent: {self.parent}, Parent Type: {self.parenttype}, Production Type: {self.production_type}")
+        frappe.log_error("TrackingOrderBundleConfiguration before_save triggered", f"Parent: {self.parent}, Parent Type: {self.parenttype}, Production Type: {self.production_type}")
 
     def _set_production_type_from_parent(self):
         """

@@ -10,8 +10,14 @@
   "workstation",
   "scanned_by",
   "scan_time",
+  "logged_time",
   "status",
-  "remarks"
+  "log_status",
+  "log_type",
+  "remarks",
+  "defect_list",
+  "production_item_type",
+  "dut"
  ],
  "fields": [
   {
@@ -19,7 +25,7 @@
    "fieldtype": "Link",
    "in_list_view": 1,
    "label": "Production Item",
-   "options": "Product Bundle Item",
+   "options": "Production Item",
    "reqd": 1
   },
   {
@@ -56,19 +62,55 @@
    "fieldname": "status",
    "fieldtype": "Select",
    "label": "Status",
-   "options": "Pass\nFail\nRework\nRejected",
-   "reqd": 1
+   "options": "\nPass\nFail\nRework\nRejected"
   },
   {
    "fieldname": "remarks",
    "fieldtype": "Data",
    "label": "Remarks"
+  },
+  {
+   "fieldname": "defect_list",
+   "fieldtype": "Table",
+   "label": "Defect List",
+   "options": "Item Scan Log Defect"
+  },
+  {
+   "fieldname": "logged_time",
+   "fieldtype": "Datetime",
+   "label": "Logged Time"
+  },
+  {
+   "fieldname": "log_status",
+   "fieldtype": "Select",
+   "label": "Log Status",
+   "options": "Draft\nCompleted\nCancelled",
+   "reqd": 1
+  },
+  {
+   "fieldname": "log_type",
+   "fieldtype": "Select",
+   "label": "Log Type",
+   "options": "User Scanned\nSkip Adjusted",
+   "reqd": 1
+  },
+  {
+   "fieldname": "production_item_type",
+   "fieldtype": "Select",
+   "label": "Production Item Type",
+   "options": "Unit\nBundle"
+  },
+  {
+   "fieldname": "dut",
+   "fieldtype": "Select",
+   "label": "DUT",
+   "options": "ON\nOFF"
   }
  ],
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2025-07-29 20:28:38.694799",
+ "modified": "2025-09-05 12:15:49.534421",
  "modified_by": "Administrator",
  "module": "TrackerX Live",
  "name": "Item Scan Log",

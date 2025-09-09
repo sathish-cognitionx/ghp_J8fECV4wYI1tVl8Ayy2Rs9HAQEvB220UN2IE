@@ -8,14 +8,19 @@
   "production_item_number",
   "tracking_order",
   "bundle_configuration",
+  "tracking_tag",
   "component",
+  "device_id",
   "size",
   "quantity",
   "status",
   "current_operation",
   "next_operation",
   "current_workstation",
-  "next_workstation"
+  "next_workstation",
+  "source",
+  "tracking_status",
+  "unlinked_source"
  ],
  "fields": [
   {
@@ -31,14 +36,15 @@
    "fieldtype": "Link",
    "in_list_view": 1,
    "label": "Bundle Configuration",
-   "options": "Bundle Configuration"
+   "options": "Tracking Order Bundle Configuration",
+   "reqd": 1
   },
   {
    "fieldname": "component",
-   "fieldtype": "Data",
+   "fieldtype": "Link",
    "in_list_view": 1,
    "label": "Component",
-   "options": "FG Components",
+   "options": "Tracking Component",
    "reqd": 1
   },
   {
@@ -92,18 +98,49 @@
   },
   {
    "fieldname": "production_item_number",
-   "fieldtype": "Link",
+   "fieldtype": "Data",
    "in_list_view": 1,
    "label": "Production Item Number",
-   "options": "Tracking Order",
    "reqd": 1
+  },
+  {
+   "fieldname": "device_id",
+   "fieldtype": "Data",
+   "label": "Device Id",
+   "reqd": 1
+  },
+  {
+   "fieldname": "tracking_tag",
+   "fieldtype": "Link",
+   "label": "Tracking Tag",
+   "options": "Tracking Tag",
+   "reqd": 1
+  },
+  {
+   "fieldname": "source",
+   "fieldtype": "Select",
+   "label": "Source",
+   "options": "Activation\nDefective Unit Tagging\nUnlink Link\nRecut Activation"
+  },
+  {
+   "default": "Active",
+   "fieldname": "tracking_status",
+   "fieldtype": "Select",
+   "label": "Tracking Status",
+   "options": "Active\nDefective Unit Tagging\nUnlinked"
+  },
+  {
+   "fieldname": "unlinked_source",
+   "fieldtype": "Select",
+   "label": "Unlinked Source",
+   "options": "Final Process\nEOL\nUnlink Link\nPartial Bundle Flow"
   }
  ],
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2025-08-20 12:32:54.060603",
- "modified_by": "abhinav@cognitionx.tech",
+ "modified": "2025-09-04 11:56:18.288052",
+ "modified_by": "Administrator",
  "module": "TrackerX Live",
  "name": "Production Item",
  "owner": "Administrator",
