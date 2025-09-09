@@ -20,7 +20,8 @@
   "next_workstation",
   "source",
   "tracking_status",
-  "unlinked_source"
+  "unlinked_source",
+  "physical_cell"
  ],
  "fields": [
   {
@@ -134,12 +135,18 @@
    "fieldtype": "Select",
    "label": "Unlinked Source",
    "options": "Final Process\nEOL\nUnlink Link\nPartial Bundle Flow"
+  },
+  {
+   "fieldname": "physical_cell",
+   "fieldtype": "Link",
+   "label": "Physical Cell",
+   "options": "Physical Cell"
   }
  ],
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2025-09-04 11:56:18.288052",
+ "modified": "2025-09-09 23:21:32.536048",
  "modified_by": "Administrator",
  "module": "TrackerX Live",
  "name": "Production Item",
