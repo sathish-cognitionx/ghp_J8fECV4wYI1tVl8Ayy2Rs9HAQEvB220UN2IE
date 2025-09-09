@@ -7,13 +7,26 @@ app_license = "mit"
 
 
 fixtures = [
-    
+    {
+        "dt": "Custom Field",
+        "filters": [
+            ["dt", "in", ["Operation"]],
+            ["module", "=", "TrackerX Live"]
+        ]
+    },
+    {
+        "dt": "Property Setter",
+        "filters": [
+            ["doc_type", "in", ["Operation"]],
+            ["module", "=", "TrackerX Live"]
+        ]
+    }
 ]
 
 # Apps
 # ------------------
 
-required_apps = ["erpnext","erpnext_trackerx_customization"]
+required_apps = ["erpnext"]
 
 # Each item in the list will be shown as an app in the apps page
 # add_to_apps_screen = [
@@ -50,6 +63,7 @@ required_apps = ["erpnext","erpnext_trackerx_customization"]
 # include js in doctype views
 # doctype_js = {"doctype" : "public/js/doctype.js"}
 # doctype_list_js = {"doctype" : "public/js/doctype_list.js"}
+doctype_js = {"Bundle Creation" : "public/js/bundle_creation.js"}
 # doctype_tree_js = {"doctype" : "public/js/doctype_tree.js"}
 # doctype_calendar_js = {"doctype" : "public/js/doctype_calendar.js"}
 
@@ -149,6 +163,14 @@ required_apps = ["erpnext","erpnext_trackerx_customization"]
 # 		"on_trash": "method"
 # 	}
 # }
+doc_events = {
+    "Bundle Creation": {
+        "on_submit": "trackerx_live.hook.bundle_configuration.cuttingx_bundle_configuration_on_submit",
+        "before_cancel": "trackerx_live.hook.bundle_configuration.cuttingx_bundle_configuration_before_cancel",
+        "on_cancel": "trackerx_live.hook.bundle_configuration.cuttingx_bundle_configuration_before_on_cancel",
+        "before_delete": "trackerx_live.hook.bundle_configuration.cuttingx_bundle_configuration_before_delete"
+    }
+}
 
 
 # Scheduled Tasks

@@ -1,0 +1,70 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "creation": "2025-07-28 19:40:34.672158",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "operation",
+  "component",
+  "next_operation",
+  "sequence_no"
+ ],
+ "fields": [
+  {
+   "allow_in_quick_entry": 1,
+   "columns": 3,
+   "fieldname": "operation",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Operation",
+   "options": "Operation",
+   "reqd": 1
+  },
+  {
+   "allow_in_quick_entry": 1,
+   "columns": 3,
+   "fieldname": "component",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "label": "Component",
+   "reqd": 1
+  },
+  {
+   "allow_in_quick_entry": 1,
+   "columns": 3,
+   "fieldname": "next_operation",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Next Operation",
+   "options": "Operation",
+   "reqd": 1
+  },
+  {
+   "allow_in_quick_entry": 1,
+   "columns": 1,
+   "default": "1",
+   "fieldname": "sequence_no",
+   "fieldtype": "Int",
+   "in_list_view": 1,
+   "label": "Sequence No",
+   "non_negative": 1,
+   "reqd": 1
+  }
+ ],
+ "grid_page_length": 50,
+ "index_web_pages_for_search": 1,
+ "istable": 1,
+ "links": [],
+ "modified": "2025-08-29 11:33:20.884373",
+ "modified_by": "Administrator",
+ "module": "TrackerX Live",
+ "name": "Operation Map",
+ "owner": "Administrator",
+ "permissions": [],
+ "row_format": "Dynamic",
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}

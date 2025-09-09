@@ -6,6 +6,13 @@ from frappe.model.document import Document
 
 class TrackingOrder(Document):
     def validate(self):
+
+        self.validate_bundle_configurations();
+
+        self.validate_tracking_components();
+    
+
+    def validate_bundle_configurations(self):
         """
         Validates the Tracking Order document before saving.
         Includes checks for Bundle Configuration:
@@ -43,6 +50,39 @@ class TrackingOrder(Document):
                     "The sum of (Units per Bundle * Number of Bundles) "
                     f"({total_bundled_quantity}) does not match the Tracking Order Quantity ({self.quantity})."
                 )
+
+    def validate_tracking_components(self):
+        # --- Validation: Tracking Components ---
+        component_names = set()
+        parent_components = set()
+        main_component = None
+
+        for row in self.tracking_components:
+            name = row.component_name.strip() if row.component_name else None
+            if not name:
+                frappe.throw(f"Component Name is required in row {row.idx} of Tracking Components.")
+            
+            # Track uniqueness
+            if name in component_names:
+                frappe.throw(f"Duplicate Component Name '{name}' found in Tracking Components at row {row.idx}.")
+            component_names.add(name)
+
+            # Track parent usage
+            if row.parent_component:
+                if row.parent_component == name:
+                    frappe.throw(f"Component '{name}' cannot be its own parent (row {row.idx}).")
+                parent_components.add(row.parent_component)
+
+            # Check for multiple main components
+            if row.is_main:
+                if main_component:
+                    frappe.throw(f"Multiple main components found: '{main_component}' and '{name}'. Only one is allowed.")
+                main_component = name
+
+        # Leaf validation: main component must not be a parent of any other
+        if main_component and main_component in parent_components:
+            frappe.throw(f"The main component '{main_component}' cannot be a parent to another component. It must be a leaf node.")
+
         
 
 

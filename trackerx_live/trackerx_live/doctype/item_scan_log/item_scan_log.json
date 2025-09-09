@@ -1,0 +1,136 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "creation": "2025-07-29 20:25:47.409523",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "production_item",
+  "operation",
+  "workstation",
+  "scanned_by",
+  "scan_time",
+  "logged_time",
+  "status",
+  "log_status",
+  "log_type",
+  "remarks",
+  "defect_list",
+  "production_item_type",
+  "dut"
+ ],
+ "fields": [
+  {
+   "fieldname": "production_item",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Production Item",
+   "options": "Production Item",
+   "reqd": 1
+  },
+  {
+   "fieldname": "operation",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Operation",
+   "options": "Operation",
+   "reqd": 1
+  },
+  {
+   "fieldname": "workstation",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Workstation",
+   "options": "Workstation",
+   "reqd": 1
+  },
+  {
+   "fieldname": "scanned_by",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Scanned By",
+   "options": "User",
+   "reqd": 1
+  },
+  {
+   "fieldname": "scan_time",
+   "fieldtype": "Datetime",
+   "label": "Scan Time",
+   "reqd": 1
+  },
+  {
+   "fieldname": "status",
+   "fieldtype": "Select",
+   "label": "Status",
+   "options": "\nPass\nFail\nRework\nRejected"
+  },
+  {
+   "fieldname": "remarks",
+   "fieldtype": "Data",
+   "label": "Remarks"
+  },
+  {
+   "fieldname": "defect_list",
+   "fieldtype": "Table",
+   "label": "Defect List",
+   "options": "Item Scan Log Defect"
+  },
+  {
+   "fieldname": "logged_time",
+   "fieldtype": "Datetime",
+   "label": "Logged Time"
+  },
+  {
+   "fieldname": "log_status",
+   "fieldtype": "Select",
+   "label": "Log Status",
+   "options": "Draft\nCompleted\nCancelled",
+   "reqd": 1
+  },
+  {
+   "fieldname": "log_type",
+   "fieldtype": "Select",
+   "label": "Log Type",
+   "options": "User Scanned\nSkip Adjusted",
+   "reqd": 1
+  },
+  {
+   "fieldname": "production_item_type",
+   "fieldtype": "Select",
+   "label": "Production Item Type",
+   "options": "Unit\nBundle"
+  },
+  {
+   "fieldname": "dut",
+   "fieldtype": "Select",
+   "label": "DUT",
+   "options": "ON\nOFF"
+  }
+ ],
+ "grid_page_length": 50,
+ "index_web_pages_for_search": 1,
+ "links": [],
+ "modified": "2025-09-05 12:15:49.534421",
+ "modified_by": "Administrator",
+ "module": "TrackerX Live",
+ "name": "Item Scan Log",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "row_format": "Dynamic",
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}
