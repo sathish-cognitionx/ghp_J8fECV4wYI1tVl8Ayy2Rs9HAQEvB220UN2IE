@@ -62,8 +62,8 @@ required_apps = ["erpnext"]
 
 # include js in doctype views
 # doctype_js = {"doctype" : "public/js/doctype.js"}
-doctype_js = {"Bundle Creation" : "public/js/bundle_creation.js"}
 # doctype_list_js = {"doctype" : "public/js/doctype_list.js"}
+doctype_js = {"Bundle Creation" : "public/js/bundle_creation.js"}
 # doctype_tree_js = {"doctype" : "public/js/doctype_tree.js"}
 # doctype_calendar_js = {"doctype" : "public/js/doctype_calendar.js"}
 
@@ -168,8 +168,7 @@ doc_events = {
         "on_submit": "trackerx_live.hook.bundle_configuration.cuttingx_bundle_configuration_on_submit",
         "before_cancel": "trackerx_live.hook.bundle_configuration.cuttingx_bundle_configuration_before_cancel",
         "on_cancel": "trackerx_live.hook.bundle_configuration.cuttingx_bundle_configuration_before_on_cancel",
-        "before_delete": "trackerx_live.hook.bundle_configuration.cuttingx_bundle_configuration_before_delete",
-        
+        "before_delete": "trackerx_live.hook.bundle_configuration.cuttingx_bundle_configuration_before_delete"
     }
 }
 

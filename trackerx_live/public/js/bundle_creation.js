@@ -1,4 +1,3 @@
-
 frappe.ui.form.on('Bundle Creation', {
     before_cancel: function(frm) {
         // Check if we need confirmation for cancellation

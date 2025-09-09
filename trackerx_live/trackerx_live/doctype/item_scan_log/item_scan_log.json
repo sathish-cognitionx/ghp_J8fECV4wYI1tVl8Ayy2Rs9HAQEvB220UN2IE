@@ -6,8 +6,9 @@
  "engine": "InnoDB",
  "field_order": [
   "production_item",
-  "operation",
   "workstation",
+  "operation",
+  "physical_cell",
   "scanned_by",
   "scan_time",
   "logged_time",
@@ -32,6 +33,7 @@
    "fieldname": "operation",
    "fieldtype": "Link",
    "in_list_view": 1,
+   "in_standard_filter": 1,
    "label": "Operation",
    "options": "Operation",
    "reqd": 1
@@ -40,6 +42,7 @@
    "fieldname": "workstation",
    "fieldtype": "Link",
    "in_list_view": 1,
+   "in_standard_filter": 1,
    "label": "Workstation",
    "options": "Workstation",
    "reqd": 1
@@ -105,12 +108,21 @@
    "fieldtype": "Select",
    "label": "DUT",
    "options": "ON\nOFF"
+  },
+  {
+   "fieldname": "physical_cell",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Physical Cell",
+   "options": "Physical Cell",
+   "reqd": 1
   }
  ],
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2025-09-05 12:15:49.534421",
+ "modified": "2025-09-09 17:49:49.652881",
  "modified_by": "Administrator",
  "module": "TrackerX Live",
  "name": "Item Scan Log",
