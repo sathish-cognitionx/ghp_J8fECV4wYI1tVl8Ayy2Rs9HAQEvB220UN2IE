@@ -1,17 +1,19 @@
 import frappe
 from frappe import _
+from trackerx_live.trackerx_live.utils.cell_operator_ws_util import get_cell_operator_by_ws
+import json
 
 @frappe.whitelist()
-def scan_item(tags, operation, workstation, remarks=None):
+def scan_item(tags, workstation, remarks=None):
     """
     Create Item Scan Log(s) for one or multiple tags.
     - tags can be a single tag_number (string) OR a list of tag_numbers (JSON/string).
+    - Only workstation is passed in; operation & physical cell are derived from workstation.
     """
     try:
         # If tags is string, convert to list
         if isinstance(tags, str):
             try:
-                import json
                 tags = json.loads(tags) if tags.strip().startswith("[") else [tags]
             except Exception:
                 tags = [tags]
@@ -20,6 +22,17 @@ def scan_item(tags, operation, workstation, remarks=None):
             return {"status": "error", "message": "Please provide at least one tag_number"}
 
         results = []
+
+        # --- Step 0: Fetch operation + physical cell from workstation ---
+        ws_info_list = get_cell_operator_by_ws(workstation)
+        if not ws_info_list:
+            return {
+                "status": "error",
+                "message": f"No operation/cell mapped for workstation {workstation}"
+            }
+        ws_info = ws_info_list[0]
+        operation = ws_info["operation_name"]
+        physical_cell = ws_info["cell_id"]
 
         for tag_number in tags:
             try:
@@ -30,7 +43,11 @@ def scan_item(tags, operation, workstation, remarks=None):
                     fields=["name"]
                 )
                 if not tag:
-                    results.append({"tag": tag_number, "status": "error", "message": f"No Tracking Tag found"})
+                    results.append({
+                        "tag": tag_number,
+                        "status": "error",
+                        "message": f"No Tracking Tag found"
+                    })
                     continue
 
                 tag_id = tag[0]["name"]
@@ -43,10 +60,18 @@ def scan_item(tags, operation, workstation, remarks=None):
                 )
 
                 if not tag_map:
-                    results.append({"tag": tag_number, "status": "error", "message": "Tag not linked to any Production Item"})
+                    results.append({
+                        "tag": tag_number,
+                        "status": "error",
+                        "message": "Tag not linked to any Production Item"
+                    })
                     continue
                 if not tag_map.is_active:
-                    results.append({"tag": tag_number, "status": "error", "message": "Tag is deactivated"})
+                    results.append({
+                        "tag": tag_number,
+                        "status": "error",
+                        "message": "Tag is deactivated"
+                    })
                     continue
 
                 # --- Step 2: Get Production Item ---
@@ -65,7 +90,13 @@ def scan_item(tags, operation, workstation, remarks=None):
                     fields=["name"]
                 )
                 for log in existing_logs:
-                    frappe.db.set_value("Item Scan Log", log["name"], "log_status", "Cancelled", update_modified=False)
+                    frappe.db.set_value(
+                        "Item Scan Log",
+                        log["name"],
+                        "log_status",
+                        "Cancelled",
+                        update_modified=False
+                    )
 
                 # --- Step 4: Create new scan log ---
                 scan_log_doc = frappe.get_doc({
@@ -73,6 +104,7 @@ def scan_item(tags, operation, workstation, remarks=None):
                     "production_item": production_item_name,
                     "operation": operation,
                     "workstation": workstation,
+                    "physical_cell": physical_cell,
                     "scanned_by": frappe.session.user,
                     "scan_time": frappe.utils.now_datetime(),
                     "logged_time": frappe.utils.now_datetime(),
@@ -97,7 +129,11 @@ def scan_item(tags, operation, workstation, remarks=None):
                 })
 
             except Exception as inner_e:
-                results.append({"tag": tag_number, "status": "error", "message": str(inner_e)})
+                results.append({
+                    "tag": tag_number,
+                    "status": "error",
+                    "message": str(inner_e)
+                })
 
         return {
             "status": "completed",

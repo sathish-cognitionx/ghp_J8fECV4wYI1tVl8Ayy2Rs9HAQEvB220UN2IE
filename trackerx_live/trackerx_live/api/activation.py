@@ -1,6 +1,7 @@
 import frappe
 from frappe import _
 import json
+from trackerx_live.trackerx_live.utils.cell_operator_ws_util import get_cell_operator_by_ws
 
 #------------------------------------------------
 # function for production_item_number autoname 
@@ -113,23 +114,19 @@ def create_production_item(tracking_order, component_name, tracking_tags,
         if not bundle_configuration:
             return {"status": "error", "message": _("Bundle configuration required")}
 
-        bundle_row = frappe.get_all(
-            "Tracking Order Bundle Configuration",
-            filters={
-                "parent": tracking_order,
-                "parenttype": "Tracking Order",
-                "parentfield": "component_bundle_configurations",
-                "name": bundle_configuration
-            },
-            fields=["bundle_quantity", "number_of_bundles", "size", "component", "production_type"]
-        )
+        tracking_order_doc = frappe.get_doc("Tracking Order", tracking_order)
+
+        bundle_row = None
+        for row in tracking_order_doc.component_bundle_configurations:
+            if str(row.name) == str(bundle_configuration):
+                bundle_row = row.as_dict()
+                break
+
         if not bundle_row:
             return {"status": "error", "message": _("Invalid bundle configuration")}
-        bundle_row = bundle_row[0]
 
         # ---------------------------
         # Validation 3 – Component check
-        tracking_order_doc = frappe.get_doc("Tracking Order", tracking_order)
         component_id = None
         for row in tracking_order_doc.tracking_components:
             if row.component_name == component_name:
@@ -140,7 +137,7 @@ def create_production_item(tracking_order, component_name, tracking_tags,
             return {"status": "error", "message": _("Component not found in order")}
 
         if bundle_row.component and bundle_row.component != component_id:
-            return {"status": "error", "message": _("Bundle not linked to component")}
+            return {"status": "error", "message": _("Bundle not linked to component ")}
 
         # ---------------------------
         # Validation 4 – Activation limit
@@ -163,11 +160,18 @@ def create_production_item(tracking_order, component_name, tracking_tags,
             return {"status": "error", "message": _("Size not defined")}
 
         # ---------------------------
-        # Validation 6 – Operation Map
-        current_operation, next_operation = None, None
+        # Validation 6 – Operation & Physical Cell from workstation
+        ws_info_list = get_cell_operator_by_ws(current_workstation)
+        if not ws_info_list:
+            return {"status": "error", "message": f"No operation/cell mapped for workstation {current_workstation}"}
+        ws_info = ws_info_list[0]
+        current_operation = ws_info["operation_name"]
+        physical_cell = ws_info["cell_id"]
+
+        # Derive next_operation from order operation map
+        next_operation = None
         if tracking_order_doc.operation_map:
             first_row = tracking_order_doc.operation_map[0].as_dict()
-            current_operation = first_row.get("operation")
             next_operation = first_row.get("next_operation")
 
         if not current_operation or not next_operation:
@@ -197,6 +201,7 @@ def create_production_item(tracking_order, component_name, tracking_tags,
                 "next_operation": next_operation,
                 "current_workstation": current_workstation,
                 "next_workstation": next_workstation,
+                "physical_cell": physical_cell,
                 "tracking_tag": tag_id,
                 "source": "Activation",
                 "tracking_status": "Active",
