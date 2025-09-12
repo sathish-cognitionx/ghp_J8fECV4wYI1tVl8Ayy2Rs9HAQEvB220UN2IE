@@ -1,15 +1,17 @@
 import frappe
 import json
 from frappe import _
+from trackerx_live.trackerx_live.utils.cell_operator_ws_util import get_cell_operator_by_ws
 
 @frappe.whitelist()
-def bulk_scan_tags(tag_numbers, remarks=None):
+def bulk_scan_tags(tag_numbers, workstation, remarks=None):
     """
     Bulk scan API:
-    - Input: list of tag_numbers (JSON string or Python list)
-    - For each tag, find its Production Item and current operation/workstation
-    - Create Item Scan Log (idempotent per production item + operation + workstation + user)
-    - Returns structured response for frontend
+    - Input: list of tag_numbers (JSON string or Python list), and workstation.
+    - Operation and physical cell are derived from workstation.
+    - For each tag, find its Production Item and create Item Scan Log 
+      (idempotent per production item + operation + workstation + user).
+    - Returns structured response for frontend.
     """
     try:
         # Convert tag_numbers if passed as string
@@ -21,6 +23,17 @@ def bulk_scan_tags(tag_numbers, remarks=None):
 
         if not isinstance(tag_numbers, list) or not tag_numbers:
             return {"status": "error", "message": _("tag_numbers must be a non-empty list")}
+
+        # --- Step 0: Get operation + physical cell from workstation ---
+        ws_info_list = get_cell_operator_by_ws(workstation)
+        if not ws_info_list:
+            return {
+                "status": "error",
+                "message": f"No operation/cell mapped for workstation {workstation}"
+            }
+        ws_info = ws_info_list[0]
+        operation = ws_info["operation_name"]
+        physical_cell = ws_info["cell_id"]
 
         scanned_by = frappe.session.user
         scan_time = frappe.utils.now_datetime()
@@ -56,23 +69,14 @@ def bulk_scan_tags(tag_numbers, remarks=None):
             if not tag_map:
                 errors.append({
                     "tag": tag_number,
-                    "reason": "Tag not linked "
+                    "reason": "Tag not linked"
                 })
                 continue
 
             production_item = tag_map.production_item
             prod_item_doc = frappe.get_doc("Production Item", production_item)
-            operation = prod_item_doc.current_operation
-            workstation = prod_item_doc.current_workstation
 
-            if not operation or not workstation:
-                errors.append({
-                    "tag": tag_number,
-                    "reason": f"Production Item {production_item} missing operation/workstation"
-                })
-                continue
-
-            # check if Already scanned
+            # check if Already scanned (same production item + op + ws + user)
             existing_log = frappe.db.exists(
                 "Item Scan Log",
                 {
@@ -96,6 +100,7 @@ def bulk_scan_tags(tag_numbers, remarks=None):
                 "production_item": production_item,
                 "operation": operation,
                 "workstation": workstation,
+                "physical_cell": physical_cell,
                 "scanned_by": scanned_by,
                 "scan_time": scan_time,
                 "status": status,
@@ -109,6 +114,7 @@ def bulk_scan_tags(tag_numbers, remarks=None):
                 "production_item": production_item,
                 "log_name": doc.name
             })
+
         if created_logs: 
             frappe.db.commit()
 
