@@ -21,7 +21,8 @@
   "source",
   "tracking_status",
   "unlinked_source",
-  "physical_cell"
+  "physical_cell",
+  "type"
  ],
  "fields": [
   {
@@ -141,12 +142,18 @@
    "fieldtype": "Link",
    "label": "Physical Cell",
    "options": "Physical Cell"
+  },
+  {
+   "fieldname": "type",
+   "fieldtype": "Select",
+   "label": "Type",
+   "options": "Unit\nComponent"
   }
  ],
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2025-09-09 23:21:32.536048",
+ "modified": "2025-09-12 11:10:00.111527",
  "modified_by": "Administrator",
  "module": "TrackerX Live",
  "name": "Production Item",
