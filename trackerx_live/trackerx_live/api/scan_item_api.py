@@ -81,7 +81,8 @@ def scan_item(tags, operation, workstation, remarks=None):
                     "remarks": remarks or ""
                 })
                 scan_log_doc.insert()
-
+                frappe.db.commit()  # Ensure it's saved in DB
+                
                 results.append({
                     "tag": tag_number,
                     "status": "success",
