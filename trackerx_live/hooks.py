@@ -20,6 +20,9 @@ fixtures = [
             ["doc_type", "in", ["Operation"]],
             ["module", "=", "TrackerX Live"]
         ]
+    },
+    {
+        "dt": "Live Screen"
     }
 ]
 
