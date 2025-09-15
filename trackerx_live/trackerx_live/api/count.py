@@ -50,7 +50,7 @@ def count_tags(tag_numbers):
             )
 
             if not scan_logs:
-                skipped.append({"tag": tag_number, "reason": "No Item Scan Logs found"})
+                skipped.append({"tag": tag_number, "reason": "Item Scan Log not found"})
                 continue
 
             # Update each scan log
@@ -68,7 +68,7 @@ def count_tags(tag_numbers):
 
         return {
             "status": "success" if updated_logs else "error",
-            "summary": {
+            "message": {
                 "total_tags": len(tag_numbers),
                 "updated_count": len(updated_logs),
                 "skipped_count": len(skipped),
