@@ -69,7 +69,7 @@ def update_activation_status(tracking_order, bundle_configuration,
 @frappe.whitelist()
 def create_production_item(tracking_order, component_name, tracking_tags,
                            device_id, bundle_configuration,
-                           current_workstation, next_workstation):
+                           current_workstation):
     try:
         # ---------------------------
         # Convert tracking_tags to list
@@ -200,7 +200,7 @@ def create_production_item(tracking_order, component_name, tracking_tags,
                 "current_operation": current_operation,
                 "next_operation": next_operation,
                 "current_workstation": current_workstation,
-                "next_workstation": next_workstation,
+                "next_workstation":current_workstation ,
                 "physical_cell": physical_cell,
                 "tracking_tag": tag_id,
                 "source": "Activation",
