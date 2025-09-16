@@ -25,7 +25,8 @@
   "components_section_break",
   "tracking_components",
   "section_break_op_map",
-  "operation_map"
+  "operation_map",
+  "company"
  ],
  "fields": [
   {
@@ -164,13 +165,20 @@
    "fieldtype": "Int",
    "label": "Rejected Qty",
    "non_negative": 1
+  },
+  {
+   "fieldname": "company",
+   "fieldtype": "Link",
+   "label": "Company",
+   "options": "Company",
+   "reqd": 1
   }
  ],
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
  "is_submittable": 1,
  "links": [],
- "modified": "2025-09-16 16:02:42.881641",
+ "modified": "2025-09-16 20:05:57.935765",
  "modified_by": "Administrator",
  "module": "TrackerX Live",
  "name": "Tracking Order",
