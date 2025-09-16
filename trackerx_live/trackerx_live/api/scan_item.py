@@ -5,11 +5,6 @@ import json
 
 @frappe.whitelist()
 def scan_item(tags, workstation, remarks=None):
-    """
-    Create Item Scan Log(s) for one or multiple tags.
-    - tags can be a single tag_number (string) OR a list of tag_numbers (JSON/string).
-    - Only workstation is passed in; operation & physical cell are derived from workstation.
-    """
     try:
         # If tags is string, convert to list
         if isinstance(tags, str):
@@ -23,7 +18,7 @@ def scan_item(tags, workstation, remarks=None):
 
         results = []
 
-        # --- Step 0: Fetch operation + physical cell from workstation ---
+        # Fetch operation + physical cell from workstation ---
         ws_info_list = get_cell_operator_by_ws(workstation)
         if not ws_info_list:
             return {
@@ -36,7 +31,7 @@ def scan_item(tags, workstation, remarks=None):
 
         for tag_number in tags:
             try:
-                # --- Step 1: Validate Tag ---
+                # --- Validate Tag ---
                 tag = frappe.get_all(
                     "Tracking Tag",
                     filters={"tag_number": tag_number},
@@ -74,11 +69,11 @@ def scan_item(tags, workstation, remarks=None):
                     })
                     continue
 
-                # --- Step 2: Get Production Item ---
+                # --- Get Production Item ---
                 production_item_name = tag_map.production_item
                 item = frappe.get_doc("Production Item", production_item_name)
 
-                # --- Step 3: Cancel existing logs for same op/ws ---
+                # --- Cancel existing logs for same op/ws ---
                 existing_logs = frappe.get_all(
                     "Item Scan Log",
                     filters={
@@ -98,7 +93,7 @@ def scan_item(tags, workstation, remarks=None):
                         update_modified=False
                     )
 
-                # --- Step 4: Create new scan log ---
+                # --- Create new scan log ---
                 scan_log_doc = frappe.get_doc({
                     "doctype": "Item Scan Log",
                     "production_item": production_item_name,
@@ -113,11 +108,9 @@ def scan_item(tags, workstation, remarks=None):
                     "remarks": remarks or ""
                 })
                 scan_log_doc.insert()
-                frappe.db.commit()  # Ensure it's saved in DB
+                
                 
                 results.append({
-                    "tag": tag_number,
-                    "status": "success",
                     "message": "Item Scanned",
                     "scan_log_id": scan_log_doc.name,
                     "production_item_number": item.production_item_number,
@@ -126,7 +119,7 @@ def scan_item(tags, workstation, remarks=None):
                     "component": item.component,
                     "size": item.size,
                     "quantity": item.quantity,
-                    "status": item.status,
+                    "physical_cell": item.physical_cell
                 })
 
             except Exception as inner_e:
