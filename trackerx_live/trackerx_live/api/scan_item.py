@@ -103,6 +103,7 @@ def scan_item(tags, workstation, remarks=None):
                     "scanned_by": frappe.session.user,
                     "scan_time": frappe.utils.now_datetime(),
                     "logged_time": frappe.utils.now_datetime(),
+                    "status":"Activated",
                     "log_status": "Draft",
                     "log_type": "User Scanned",
                     "remarks": remarks or ""

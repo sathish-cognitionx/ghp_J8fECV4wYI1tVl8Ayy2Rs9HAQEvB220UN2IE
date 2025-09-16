@@ -8,7 +8,7 @@ def get_tracking_orders_pending_activation():
     along with their components, reference order details, and item info.
     """
     try:
-        result = []
+        tracking_orders_list = []
 
         # Fetch Tracking Orders
         tracking_orders = frappe.get_all(
@@ -30,7 +30,7 @@ def get_tracking_orders_pending_activation():
                 fields=["name", "component_name"]
             )
 
-            # Fetch Item details with your custom fields
+            # Fetch Item details
             item_doc = frappe.db.get_value(
                 "Item",
                 order.item,
@@ -46,7 +46,11 @@ def get_tracking_orders_pending_activation():
                 as_dict=True
             ) if order.item else {}
 
-            item_details = {
+            tracking_orders_list.append({
+                "tracking_order": order.name,
+                "reference_order_type": order.reference_order_type,
+                "reference_order_number": order.reference_order_number,
+                "item": order.item,
                 "style": item_doc.get("custom_style_master") if item_doc else None,
                 "colour_name": item_doc.get("custom_colour_name") if item_doc else None,
                 "material_composition": item_doc.get("custom_material_composition") if item_doc else None,
@@ -54,22 +58,12 @@ def get_tracking_orders_pending_activation():
                 "gender": item_doc.get("custom_gender") if item_doc else None,
                 "season": item_doc.get("custom_season") if item_doc else None,
                 "supplier": item_doc.get("custom_preferred_supplier") if item_doc else None,
-            }
-
-            result.append({
-                "tracking_order": order.name,
-                "reference_order_type": order.reference_order_type,
-                "reference_order_number": order.reference_order_number,
-                "item": order.item,
-                "item_details": item_details,
                 "components": components
             })
 
         return {
-            "message": {
                 "status": "success",
-                "tracking_orders": result
-            }
+                "data": tracking_orders_list
         }
 
     except Exception as e:
