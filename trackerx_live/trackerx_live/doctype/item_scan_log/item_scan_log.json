@@ -65,7 +65,7 @@
    "fieldname": "status",
    "fieldtype": "Select",
    "label": "Status",
-   "options": "\nPass\nFail\nRework\nRejected\nCounted"
+   "options": "\nPass\nQC Rework\nQC Rejected\nQC Recut\nCounted\nActivated\nTag Switched\nUnlink Link"
   },
   {
    "fieldname": "remarks",
@@ -122,7 +122,7 @@
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2025-09-15 10:07:13.119468",
+ "modified": "2025-09-16 15:27:50.592186",
  "modified_by": "Administrator",
  "module": "TrackerX Live",
  "name": "Item Scan Log",
