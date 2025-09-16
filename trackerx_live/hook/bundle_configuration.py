@@ -36,6 +36,8 @@ def create_tracking_order_from_bundle_creation(doc, method=None):
         tracking_order.production_type = "Bundle"  # Since this is from Bundle Creation
         tracking_order.order_status = "Created"
         tracking_order.activation_status = "Ready"
+        current_company = frappe.defaults.get_user_default("company")
+        tracking_order.company = current_company
 
         
         # Calculate total quantity from Bundle Creation Items
