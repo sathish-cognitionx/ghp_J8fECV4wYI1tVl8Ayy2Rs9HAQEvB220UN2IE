@@ -7,3 +7,6 @@ from frappe.model.document import Document
 
 class LiveScreen(Document):
 	pass
+
+
+
