@@ -74,3 +74,37 @@ def get_tracking_orders_pending_activation():
                 "error": str(e)
             }
         }
+
+@frappe.whitelist()
+def get_operation_map_test_api(tracking_order_number, component=None, current_operation=None):
+
+
+    from trackerx_live.trackerx_live.utils.operation_map_util import OperationMapManager
+    operation_map_manager = OperationMapManager()
+    operation_map = operation_map_manager.get_operation_map(tracking_order_number)
+    next_opeation = operation_map.get_next_operation(current_operation=current_operation, component=component)
+    return next_opeation.operation
+    response = []
+
+    for node in oper_map.get_component_operations(component):
+        previous_operations = []
+        next_operations = []
+        for prev_node in node.previous_operations:
+            previous_operations.append({'op': prev_node.operation})
+        for next_node in node.next_operations:
+            next_operations.append({'op': next_node.operation})
+        response.append({
+            'opeation': node.operation,
+            'component': node.component,
+            'operation_type': str(node.operation_type.value),
+            'sequence_no': node.sequence_no,
+            'configs': node.configs,
+            'next_operations': next_operations,
+            'previous_operations': previous_operations,
+
+        })
+
+    
+
+    return response
+
