@@ -45,14 +45,18 @@ def activate_component_bundle_configuration(tracking_order, component_id):
             }).insert()
 
 
-
 # ------------------
 # Main API function
 @frappe.whitelist()
 def get_bundle_configuration_info(tracking_order, component_name):
     try:
         if not tracking_order or not component_name:
-            return {"status": "error", "message": "Both Tracking Order and component name are required"}
+            return {
+                "message": {
+                    "status": "error",
+                    "error": "Both Tracking Order and component name are required"
+                }
+            }
 
         tracking_order_doc = frappe.get_doc("Tracking Order", tracking_order)
 
@@ -65,26 +69,16 @@ def get_bundle_configuration_info(tracking_order, component_name):
 
         if not component_id:
             return {
-                "status": "error",
-                "message": f"No Component found with name {component_name} in Tracking Order {tracking_order}"
+                "message": {
+                    "status": "error",
+                    "error": "Component not found "
+                }
             }
 
-        # Fetch bundle configs inside Tracking Order for the component_name
+       
         bundle_configs = [
-            {
-                "name": row.name,
-                "bc_name": row.bc_name,
-                "size": row.size,
-                "bundle_quantity": row.bundle_quantity,
-                "number_of_bundles": row.number_of_bundles,
-                "production_type": row.production_type,
-                "component": row.component,
-            }
-            for row in tracking_order_doc.bundle_configurations
-            if row.component == component_id
+            row for row in tracking_order_doc.bundle_configurations if row.component == component_id
         ]
-
-        # If not found, create component_bundle_configurations
         if not bundle_configs:
             activate_component_bundle_configuration(tracking_order, component_id)
             tracking_order_doc.reload()
@@ -142,7 +136,6 @@ def get_bundle_configuration_info(tracking_order, component_name):
                 "size": bc.get("size"),
                 "bundle_quantity": bc.get("bundle_quantity"),
                 "number_of_bundles": bc.get("number_of_bundles"),
-                "production_type": bc.get("production_type"),
                 "component": bc.get("component"),
                 "parent_bundle_configuration": bc.get("parent_bundle_configuration"),
                 "source": bc.get("source"),
@@ -151,18 +144,25 @@ def get_bundle_configuration_info(tracking_order, component_name):
                 "pending_activation": pending_activation,
                 "completed_count": completed_count
             })
-        return {
-            "status": "success",
-            "component_name": component_name,
-            "component_id": component_id,
-            "tracking_order": tracking_order,
-            "bundle_configurations": bundle_info_list,
-            "total_activated_count": total_activated_count,
-            "total_pending_activation": total_pending_activation,
-            "total_completed_count": total_completed_count,
-            "total_number_of_bundles": total_number_of_bundles
+
+        return {      
+                "status": "success",
+                "component_name": component_name,
+                "component_id": component_id,
+                "tracking_order": tracking_order,
+                "production_type": tracking_order_doc.production_type,
+                "bundle_configurations": bundle_info_list,
+                "total_activated_count": total_activated_count,
+                "total_pending_activation": total_pending_activation,
+                "total_completed_count": total_completed_count,
+                "total_number_of_bundles": total_number_of_bundles    
         }
 
     except Exception as e:
         frappe.log_error(frappe.get_traceback(), "Get Bundle Configuration Info Error")
-        return {"status": "error", "message": str(e)}
+        return {
+            "message": {
+                "status": "error",
+                "error": str(e)
+            }
+        }
