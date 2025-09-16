@@ -1,10 +1,10 @@
 import frappe
 import json
 from frappe import _
+from trackerx_live.trackerx_live.utils.production_completion_util import check_and_complete_production_item
 
 @frappe.whitelist()
 def count_tags(tag_numbers):
- 
     try:
         # Convert tag_numbers if passed as JSON string
         if isinstance(tag_numbers, str):
@@ -33,20 +33,22 @@ def count_tags(tag_numbers):
             tag_id = tag[0].name
 
             # Get Production Item linked to tag
-            production_item = frappe.get_value(
+            production_item_name = frappe.get_value(
                 "Production Item",
                 {"tracking_tag": tag_id},
                 "name"
             )
-            if not production_item:
+            if not production_item_name:
                 errors.append({"tag": tag_number, "reason": "No Production Item linked"})
                 continue
+
+            production_item_doc = frappe.get_doc("Production Item", production_item_name)
 
             # Get all scan logs for this Production Item
             scan_logs = frappe.get_all(
                 "Item Scan Log",
-                filters={"production_item": production_item},
-                fields=["name", "status"]
+                filters={"production_item": production_item_name},
+                fields=["name", "status", "operation"]
             )
 
             if not scan_logs:
@@ -62,6 +64,9 @@ def count_tags(tag_numbers):
                     "tag": tag_number,
                     "log": doc.name
                 })
+
+                current_operation = log.get("operation")
+                check_and_complete_production_item(production_item_doc, current_operation)
 
         if updated_logs:
             frappe.db.commit()
