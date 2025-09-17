@@ -72,9 +72,13 @@ def count_tags(tag_numbers,ws_name, period="today"):
         if updated_logs:
             frappe.db.commit()
 
-        # Call counted_info for the workstation (use production_item_doc.current_workstation)
+        # Call counted_info for the workstation 
         counted_info_data = None   
         counted_info_data = get_counted_info(ws_name, period)
+
+        # Add total_count for today and current hour
+        today_info = get_counted_info(ws_name, "today")
+        current_hour_info = get_counted_info(ws_name, "current_hour")
 
         return {
             "status": "success" if updated_logs else "error",
@@ -83,7 +87,9 @@ def count_tags(tag_numbers,ws_name, period="today"):
                 "updated_count": len(updated_logs),
                 "skipped_count": len(skipped),
                 "error_count": len(errors),
-                "counted_info": counted_info_data  
+                "today_count": today_info.get("total_count", 0),
+                "current_hour_count": current_hour_info.get("total_count", 0),
+                "counted_info": counted_info_data
             },
             "updated_logs": updated_logs,
             "skipped": skipped,
