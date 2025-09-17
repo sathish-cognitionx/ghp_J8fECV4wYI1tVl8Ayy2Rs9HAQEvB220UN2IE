@@ -39,6 +39,7 @@ def create_tracking_order_from_bundle_creation(doc, method=None):
         current_company = frappe.defaults.get_user_default("company")
         tracking_order.company = current_company
 
+
         
         # Calculate total quantity from Bundle Creation Items
         total_quantity = 0
@@ -104,17 +105,21 @@ def create_tracking_order_from_bundle_creation(doc, method=None):
             
             tracking_order.tracking_components.append(component_row)
         
+        from trackerx_live.trackerx_live.utils.process_map_to_operation_map_util import generate_operation_map_from_item
         # Create basic operation map
-        operation_row = frappe.new_doc("Operation Map")
-        operation_row.operation = "Activation"
-        operation_row.component = "__Default__"
-        operation_row.next_operation = "Activation"
-        operation_row.sequence_no = 1
-        operation_row.parent = tracking_order.name
-        operation_row.parenttype = "Tracking Order"
-        operation_row.parentfield = "operation_map"
+        results = generate_operation_map_from_item(doc.fg_item)
+        for result in results:
+            operation_row = frappe.new_doc("Operation Map")
+            operation_row.operation = result.operation
+            operation_row.component = result.component
+            operation_row.next_operation = result.next_operation
+            operation_row.sequence_no = result.sequence_no
+            operation_row.configs = result.configs
+            operation_row.parent = tracking_order.name
+            operation_row.parenttype = "Tracking Order"
+            operation_row.parentfield = "operation_map"
         
-        tracking_order.operation_map.append(operation_row)
+            tracking_order.operation_map.append(operation_row)
         
         # Insert the document
         tracking_order.insert(ignore_permissions=True)
@@ -135,7 +140,7 @@ def create_tracking_order_from_bundle_creation(doc, method=None):
         
     except Exception as e:
         frappe.log_error(f"Error creating Tracking Order from Bundle Creation {doc.name}: {str(e)}")
-        frappe.throw(f"Failed to create Tracking Order: {str(e)}")
+        frappe.throw(f"Failed to submit Bundle Configuration: {str(e)}")
 
 
 def create_production_items(doc, tracking_order):

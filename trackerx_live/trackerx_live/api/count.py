@@ -2,9 +2,10 @@ import frappe
 import json
 from frappe import _
 from trackerx_live.trackerx_live.utils.production_completion_util import check_and_complete_production_item
+from trackerx_live.trackerx_live.api.counted_info import get_counted_info
 
 @frappe.whitelist()
-def count_tags(tag_numbers):
+def count_tags(tag_numbers,ws_name, period="today"):
     try:
         # Convert tag_numbers if passed as JSON string
         if isinstance(tag_numbers, str):
@@ -71,6 +72,10 @@ def count_tags(tag_numbers):
         if updated_logs:
             frappe.db.commit()
 
+        # Call counted_info for the workstation (use production_item_doc.current_workstation)
+        counted_info_data = None   
+        counted_info_data = get_counted_info(ws_name, period)
+
         return {
             "status": "success" if updated_logs else "error",
             "message": {
@@ -78,6 +83,7 @@ def count_tags(tag_numbers):
                 "updated_count": len(updated_logs),
                 "skipped_count": len(skipped),
                 "error_count": len(errors),
+                "counted_info": counted_info_data  
             },
             "updated_logs": updated_logs,
             "skipped": skipped,
