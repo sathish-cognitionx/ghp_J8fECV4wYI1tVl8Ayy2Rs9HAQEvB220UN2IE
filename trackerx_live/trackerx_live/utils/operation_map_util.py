@@ -657,7 +657,7 @@ class OperationMapManager:
             })
         result = self._create_operation_map(tracking_order_number, operation_data)
         if not result.is_valid:
-            raise Exception("Invalid Opeation map")
+            raise Exception("Invalid Operation map")
         
         return self._operation_maps.get(tracking_order_number)
         
