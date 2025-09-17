@@ -70,7 +70,7 @@ def update_activation_status(tracking_order, bundle_configuration,
 @frappe.whitelist()
 def create_production_item(tracking_order, component_name, tracking_tags,
                            device_id, bundle_configuration,
-                           current_workstation):
+                           current_workstation,tag_type="RIFD"):
     try:
         # ---------------------------
         # Convert tracking_tags to list
@@ -91,9 +91,11 @@ def create_production_item(tracking_order, component_name, tracking_tags,
                 new_tag = frappe.get_doc({
                     "doctype": "Tracking Tag",
                     "tag_number": tag_number,
+                    "tag_type":tag_type,
+                    "activation_time":frappe.utils.now_datetime(),
                     "status": "Active"  
                 })
-                new_tag.insert(ignore_permissions=True)
+                new_tag.insert()
                 tag_id = new_tag.name
             else:
                 tag_id = tag_doc[0].name
@@ -257,7 +259,7 @@ def create_production_item(tracking_order, component_name, tracking_tags,
         return {
             "status": "success",
             "message": _("Production items created"),
-            "Production Items": created_items,
+            "production_items": created_items,
             "bundle_info":bundle_info
         }
 
