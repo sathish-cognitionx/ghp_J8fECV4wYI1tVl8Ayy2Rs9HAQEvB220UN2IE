@@ -18,7 +18,8 @@ def get_tracking_orders_pending_activation():
                 "name",
                 "reference_order_type",
                 "reference_order_number",
-                "item"
+                "item",
+                "quantity"
             ]
         )
 
@@ -51,6 +52,7 @@ def get_tracking_orders_pending_activation():
                 "reference_order_type": order.reference_order_type,
                 "reference_order_number": order.reference_order_number,
                 "item": order.item,
+                "quantity":order.quantity,
                 "style": item_doc.get("custom_style_master") if item_doc else None,
                 "colour_name": item_doc.get("custom_colour_name") if item_doc else None,
                 "material_composition": item_doc.get("custom_material_composition") if item_doc else None,

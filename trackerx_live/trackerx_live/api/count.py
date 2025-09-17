@@ -1,12 +1,19 @@
 import frappe
 import json
 from frappe import _
+from frappe.utils import now_datetime
 from trackerx_live.trackerx_live.utils.production_completion_util import check_and_complete_production_item
 from trackerx_live.trackerx_live.api.counted_info import get_counted_info
 
 @frappe.whitelist()
-def count_tags(tag_numbers,ws_name, period="today"):
+def count_tags(tag_numbers, ws_name):
     try:
+        if not ws_name:
+            frappe.throw(
+                _("No mapping found for workstation: {0}").format(ws_name),
+                exc=frappe.ValidationError
+            )
+
         # Convert tag_numbers if passed as JSON string
         if isinstance(tag_numbers, str):
             try:
@@ -15,14 +22,13 @@ def count_tags(tag_numbers,ws_name, period="today"):
                 tag_numbers = [tag_numbers]
 
         if not isinstance(tag_numbers, list) or not tag_numbers:
-            return {"status": "error", "message": _("tag_numbers must be a non-empty list")}
+            frappe.throw(_("tag_numbers must be a non-empty list"), frappe.ValidationError)
 
-        updated_logs = []
-        skipped = []
+        created_logs = []
         errors = []
 
         for tag_number in tag_numbers:
-            # Get Tracking Tag
+            # --- Validate Tag ---
             tag = frappe.get_all(
                 "Tracking Tag",
                 filters={"tag_number": tag_number},
@@ -31,71 +37,79 @@ def count_tags(tag_numbers,ws_name, period="today"):
             if not tag:
                 errors.append({"tag": tag_number, "reason": "Tag not found"})
                 continue
-            tag_id = tag[0].name
 
-            # Get Production Item linked to tag
-            production_item_name = frappe.get_value(
-                "Production Item",
+            tag_id = tag[0]["name"]
+
+            tag_map = frappe.db.get_value(
+                "Production Item Tag Map",
                 {"tracking_tag": tag_id},
-                "name"
-            )
-            if not production_item_name:
-                errors.append({"tag": tag_number, "reason": "No Production Item linked"})
-                continue
-
-            production_item_doc = frappe.get_doc("Production Item", production_item_name)
-
-            # Get all scan logs for this Production Item
-            scan_logs = frappe.get_all(
-                "Item Scan Log",
-                filters={"production_item": production_item_name},
-                fields=["name", "status", "operation"]
+                ["name", "is_active", "production_item"],
+                as_dict=True
             )
 
-            if not scan_logs:
-                skipped.append({"tag": tag_number, "reason": "Item Scan Log not found"})
+            if not tag_map:
+                errors.append({"tag": tag_number, "reason": "Tag not linked"})
+                continue
+            if not tag_map.is_active:
+                errors.append({"tag": tag_number, "reason": "Tag is deactivated"})
                 continue
 
-            # Update each scan log
-            for log in scan_logs:
-                doc = frappe.get_doc("Item Scan Log", log["name"])
-                doc.status = "Counted"
-                doc.save(ignore_permissions=True)
-                updated_logs.append({
-                    "tag": tag_number,
-                    "log": doc.name
-                })
+            production_item_doc = frappe.get_doc("Production Item", tag_map.production_item)
 
-                current_operation = log.get("operation")
-                check_and_complete_production_item(production_item_doc, current_operation)
+            current_operation = production_item_doc.current_operation
+            current_workstation = production_item_doc.current_workstation
 
-        if updated_logs:
+            if not current_operation or not current_workstation:
+                errors.append({"tag": tag_number, "reason": "Missing operation/workstation"})
+                continue
+
+            # Create a new scan log with status Counted
+            new_log = frappe.get_doc({
+                "doctype": "Item Scan Log",
+                "production_item": production_item_doc.name,
+                "operation": current_operation,
+                "workstation": current_workstation,
+                "physical_cell": production_item_doc.physical_cell,
+                "scanned_by": frappe.session.user,
+                "scan_time": now_datetime(),
+                "logged_time": now_datetime(),
+                "status": "Counted",
+                "log_status": "Completed",
+                "log_type": "User Scanned",
+                "production_item_type": production_item_doc.type,
+            })
+            new_log.insert(ignore_permissions=True)
+
+            created_logs.append({
+                "tag": tag_number,
+                "log": new_log.name
+            })
+
+            # Check and complete production item
+            check_and_complete_production_item(production_item_doc, current_operation)
+
+        if created_logs:
             frappe.db.commit()
 
-        # Call counted_info for the workstation 
-        counted_info_data = None   
-        counted_info_data = get_counted_info(ws_name, period)
+        if not created_logs and errors:
+            frappe.throw(_("All tags failed validation"), exc=frappe.ValidationError)
 
-        # Add total_count for today and current hour
+        # Call counted_info for the workstation 
+        counted_info_data = get_counted_info(ws_name)
         today_info = get_counted_info(ws_name, "today")
         current_hour_info = get_counted_info(ws_name, "current_hour")
 
         return {
-            "status": "success" if updated_logs else "error",
-            "message": {
-                "total_tags": len(tag_numbers),
-                "updated_count": len(updated_logs),
-                "skipped_count": len(skipped),
-                "error_count": len(errors),
-                "today_count": today_info.get("total_count", 0),
-                "current_hour_count": current_hour_info.get("total_count", 0),
-                "counted_info": counted_info_data
-            },
-            "updated_logs": updated_logs,
-            "skipped": skipped,
-            "errors": errors
+            "status": "success",
+            "total_tags": len(tag_numbers),
+            "logged_tags": len(created_logs),
+            "error_tags": len(errors),
+            "today_count": today_info.get("total_count", 0),
+            "current_hour_count": current_hour_info.get("total_count", 0),
+            "counted_info": counted_info_data,
+            "logged_tags_info": created_logs,
+            "errors_info": errors
         }
 
-    except Exception as e:
-        frappe.log_error(frappe.get_traceback(), "Update Scan Logs by Tags API Error")
-        return {"status": "error", "message": str(e)}
+    except Exception:
+        frappe.throw(_("Update Scan Logs by Tags API failed"), exc=frappe.ValidationError)
