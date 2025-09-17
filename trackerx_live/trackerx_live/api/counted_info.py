@@ -47,12 +47,13 @@ def get_counted_info(ws_name, period="today"):
             as_dict=True
         )
 
-        # Overall totals (float)
         total_count = float(sum([row["total_count"] for row in logs]) if logs else 0)
         bundle_count = float(sum([row["bundle_count"] for row in logs]) if logs else 0)
 
-        # Collect component → { size, total_count }
+
+        tracking_order = None
         component_map = {}
+
         for row in logs:
             comp_id, size, tracking_order = frappe.db.get_value(
                 "Production Item", row["production_item"], ["component", "size", "tracking_order"]
@@ -69,42 +70,75 @@ def get_counted_info(ws_name, period="today"):
                 component_map[comp_name]["sizes"][size] = 0.0
             component_map[comp_name]["sizes"][size] += float(row["total_count"])
 
-        # Prepare components with size_data
-        components = []
-        for comp_name, data in component_map.items():
-            # Get the component ID (docname of Tracking Component)
-            comp_id = frappe.db.get_value("Tracking Component", {"component_name": comp_name}, "name")
+        # If no logs, try to fetch tracking_order directly from workstation mapping
+        if not tracking_order:
+            tracking_order = frappe.db.get_value(
+                "Production Item",
+                {"current_workstation": ws_name},
+                "tracking_order"
+            )
 
-            sizes_in_config = frappe.db.sql(
+        # Always fetch product info
+        item_code = style = colour_name = material_composition = None
+        if tracking_order:
+            item_code, style, colour_name, material_composition = frappe.db.get_value(
+                "Item",
+                frappe.db.get_value("Tracking Order", tracking_order, "item"),
+                ["item_code", "custom_style_master", "custom_colour_name", "custom_material_composition"]
+            )
+
+        # Always build components structure from Tracking Order
+        components = []
+        if tracking_order:
+            tracking_components = frappe.db.sql(
                 """
-                SELECT DISTINCT tbc.size
-                FROM `tabTracking Order Bundle Configuration` tbc
-                INNER JOIN `tabTracking Order` todr
-                    ON tbc.parent = todr.name
-                WHERE tbc.component = %s
-                AND todr.name = %s
+                SELECT tc.name, tc.component_name
+                FROM `tabTracking Component` tc
+                WHERE tc.parent = %s
                 """,
-                (comp_id, tracking_order),
+                (tracking_order,),
                 as_dict=True
             )
 
-            size_data = []
-            for s in sizes_in_config:
-                size_val = s["size"]
-                count_val = data["sizes"].get(size_val, 0.0)  # default 0 if not scanned
-                size_data.append({
-                    "size": size_val,
-                    "total_count": float(count_val)
+            for tc in tracking_components:
+                comp_id = tc["name"]
+                comp_name = tc["component_name"]
+
+                sizes_in_config = frappe.db.sql(
+                    """
+                    SELECT DISTINCT tbc.size
+                    FROM `tabTracking Order Bundle Configuration` tbc
+                    INNER JOIN `tabTracking Order` todr
+                        ON tbc.parent = todr.name
+                    WHERE tbc.component = %s
+                    AND todr.name = %s
+                    """,
+                    (comp_id, tracking_order),
+                    as_dict=True
+                )
+
+                size_data = []
+                for s in sizes_in_config:
+                    size_val = s["size"]
+                    count_val = 0.0
+                    if comp_name in component_map:
+                        count_val = component_map[comp_name]["sizes"].get(size_val, 0.0)
+                    size_data.append({
+                        "size": size_val,
+                        "total_count": float(count_val)
+                    })
+
+                comp_total = 0.0
+                if comp_name in component_map:
+                    comp_total = component_map[comp_name]["total_count"]
+
+                components.append({
+                    "component_name": comp_name,
+                    "total_count": float(comp_total),
+                    "size_data": size_data
                 })
 
-            components.append({
-                "component_name": comp_name,
-                "total_count": float(data["total_count"]),
-                "size_data": size_data
-            })
-
-
-        # Operation breakdown
+        # Operation breakdown (only if logs exist)
         operation_map = {}
         for row in logs:
             op = row["operation"]
@@ -131,15 +165,6 @@ def get_counted_info(ws_name, period="today"):
                     operation_map[op]["components"][comp_name]["sizes"][size] = 0.0
                 operation_map[op]["components"][comp_name]["sizes"][size] += float(row["total_count"])
 
-        # Get product info from Tracking Order → Item
-        item_code, style, colour_name, material_composition = frappe.db.get_value(
-            "Item",
-            frappe.db.get_value("Tracking Order", tracking_order, "item"),
-            ["item_code", "custom_style_master", "custom_colour_name", "custom_material_composition"]
-        )
-
-
-        # Build operations response
         operations_data = []
         for op, vals in operation_map.items():
             comp_list = []
@@ -158,8 +183,6 @@ def get_counted_info(ws_name, period="today"):
                 "material_composition": material_composition,
                 "components": comp_list
             })
-
-
 
         return {
             "total_count": total_count,
