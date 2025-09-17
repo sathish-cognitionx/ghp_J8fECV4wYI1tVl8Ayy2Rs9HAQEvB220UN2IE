@@ -2,6 +2,7 @@ import frappe
 from frappe import _
 import json
 from trackerx_live.trackerx_live.utils.cell_operator_ws_util import get_cell_operator_by_ws
+from trackerx_live.trackerx_live.api.bundle_configuration_info import get_bundle_configuration_info
 
 #------------------------------------------------
 # function for production_item_number autoname 
@@ -214,10 +215,14 @@ def create_production_item(tracking_order, component_name, tracking_tags,
         # Validation 7- Call function for Post-Activation Status Updates
         update_activation_status(tracking_order, bundle_configuration, activated_count, len(tag_ids))
 
+        bundle_info=get_bundle_configuration_info(tracking_order, component_name)
+
+
         return {
             "status": "success",
             "message": _("Production items created"),
-            "Production Items": created_items
+            "Production Items": created_items,
+            "bundle_info":bundle_info
         }
 
     except Exception as e:
