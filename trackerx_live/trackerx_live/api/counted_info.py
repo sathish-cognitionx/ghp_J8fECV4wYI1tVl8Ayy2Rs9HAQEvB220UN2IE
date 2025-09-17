@@ -47,9 +47,8 @@ def get_counted_info(ws_name, period="today"):
             as_dict=True
         )
 
-        total_count = float(sum([row["total_count"] for row in logs]) if logs else 0)
-        bundle_count = float(sum([row["bundle_count"] for row in logs]) if logs else 0)
-
+        total_count = int(sum([row["total_count"] for row in logs]) if logs else 0)
+        bundle_count = int(sum([row["bundle_count"] for row in logs]) if logs else 0)
 
         tracking_order = None
         component_map = {}
@@ -63,12 +62,12 @@ def get_counted_info(ws_name, period="today"):
                 continue
 
             if comp_name not in component_map:
-                component_map[comp_name] = {"total_count": 0.0, "sizes": {}}
+                component_map[comp_name] = {"total_count": 0, "sizes": {}}
 
-            component_map[comp_name]["total_count"] += float(row["total_count"])
+            component_map[comp_name]["total_count"] += int(row["total_count"])
             if size not in component_map[comp_name]["sizes"]:
-                component_map[comp_name]["sizes"][size] = 0.0
-            component_map[comp_name]["sizes"][size] += float(row["total_count"])
+                component_map[comp_name]["sizes"][size] = 0
+            component_map[comp_name]["sizes"][size] += int(row["total_count"])
 
         # If no logs, try to fetch tracking_order directly from workstation mapping
         if not tracking_order:
@@ -120,21 +119,21 @@ def get_counted_info(ws_name, period="today"):
                 size_data = []
                 for s in sizes_in_config:
                     size_val = s["size"]
-                    count_val = 0.0
+                    count_val = 0
                     if comp_name in component_map:
-                        count_val = component_map[comp_name]["sizes"].get(size_val, 0.0)
+                        count_val = component_map[comp_name]["sizes"].get(size_val, 0)
                     size_data.append({
                         "size": size_val,
-                        "total_count": float(count_val)
+                        "total_count": int(count_val)
                     })
 
-                comp_total = 0.0
+                comp_total = 0
                 if comp_name in component_map:
                     comp_total = component_map[comp_name]["total_count"]
 
                 components.append({
                     "component_name": comp_name,
-                    "total_count": float(comp_total),
+                    "total_count": int(comp_total),
                     "size_data": size_data
                 })
 
@@ -149,21 +148,21 @@ def get_counted_info(ws_name, period="today"):
 
             if op not in operation_map:
                 operation_map[op] = {
-                    "total_count": 0.0,
-                    "bundle_count": 0.0,
+                    "total_count": 0,
+                    "bundle_count": 0,
                     "components": {}
                 }
 
-            operation_map[op]["total_count"] += float(row["total_count"])
-            operation_map[op]["bundle_count"] += float(row["bundle_count"])
+            operation_map[op]["total_count"] += int(row["total_count"])
+            operation_map[op]["bundle_count"] += int(row["bundle_count"])
 
             if comp_name:
                 if comp_name not in operation_map[op]["components"]:
-                    operation_map[op]["components"][comp_name] = {"total_count": 0.0, "sizes": {}}
-                operation_map[op]["components"][comp_name]["total_count"] += float(row["total_count"])
+                    operation_map[op]["components"][comp_name] = {"total_count": 0, "sizes": {}}
+                operation_map[op]["components"][comp_name]["total_count"] += int(row["total_count"])
                 if size not in operation_map[op]["components"][comp_name]["sizes"]:
-                    operation_map[op]["components"][comp_name]["sizes"][size] = 0.0
-                operation_map[op]["components"][comp_name]["sizes"][size] += float(row["total_count"])
+                    operation_map[op]["components"][comp_name]["sizes"][size] = 0
+                operation_map[op]["components"][comp_name]["sizes"][size] += int(row["total_count"])
 
         operations_data = []
         for op, vals in operation_map.items():
@@ -171,12 +170,18 @@ def get_counted_info(ws_name, period="today"):
             for c, cdata in vals["components"].items():
                 comp_list.append({
                     "component_name": c,
-                    "total_count": float(cdata["total_count"])
+                    "total_count": int(cdata["total_count"])
                 })
+
+            production_type = None
+            if tracking_order:
+                production_type = frappe.db.get_value("Tracking Order", tracking_order, "production_type")
+
             operations_data.append({
                 "operation_name": op,
-                "bundle_count": float(vals["bundle_count"]),
-                "total_count": float(vals["total_count"]),
+                "production_type": production_type or "",
+                "bundle_count": int(vals["bundle_count"]),
+                "total_count": int(vals["total_count"]),
                 "product_code": item_code,
                 "style": style,
                 "colour_name": colour_name,
