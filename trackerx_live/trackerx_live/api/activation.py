@@ -85,10 +85,18 @@ def create_production_item(tracking_order, component_name, tracking_tags,
         tag_ids = []
         for tag_number in tracking_tags:
             tag_doc = frappe.get_all("Tracking Tag", filters={"tag_number": tag_number}, fields=["name"])
+            
             if not tag_doc:
-                return {"status": "error", "message": _(f"Tag {tag_number} not found")}
-
-            tag_id = tag_doc[0].name
+                # Tag does not exist – create a new one
+                new_tag = frappe.get_doc({
+                    "doctype": "Tracking Tag",
+                    "tag_number": tag_number,
+                    "status": "Active"  
+                })
+                new_tag.insert(ignore_permissions=True)
+                tag_id = new_tag.name
+            else:
+                tag_id = tag_doc[0].name
 
             # Check if already mapped in Tag Map
             existing_mapping = frappe.get_all(
@@ -188,6 +196,7 @@ def create_production_item(tracking_order, component_name, tracking_tags,
         for tag_id in tag_ids:
             production_item_number = get_next_production_item_number(tracking_order)
 
+            # Create Production Item
             doc = frappe.get_doc({
                 "doctype": "Production Item",
                 "production_item_number": production_item_number,
@@ -201,7 +210,7 @@ def create_production_item(tracking_order, component_name, tracking_tags,
                 "current_operation": current_operation,
                 "next_operation": next_operation,
                 "current_workstation": current_workstation,
-                "next_workstation":current_workstation ,
+                "next_workstation": current_workstation,
                 "physical_cell": physical_cell,
                 "tracking_tag": tag_id,
                 "source": "Activation",
@@ -210,6 +219,33 @@ def create_production_item(tracking_order, component_name, tracking_tags,
             })
             doc.insert()
             created_items.append(doc.name)
+
+            # Link to Production Item Tag Map
+            tag_map_doc = frappe.get_doc({
+                "doctype": "Production Item Tag Map",
+                "production_item": doc.name,
+                "tracking_tag": tag_id,
+                "linked_on":frappe.utils.now_datetime(),
+                "is_active": 1
+            })
+            tag_map_doc.insert()
+
+            # Create Item Scan Log
+            scan_log_doc = frappe.get_doc({
+                "doctype": "Item Scan Log",
+                "production_item": doc.name,
+                "workstation": current_workstation,
+                "operation": current_operation,
+                "physical_cell": physical_cell,
+                "scanned_by": frappe.session.user,
+                "scan_time": frappe.utils.now_datetime(),
+                "logged_time": frappe.utils.now_datetime(),
+                "status": "Activated",
+                "production_item_type": "Unit" if bundle_row.production_type=="Single Unit" else "Bundle"
+                
+            })
+            scan_log_doc.insert()
+
 
         # --------------------------------
         # Validation 7- Call function for Post-Activation Status Updates
