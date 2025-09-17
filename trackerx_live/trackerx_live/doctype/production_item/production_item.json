@@ -22,7 +22,8 @@
   "tracking_status",
   "unlinked_source",
   "physical_cell",
-  "type"
+  "type",
+  "last_scan_log"
  ],
  "fields": [
   {
@@ -148,12 +149,18 @@
    "fieldtype": "Select",
    "label": "Type",
    "options": "Unit\nComponent"
+  },
+  {
+   "fieldname": "last_scan_log",
+   "fieldtype": "Link",
+   "label": "Last Scan Log",
+   "options": "Item Scan Log"
   }
  ],
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2025-09-12 11:10:00.111527",
+ "modified": "2025-09-17 13:34:24.490593",
  "modified_by": "Administrator",
  "module": "TrackerX Live",
  "name": "Production Item",

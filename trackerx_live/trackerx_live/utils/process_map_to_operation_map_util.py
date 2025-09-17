@@ -12,19 +12,21 @@ def generate_operation_map_from_item(item):
             "Process Map",
             filters={
                 "select_fg": item,
-                "docstatus": DocStatus.submitted  # Filters for submitted documents
+                "docstatus": 1  # Filters for submitted documents
             },
+            order_by='modified desc'
             # You can add other parameters like 'fields', 'order_by', 'limit', etc.
             # For example, to get all fields: fields=["*"]
         )
 
         if not submitted_process_maps:
-            raise Exception("No approved process map(s) found")
-        
-        if submitted_process_maps.length > 1:
-            frappe.msgprint(f"Found more than 1 process map for {item}, Choosing the latest one for tracking")
+            raise Exception(f"No approved process map(s) found for {item}")
         
         process_map_name = submitted_process_maps[0].name
+
+        if len(submitted_process_maps) > 1:
+            frappe.msgprint(f"Found more than 1 process map for {item}, Choosing the latest Process Map {process_map_name}")
+        
         process_map_doc = frappe.get_doc("Process Map", process_map_name)
         
         # Parse nodes and edges JSON
@@ -70,7 +72,10 @@ def generate_operation_map_from_item(item):
                 
                 operation_map_entries.append(operation_entry)
         
-        return operation_map_entries
+        return {
+            "map_name": process_map_name, 
+            "operation_map_entries": operation_map_entries
+        }
         
     except Exception as e:
-        frappe.throw(f"Error converting Process Map to Operation Map: {str(e)}")
+        raise e

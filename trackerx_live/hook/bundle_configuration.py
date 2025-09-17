@@ -107,25 +107,36 @@ def create_tracking_order_from_bundle_creation(doc, method=None):
         
         from trackerx_live.trackerx_live.utils.process_map_to_operation_map_util import generate_operation_map_from_item
         # Create basic operation map
-        results = generate_operation_map_from_item(doc.fg_item)
-        for result in results:
+        result = generate_operation_map_from_item(doc.fg_item)
+        for entry in result["operation_map_entries"]:
             operation_row = frappe.new_doc("Operation Map")
-            operation_row.operation = result.operation
-            operation_row.component = result.component
-            operation_row.next_operation = result.next_operation
-            operation_row.sequence_no = result.sequence_no
-            operation_row.configs = result.configs
+            operation_row.operation = entry["operation"]
+            operation_row.component = entry["component"]
+            operation_row.next_operation = entry["next_operation"]
+            operation_row.sequence_no = entry["sequence_no"]
+            operation_row.configs = entry["configs"]
             operation_row.parent = tracking_order.name
             operation_row.parenttype = "Tracking Order"
             operation_row.parentfield = "operation_map"
         
             tracking_order.operation_map.append(operation_row)
+
         
         # Insert the document
         tracking_order.insert(ignore_permissions=True)
         
         # Submit the Tracking Order
         tracking_order.submit()
+
+        try:
+            from trackerx_live.trackerx_live.utils.operation_map_util import OperationMapManager
+            operation_map_manager = OperationMapManager()
+            operation_map = operation_map_manager.get_operation_map(tracking_order.name)
+            validation_result = operation_map.get_validation_result
+        except Exception as e:
+            if "Invalid Operation map" == str(e):
+                frappe.throw(f"Invalid process map {result["map_name"]} for Item {doc.fg_item}")
+    
 
         is_auto_activation_required = doc.tracking_tech in ('Barcode', 'QR Code')
 
@@ -139,6 +150,7 @@ def create_tracking_order_from_bundle_creation(doc, method=None):
         frappe.logger().info(f"Auto-created Tracking Order {tracking_order.name} from Bundle Creation {doc.name}")
         
     except Exception as e:
+        
         frappe.log_error(f"Error creating Tracking Order from Bundle Creation {doc.name}: {str(e)}")
         frappe.throw(f"Failed to submit Bundle Configuration: {str(e)}")
 
