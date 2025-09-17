@@ -29,6 +29,8 @@ def scan_item(tags, workstation, remarks=None):
         operation = ws_info["operation_name"]
         physical_cell = ws_info["cell_id"]
 
+        
+
         for tag_number in tags:
             try:
                 # --- Validate Tag ---
@@ -71,7 +73,37 @@ def scan_item(tags, workstation, remarks=None):
 
                 # --- Get Production Item ---
                 production_item_name = tag_map.production_item
-                item = frappe.get_doc("Production Item", production_item_name)
+
+                production_item_doc = frappe.get_doc("Production Item", production_item_name)
+
+                production_item_bc_doc = frappe.get_doc("Tracking Order Bundle Configuration", production_item_doc.bundle_configuration)
+
+                operation_doc = frappe.get_doc("Operation", operation)
+
+                operation_group_doc = frappe.get_doc("Operation Group", operation_doc.custom_operation_group)
+
+                tracking_order_doc = frappe.get_doc("Tracking Order", production_item_doc.tracking_order)
+
+                fg_item_doc = frappe.get_doc("Item", tracking_order_doc.item)
+
+                style_master_doc = frappe.get_doc("Style Master", fg_item_doc.custom_style_master)
+
+                physical_cell_doc = frappe.get_doc("Physical Cell", physical_cell)
+
+                from trackerx_live.trackerx_live.utils.operation_map_util import OperationMapManager
+                operation_map_manager = OperationMapManager()
+                operation_map = operation_map_manager.get_operation_map(tracking_order_number=tracking_order_doc.name)
+                prev_operations = operation_map.get_all_previous_operations(current_operation=operation, component=production_item_doc.component,sequence_no=1)
+
+                last_scan_log_doc = frappe.get_doc("Item Scan Log", production_item_doc.last_scan_log) if production_item_doc.last_scan_log else None
+
+                is_defective_last = last_scan_log_doc.status in ('QC Rework', 'QC Reject', 'QC Recut') if last_scan_log_doc else False
+                is_rework_last = last_scan_log_doc.status in ('QC Rework') if last_scan_log_doc else False
+
+                if is_defective_last and not is_rework_last:
+                    frappe.throw(
+                        f"This Unit/Bundle is rejected by QC at {last_scan_log_doc.current_operation}"
+                    )
 
                 # --- Cancel existing logs for same op/ws ---
                 existing_logs = frappe.get_all(
@@ -103,7 +135,7 @@ def scan_item(tags, workstation, remarks=None):
                     "scanned_by": frappe.session.user,
                     "scan_time": frappe.utils.now_datetime(),
                     "logged_time": frappe.utils.now_datetime(),
-                    "status":"Activated",
+                    "status": None,
                     "log_status": "Draft",
                     "log_type": "User Scanned",
                     "remarks": remarks or ""
@@ -114,13 +146,35 @@ def scan_item(tags, workstation, remarks=None):
                 results.append({
                     "message": "Item Scanned",
                     "scan_log_id": scan_log_doc.name,
-                    "production_item_number": item.production_item_number,
-                    "tracking_order": item.tracking_order,
-                    "bundle_configuration": item.bundle_configuration,
-                    "component": item.component,
-                    "size": item.size,
-                    "quantity": item.quantity,
-                    "physical_cell": item.physical_cell
+                    "production_item_number": production_item_doc.production_item_number,
+                    "tracking_order": production_item_doc.tracking_order,
+                    "bundle_configuration": production_item_doc.bundle_configuration,
+                    "component": production_item_doc.component,
+                    "size": production_item_doc.size,
+                    "quantity": production_item_doc.quantity,
+                    "physical_cell": production_item_doc.physical_cell,
+                    "production_type": production_item_bc_doc.production_type,
+                    "dut": is_dut_on(production_item_doc.type),
+                    "type": production_item_doc.type,
+                    "operation": operation,
+                    "operation_name": operation,
+                    "operation_group": operation_group_doc.name if operation_group_doc else None,
+                    "operation_group_name": operation_group_doc.group_name if operation_group_doc else None,
+                    "operation_type": operation_doc.custom_operation_type if operation_doc else None,
+                    "workstation": workstation,
+                    "workstation_name": workstation,
+                    "color": fg_item_doc.custom_colour_name,
+                    "style": style_master_doc.style_name,
+                    "season": fg_item_doc.custom_season,
+                    "material": fg_item_doc.custom_material_composition,
+                    "prev_operation_ids": ','.join(prev_operations.sort()),
+                    "prev_and_current_operation_ids": ','.join(prev_operations.append(operation).sort()),
+                    "smv_in_secs": operation_doc.total_operation_time * 60,
+                    "cell": physical_cell_doc.name,
+                    "cell_no": physical_cell_doc.cell_number,
+                    "cell_name": physical_cell_doc.cell_name,
+                    "is_rework_scan": is_rework_last,
+                    "prev_logged_defects": ""
                 })
 
             except Exception as inner_e:
@@ -132,10 +186,15 @@ def scan_item(tags, workstation, remarks=None):
 
         return {
             "status": "completed",
+            "code": 1200,
             "total_tags": len(tags),
-            "results": results
+            "data": results
         }
 
     except Exception as e:
         frappe.log_error(frappe.get_traceback(), "Scan Item API Error")
         return {"status": "error", "message": str(e)}
+
+
+def is_dut_on(type):
+    return frappe.db.get_single_value("TrackerX Live Settings", "component_defective_unit_tagging") if type == "Component" else frappe.db.get_single_value("TrackerX Live Settings", "progressive_defective_unit_tagging") 

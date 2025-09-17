@@ -422,6 +422,42 @@ class OperationMapData:
             return prev_operations[0]
         return None
     
+    def get_all_previous_operations(self, current_operation: str, component: str, 
+                        sequence_no: int = 1) -> List[str]:
+        """
+        Recursively get all previous operations for a given operation.
+        Returns a list of operation names (strings) from all previous operations
+        in the dependency chain.
+        """
+        all_prev_operations = []
+        visited = set()  # To prevent infinite loops in case of cycles
+        
+        def _collect_previous_recursive(op_name: str, comp_name: str, seq_no: int):
+            # Create a unique identifier for this operation
+            op_id = (op_name, comp_name, seq_no)
+            
+            # Skip if already visited (prevents infinite loops)
+            if op_id in visited:
+                return
+            
+            visited.add(op_id)
+            
+            # Get immediate previous operations for current operation
+            prev_operations = self.get_previous_operations(op_name, comp_name, seq_no)
+            
+            # Process each previous operation
+            for prev_op in prev_operations:
+                # Add the operation name to our result list
+                all_prev_operations.append(prev_op.operation)
+                
+                # Recursively get previous operations for this operation
+                _collect_previous_recursive(prev_op.operation, prev_op.component, prev_op.sequence_no)
+        
+        # Start the recursive collection from the given operation
+        _collect_previous_recursive(current_operation, component, sequence_no)
+        
+        return all_prev_operations
+    
     def get_component_operations(self, component: str) -> List[OperationNode]:
         """Get all operations for a specific component"""
         if not self.is_valid():
