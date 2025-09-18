@@ -141,29 +141,28 @@ def get_counted_info(ws_name, period="today"):
         operation_map = {}
         for row in logs:
             op = row["operation"]
-            comp_id, size, total_count = frappe.db.get_value(
+            comp_id, size, total_count_row = frappe.db.get_value(
                 "Production Item", row["production_item"], ["component", "size", "quantity"]
             )
             comp_name = frappe.db.get_value("Tracking Component", comp_id, "component_name") if comp_id else None
 
             if op not in operation_map:
                 operation_map[op] = {
-                    "total_count": 0,
+                    "op_total_count": 0,
                     "bundle_count": 0,
                     "components": {}
                 }
 
-            operation_map[op]["total_count"] += int(row["total_count"])
+            operation_map[op]["op_total_count"] += int(row["total_count"])
             operation_map[op]["bundle_count"] += int(row["bundle_count"])
 
             if comp_name:
                 if comp_name not in operation_map[op]["components"]:
                     operation_map[op]["components"][comp_name] = {
-                        "total_count": 0,
-                        "sizes": {},
-                        "size_data": []
+                        "comp_total_count": 0,
+                        "sizes": {}
                     }
-                operation_map[op]["components"][comp_name]["total_count"] += int(row["total_count"])
+                operation_map[op]["components"][comp_name]["comp_total_count"] += int(row["total_count"])
                 if size not in operation_map[op]["components"][comp_name]["sizes"]:
                     operation_map[op]["components"][comp_name]["sizes"][size] = 0
                 operation_map[op]["components"][comp_name]["sizes"][size] += int(row["total_count"])
@@ -175,7 +174,7 @@ def get_counted_info(ws_name, period="today"):
                 size_data_list = [{"size": s, "total_count": int(count)} for s, count in cdata["sizes"].items()]
                 comp_list.append({
                     "component_name": c,
-                    "total_count": int(cdata["total_count"]),
+                    "total_count": int(cdata["comp_total_count"]),
                     "size_data": size_data_list
                 })
 
@@ -184,7 +183,7 @@ def get_counted_info(ws_name, period="today"):
                 "operation_name": op,
                 "production_type": production_type or "",
                 "bundle_count": int(vals["bundle_count"]),
-                "total_count": int(vals["total_count"]),
+                "total_count": int(vals["op_total_count"]),
                 "product_code": item_code,
                 "style": style,
                 "colour_name": colour_name,
