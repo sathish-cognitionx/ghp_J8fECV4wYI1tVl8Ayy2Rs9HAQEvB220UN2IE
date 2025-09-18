@@ -70,7 +70,7 @@ def update_activation_status(tracking_order, bundle_configuration,
 @frappe.whitelist()
 def create_production_item(tracking_order, component_name, tracking_tags,
                            device_id, bundle_configuration,
-                           current_workstation,tag_type="RIFD"):
+                           current_workstation,tag_type="RFID"):
     try:
         # ---------------------------
         # Convert tracking_tags to list
