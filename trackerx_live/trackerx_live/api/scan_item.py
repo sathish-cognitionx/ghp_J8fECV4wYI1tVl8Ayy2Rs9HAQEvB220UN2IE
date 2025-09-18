@@ -14,17 +14,21 @@ def scan_item(tags, workstation, remarks=None):
                 tags = [tags]
 
         if not isinstance(tags, list) or not tags:
-            return {"status": "error", "message": "Please provide at least one tag_number"}
+            frappe.throw(
+                f"Please provide at least one tag_number", 
+                frappe.ValidationError
+            )
 
         results = []
 
         # Fetch operation + physical cell from workstation ---
         ws_info_list = get_cell_operator_by_ws(workstation)
         if not ws_info_list:
-            return {
-                "status": "error",
-                "message": f"No operation/cell mapped for workstation {workstation}"
-            }
+            frappe.throw(
+                f"No operation/cell mapped for workstation {workstation}",
+                frappe.ValidationError
+            )
+            
         ws_info = ws_info_list[0]
         operation = ws_info["operation_name"]
         physical_cell = ws_info["cell_id"]
@@ -40,12 +44,10 @@ def scan_item(tags, workstation, remarks=None):
                     fields=["name"]
                 )
                 if not tag:
-                    results.append({
-                        "tag": tag_number,
-                        "status": "error",
-                        "message": f"No Tracking Tag found"
-                    })
-                    continue
+                    frappe.throw(
+                        f"Invalid tag! This tag is not activated, Please use activated tag. Contact your supervisor",
+                        frappe.ValidationError
+                    )
 
                 tag_id = tag[0]["name"]
 
@@ -56,20 +58,11 @@ def scan_item(tags, workstation, remarks=None):
                     as_dict=True
                 )
 
-                if not tag_map:
-                    results.append({
-                        "tag": tag_number,
-                        "status": "error",
-                        "message": "Tag not linked to any Production Item"
-                    })
-                    continue
-                if not tag_map.is_active:
-                    results.append({
-                        "tag": tag_number,
-                        "status": "error",
-                        "message": "Tag is deactivated"
-                    })
-                    continue
+                if not tag_map or tag_map.is_active:
+                    frappe.throw(
+                        f"Invalid Tag! Tag already unlinked, Please use activated tag. Contact your supervisor"
+                    )
+                
 
                 # --- Get Production Item ---
                 production_item_name = tag_map.production_item
@@ -167,8 +160,8 @@ def scan_item(tags, workstation, remarks=None):
                     "style": style_master_doc.style_name,
                     "season": fg_item_doc.custom_season,
                     "material": fg_item_doc.custom_material_composition,
-                    "prev_operation_ids": ','.join(prev_operations.sort()),
-                    "prev_and_current_operation_ids": ','.join(prev_operations.append(operation).sort()),
+                    "prev_operation_ids": prev_operations,
+                    "prev_and_current_operation_ids": prev_operations + [operation],
                     "smv_in_secs": operation_doc.total_operation_time * 60,
                     "cell": physical_cell_doc.name,
                     "cell_no": physical_cell_doc.cell_number,
@@ -178,11 +171,7 @@ def scan_item(tags, workstation, remarks=None):
                 })
 
             except Exception as inner_e:
-                results.append({
-                    "tag": tag_number,
-                    "status": "error",
-                    "message": str(inner_e)
-                })
+                raise inner_e
 
         return {
             "status": "completed",
@@ -191,9 +180,15 @@ def scan_item(tags, workstation, remarks=None):
             "data": results
         }
 
+    except frappe.ValidationError as e:
+        frappe.log_error(frappe.get_traceback(), "Scan Item API Error")
+        frappe.local.response.http_status_code = 400
+        return {"status": "error", "message": str(e)}
     except Exception as e:
         frappe.log_error(frappe.get_traceback(), "Scan Item API Error")
+        frappe.local.response.http_status_code = 500
         return {"status": "error", "message": str(e)}
+    
 
 
 def is_dut_on(type):
