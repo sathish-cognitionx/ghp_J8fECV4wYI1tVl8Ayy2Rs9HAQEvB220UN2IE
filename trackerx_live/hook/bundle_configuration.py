@@ -235,7 +235,7 @@ def create_production_items(doc, tracking_order):
             production_item_tag_map.insert(ignore_permissions=True)
 
             item_scan_log = frappe.new_doc("Item Scan Log")
-            item_scan_log.production_item = production_item
+            item_scan_log.production_item = production_item.name
             item_scan_log.workstation = None
             item_scan_log.operation = None
             item_scan_log.physical_cell = None
@@ -247,6 +247,10 @@ def create_production_items(doc, tracking_order):
             item_scan_log.log_type = 'Auto'
             item_scan_log.production_item_type = 'Bundle'
             item_scan_log.dut = None
+            item_scan_log.insert(ignore_permissions=True)
+
+            production_item.last_scan_log(item_scan_log.name)
+            production_item.save()
      
 
         tracking_order.activation_status = "Completed"
