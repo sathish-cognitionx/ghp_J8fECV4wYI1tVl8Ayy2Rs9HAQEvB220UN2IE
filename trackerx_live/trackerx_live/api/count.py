@@ -14,7 +14,6 @@ def count_tags(tag_numbers, ws_name):
                 exc=frappe.ValidationError
             )
 
-        # Convert tag_numbers if passed as JSON string
         if isinstance(tag_numbers, str):
             try:
                 tag_numbers = json.loads(tag_numbers)
@@ -26,18 +25,13 @@ def count_tags(tag_numbers, ws_name):
 
         created_logs = []
         errors = []
+        current_components_map = {}
 
         for tag_number in tag_numbers:
-            # --- Validate Tag ---
-            tag = frappe.get_all(
-                "Tracking Tag",
-                filters={"tag_number": tag_number},
-                fields=["name"]
-            )
+            tag = frappe.get_all("Tracking Tag", filters={"tag_number": tag_number}, fields=["name"])
             if not tag:
                 errors.append({"tag": tag_number, "reason": "Tag not found"})
                 continue
-
             tag_id = tag[0]["name"]
 
             tag_map = frappe.db.get_value(
@@ -55,7 +49,6 @@ def count_tags(tag_numbers, ws_name):
                 continue
 
             production_item_doc = frappe.get_doc("Production Item", tag_map.production_item)
-
             current_operation = production_item_doc.current_operation
             current_workstation = production_item_doc.current_workstation
 
@@ -63,7 +56,7 @@ def count_tags(tag_numbers, ws_name):
                 errors.append({"tag": tag_number, "reason": "Missing operation/workstation"})
                 continue
 
-            # Create a new scan log with status Counted
+            # Log scan
             new_log = frappe.get_doc({
                 "doctype": "Item Scan Log",
                 "production_item": production_item_doc.name,
@@ -78,35 +71,39 @@ def count_tags(tag_numbers, ws_name):
                 "log_type": "User Scanned",
                 "production_item_type": production_item_doc.type,
             })
-            new_log.insert(ignore_permissions=True)
+            new_log.insert()
+            created_logs.append({"tag": tag_number, "log": new_log.name})
 
-            created_logs.append({
-                "tag": tag_number,
-                "log": new_log.name
-            })
+            # Track component-wise totals
+            comp_name = frappe.db.get_value("Tracking Component", production_item_doc.component, "component_name")
+            if comp_name:
+                if comp_name not in current_components_map:
+                    current_components_map[comp_name] = 0
+                current_components_map[comp_name] += production_item_doc.quantity
 
             # Check and complete production item
             check_and_complete_production_item(production_item_doc, current_operation)
 
-        if created_logs:
-            frappe.db.commit()
+        frappe.db.commit() if created_logs else None
 
-        if not created_logs and errors:
-            frappe.throw(_("All tags failed validation"), exc=frappe.ValidationError)
-
-        # Call counted_info for the workstation 
-        counted_info_data = get_counted_info(ws_name)
+        # Fetch today's and current hour's info
         today_info = get_counted_info(ws_name, "today")
         current_hour_info = get_counted_info(ws_name, "current_hour")
+        counted_info_data = get_counted_info(ws_name)
+
+        # Compute current_bundle_count for this session
+        current_bundle_count = len(created_logs)
 
         return {
             "status": "success",
             "total_tags": len(tag_numbers),
             "logged_tags": len(created_logs),
             "error_tags": len(errors),
+            "current_bundle_count": current_bundle_count,
             "today_count": today_info.get("total_count", 0),
             "current_hour_count": current_hour_info.get("total_count", 0),
-            "counted_info": counted_info_data,
+            "component_wise_current_count": current_components_map,
+            "counted_info": counted_info_data,          
             "logged_tags_info": created_logs,
             "errors_info": errors
         }
