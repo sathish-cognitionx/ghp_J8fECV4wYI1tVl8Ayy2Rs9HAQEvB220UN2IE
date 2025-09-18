@@ -135,7 +135,7 @@ def create_tracking_order_from_bundle_creation(doc, method=None):
             validation_result = operation_map.get_validation_result
         except Exception as e:
             if "Invalid Operation map" == str(e):
-                frappe.throw(f"Invalid process map {result.get("map_name","")} for Item {doc.fg_item}")
+                frappe.throw(f"Invalid process map {result.get('map_name','')} for Item {doc.fg_item}")
     
 
         is_auto_activation_required = doc.tracking_tech in ('Barcode', 'QR Code')
@@ -151,7 +151,8 @@ def create_tracking_order_from_bundle_creation(doc, method=None):
         
     except Exception as e:
         
-        frappe.log_error(f"Error creating Tracking Order from Bundle Creation {doc.name}: {str(e)}")
+        frappe.log_error(f"Error creating Tracking Order from Bundle Creation {doc.name}:")
+        frappe.log_error(f"{str(e)}")
         frappe.throw(f"Failed to submit Bundle Configuration: {str(e)}")
 
 
