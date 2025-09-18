@@ -135,7 +135,7 @@ def create_tracking_order_from_bundle_creation(doc, method=None):
             validation_result = operation_map.get_validation_result
         except Exception as e:
             if "Invalid Operation map" == str(e):
-                frappe.throw(f"Invalid process map {result["map_name"]} for Item {doc.fg_item}")
+                frappe.throw(f"Invalid process map {result.get("map_name","")} for Item {doc.fg_item}")
     
 
         is_auto_activation_required = doc.tracking_tech in ('Barcode', 'QR Code')
