@@ -237,9 +237,9 @@ def create_production_items(doc, tracking_order):
 
             item_scan_log = frappe.new_doc("Item Scan Log")
             item_scan_log.production_item = production_item.name
-            item_scan_log.workstation = None
-            item_scan_log.operation = None
-            item_scan_log.physical_cell = None
+            item_scan_log.workstation = 'QR/Barcode Cut Bundle Activation'
+            item_scan_log.operation = 'QR/Barcode Cut Bundle Activation'
+            item_scan_log.physical_cell = 'QR/Barcode Cut Bundle Activation'
             item_scan_log.scanned_by = frappe.session.user
             item_scan_log.scan_time = frappe.utils.now_datetime()
             item_scan_log.logged_time = frappe.utils.now_datetime()
