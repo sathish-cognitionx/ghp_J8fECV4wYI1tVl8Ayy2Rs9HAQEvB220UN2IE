@@ -58,7 +58,7 @@ def scan_item(tags, workstation, remarks=None):
                     as_dict=True
                 )
 
-                if not tag_map or tag_map.is_active:
+                if not tag_map or not tag_map.is_active:
                     frappe.throw(
                         f"Invalid Tag! Tag already unlinked, Please use activated tag. Contact your supervisor"
                     )
