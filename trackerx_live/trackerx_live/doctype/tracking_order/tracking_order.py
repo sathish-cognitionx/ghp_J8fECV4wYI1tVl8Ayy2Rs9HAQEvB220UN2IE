@@ -7,9 +7,9 @@ from frappe.model.document import Document
 class TrackingOrder(Document):
     def validate(self):
 
-        self.validate_bundle_configurations();
+        self.validate_bundle_configurations()
 
-        self.validate_tracking_components();
+        self.validate_tracking_components()
     
 
     def validate_bundle_configurations(self):
