@@ -219,10 +219,15 @@ def create_production_items(doc, tracking_order):
             production_item.size = bundle.size
             production_item.quantity = bundle.unitsbundle
             production_item.status = 'Activated'
-            production_item.current_operation = 'Activation'
+            production_item.current_operation = 'QR/Barcode Cut Bundle Activation'
             production_item.next_operation = 'Activation'
-            production_item.current_workstation = 'Activation WS'
+            production_item.current_workstation = 'QR/Barcode Cut Bundle Activation'
             production_item.next_workstation = 'Activation WS'
+            production_item.source = 'Activation'
+            production_item.tracking_status = 'Active'
+            production_item.unlinked_source = None,
+            production_item.physical_cell = 'QR/Barcode Cut Bundle Activation'
+            production_item.type = "Component" if len(tracking_order.tracking_components) > 1 else "Unit"
 
             production_item.insert(ignore_permissions=True)
 

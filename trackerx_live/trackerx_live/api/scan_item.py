@@ -133,7 +133,7 @@ def scan_item(tags, workstation, remarks=None):
                     "log_type": "User Scanned",
                     "remarks": remarks or ""
                 })
-                scan_log_doc.insert()
+                scan_log_doc.insert(ignore_permissions=True)
                 
                 
                 results.append({
@@ -193,4 +193,5 @@ def scan_item(tags, workstation, remarks=None):
 
 
 def is_dut_on(type):
-    return frappe.db.get_single_value("TrackerX Live Settings", "component_defective_unit_tagging") if type == "Component" else frappe.db.get_single_value("TrackerX Live Settings", "progressive_defective_unit_tagging") 
+    is_on =  frappe.db.get_single_value("TrackerX Live Settings", "component_defective_unit_tagging") if type == "Component" else frappe.db.get_single_value("TrackerX Live Settings", "progressive_defective_unit_tagging") 
+    return "ON" if is_on else "OFF"

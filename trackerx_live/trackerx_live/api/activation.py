@@ -217,7 +217,8 @@ def create_production_item(tracking_order, component_name, tracking_tags,
                 "tracking_tag": tag_id,
                 "source": "Activation",
                 "tracking_status": "Active",
-                "unlinked_source": None
+                "unlinked_source": None,
+                "type": "Component" if len(tracking_order_doc.tracking_components) > 1 else "Unit"
             })
             doc.insert()
             created_items.append(doc.name)
