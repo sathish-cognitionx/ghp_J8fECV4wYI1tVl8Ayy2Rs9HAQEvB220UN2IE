@@ -172,7 +172,8 @@ def log_defective_units(scan_id=None, defective_units=None, device_id=None):
                     "next_workstation": parent_prod.get("next_workstation"),
                     "source": "Defective Unit Tagging",
                     "tracking_status": "Defective Unit Tagging",
-                    "unlinked_source": None
+                    "unlinked_source": None,
+                    "type": parent_prod.get("type")
                 }
                 new_prod = frappe.get_doc(new_prod_fields)
                 new_prod.insert(ignore_permissions=True)
