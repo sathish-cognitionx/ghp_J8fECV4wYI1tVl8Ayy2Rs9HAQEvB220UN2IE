@@ -1,6 +1,7 @@
 {
  "actions": [],
  "allow_rename": 1,
+ "autoname": "format:{defect_type}-{defect_code}",
  "creation": "2025-07-29 20:31:36.338896",
  "doctype": "DocType",
  "engine": "InnoDB",
@@ -21,7 +22,7 @@
   },
   {
    "fieldname": "defect_category",
-   "fieldtype": "Select",
+   "fieldtype": "Data",
    "label": "Defect Category"
   },
   {
@@ -44,10 +45,11 @@
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2025-08-11 12:32:42.685625",
+ "modified": "2025-09-19 16:17:41.690846",
  "modified_by": "Administrator",
  "module": "TrackerX Live",
  "name": "Tracking Order Defect Master",
+ "naming_rule": "Expression",
  "owner": "Administrator",
  "permissions": [
   {
@@ -66,5 +68,6 @@
  "row_format": "Dynamic",
  "sort_field": "modified",
  "sort_order": "DESC",
- "states": []
+ "states": [],
+ "title_field": "defect_description"
 }

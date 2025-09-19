@@ -135,7 +135,7 @@ def create_tracking_order_from_bundle_creation(doc, method=None):
             validation_result = operation_map.get_validation_result
         except Exception as e:
             if "Invalid Operation map" == str(e):
-                frappe.throw(f"Invalid process map {result["map_name"]} for Item {doc.fg_item}")
+                frappe.throw(f"Invalid process map {result.get('map_name','')} for Item {doc.fg_item}")
     
 
         is_auto_activation_required = doc.tracking_tech in ('Barcode', 'QR Code')
@@ -151,7 +151,8 @@ def create_tracking_order_from_bundle_creation(doc, method=None):
         
     except Exception as e:
         
-        frappe.log_error(f"Error creating Tracking Order from Bundle Creation {doc.name}: {str(e)}")
+        frappe.log_error(f"Error creating Tracking Order from Bundle Creation {doc.name}:")
+        frappe.log_error(f"{str(e)}")
         frappe.throw(f"Failed to submit Bundle Configuration: {str(e)}")
 
 
@@ -233,6 +234,25 @@ def create_production_items(doc, tracking_order):
             production_item_tag_map.is_active = True
             production_item_tag_map.activated_source = 'Cut Bundle'
             production_item_tag_map.insert(ignore_permissions=True)
+
+            item_scan_log = frappe.new_doc("Item Scan Log")
+            item_scan_log.production_item = production_item.name
+            item_scan_log.workstation = 'QR/Barcode Cut Bundle Activation'
+            item_scan_log.operation = 'QR/Barcode Cut Bundle Activation'
+            item_scan_log.physical_cell = 'QR/Barcode Cut Bundle Activation'
+            item_scan_log.scanned_by = frappe.session.user
+            item_scan_log.scan_time = frappe.utils.now_datetime()
+            item_scan_log.logged_time = frappe.utils.now_datetime()
+            item_scan_log.status = 'Activated'
+            item_scan_log.log_status = 'Completed'
+            item_scan_log.log_type = 'Auto'
+            item_scan_log.production_item_type = 'Bundle'
+            item_scan_log.dut = None
+            item_scan_log.insert(ignore_permissions=True)
+
+            production_item.last_scan_log(item_scan_log.name)
+            production_item.save()
+     
 
         tracking_order.activation_status = "Completed"
         tracking_order.save()

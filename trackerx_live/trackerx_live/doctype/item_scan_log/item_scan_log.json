@@ -94,7 +94,7 @@
    "fieldname": "log_type",
    "fieldtype": "Select",
    "label": "Log Type",
-   "options": "User Scanned\nSkip Adjusted",
+   "options": "User Scanned\nSkip Adjusted\nAuto",
    "reqd": 1
   },
   {
@@ -122,7 +122,7 @@
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2025-09-16 15:27:50.592186",
+ "modified": "2025-09-18 10:26:02.581595",
  "modified_by": "Administrator",
  "module": "TrackerX Live",
  "name": "Item Scan Log",
