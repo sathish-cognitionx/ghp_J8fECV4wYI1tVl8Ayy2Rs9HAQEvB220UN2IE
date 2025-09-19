@@ -1,17 +1,18 @@
 import frappe
 from datetime import timedelta
+from frappe import _
+from frappe.exceptions import ValidationError
 from trackerx_live.trackerx_live.utils.cell_operator_ws_util import get_cell_operator_by_ws
-
 
 @frappe.whitelist()
 def get_counted_info(ws_name, period="today"):
     try:
         if not ws_name:
-            return {"error": "Workstation name is required."}
+            frappe.throw(_("Workstation name is required."), ValidationError)
 
         ws_info = get_cell_operator_by_ws(ws_name)
         if not ws_info:
-            return {"error": f"No mapping found for workstation: {ws_name}"}
+            frappe.throw(_("No mapping found for workstation: {0}").format(ws_name), ValidationError)
 
         now = frappe.utils.now_datetime()
 
@@ -25,7 +26,7 @@ def get_counted_info(ws_name, period="today"):
             from_time = now.replace(hour=0, minute=0, second=0, microsecond=0)
             to_time = now
         else:
-            return {"error": f"Invalid period '{period}'. Use today, current_hour, or last_hour."}
+            frappe.throw(_("Invalid period '{0}'. Use today, current_hour, or last_hour.").format(period), ValidationError)
 
         # Fetch logs (status = Counted), join with Production Item
         logs = frappe.db.sql(
@@ -192,12 +193,19 @@ def get_counted_info(ws_name, period="today"):
             })
 
         return {
+            "status": "success",
             "total_count": total_count,
             "bundle_count": bundle_count,
             "components": components,
             "operations": operations_data
         }
 
+    except frappe.ValidationError as e:
+        frappe.log_error(frappe.get_traceback(), "get_counted_info() error")
+        frappe.local.response.http_status_code = 400
+        return {"status": "error", "message": str(e)}
+
     except Exception as e:
-        frappe.log_error(frappe.get_traceback(), "get_counted_info API Error")
-        return {"error": f"An error occurred while fetching counts: {str(e)}"}
+        frappe.log_error(frappe.get_traceback(), "get_counted_info() error")
+        frappe.local.response.http_status_code = 500
+        return {"status": "error", "message": str(e)}

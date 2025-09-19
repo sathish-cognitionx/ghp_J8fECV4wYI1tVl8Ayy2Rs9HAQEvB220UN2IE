@@ -12,11 +12,11 @@ def auto_unlink_tags(tag_numbers, ws_name=None):
                 tag_numbers = [tag_numbers]
 
         if not isinstance(tag_numbers, list) or not tag_numbers:
-            return {"status": "error", "message": "Tag numbers are required"}
+            frappe.throw(_("Tag numbers are required"), frappe.ValidationError)
 
         if not ws_name:
-            return {"status": "error", "message": "Workstation name is required"}
-
+            frappe.throw(_("Workstation name is required"), frappe.ValidationError)
+            
         updated_tags, skipped_tags, not_found_tags = [], [], []
         qcg_bulk_error_beans = []
         production_item_doc = None
@@ -122,13 +122,19 @@ def auto_unlink_tags(tag_numbers, ws_name=None):
                 "todayScanCountAtEol": len(tag_numbers)
             },
             "code": 0,
-            "message": "Unlink tag success",
+            "info": "Unlink tag success",
             "status": "success",
             "cause": None
         }
 
         return response
 
+    except frappe.ValidationError as e:
+        frappe.log_error(frappe.get_traceback(), "auto_unlink_tags() error")
+        frappe.local.response.http_status_code = 400
+        return {"status": "error", "message": str(e)}
+
     except Exception as e:
         frappe.log_error(frappe.get_traceback(), "auto_unlink_tags() error")
+        frappe.local.response.http_status_code = 500
         return {"status": "error", "message": str(e)}

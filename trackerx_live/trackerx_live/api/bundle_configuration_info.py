@@ -1,5 +1,6 @@
 import frappe
 from frappe import _
+from frappe.exceptions import ValidationError
 
 #----------------------------------------------------------
 # Function for activating component_bundle_configurations
@@ -51,12 +52,7 @@ def activate_component_bundle_configuration(tracking_order, component_id):
 def get_bundle_configuration_info(tracking_order, component_name):
     try:
         if not tracking_order or not component_name:
-            return {
-                "message": {
-                    "status": "error",
-                    "error": "Both Tracking Order and component name are required"
-                }
-            }
+            frappe.throw(_("Both Tracking Order and component name are required"), ValidationError)
 
         tracking_order_doc = frappe.get_doc("Tracking Order", tracking_order)
 
@@ -78,12 +74,7 @@ def get_bundle_configuration_info(tracking_order, component_name):
                 break
 
         if not component_id:
-            return {
-                "message": {
-                    "status": "error",
-                    "error": "Component not found"
-                }
-            }
+            frappe.throw(_("Component not found"), ValidationError)
 
         bundle_configs = [
             row for row in tracking_order_doc.bundle_configurations if row.component == component_id
@@ -164,11 +155,12 @@ def get_bundle_configuration_info(tracking_order, component_name):
                 "total_number_of_bundles": total_number_of_bundles            
         }
 
+    except frappe.ValidationError as e:
+        frappe.log_error(frappe.get_traceback(), "get_bundle_configuration_info() error")
+        frappe.local.response.http_status_code = 400
+        return {"status": "error", "message": str(e)}
+
     except Exception as e:
-        frappe.log_error(frappe.get_traceback(), "Get Bundle Configuration Info Error")
-        return {
-            "message": {
-                "status": "error",
-                "error": str(e)
-            }
-        }
+        frappe.log_error(frappe.get_traceback(), "get_bundle_configuration_info() error")
+        frappe.local.response.http_status_code = 500
+        return {"status": "error", "message": str(e)}
