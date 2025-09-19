@@ -143,6 +143,7 @@ def scan_item(tags, workstation, remarks=None):
                     "tracking_order": production_item_doc.tracking_order,
                     "bundle_configuration": production_item_doc.bundle_configuration,
                     "component": production_item_doc.component,
+                    "component_name": production_item_doc.component,
                     "size": production_item_doc.size,
                     "quantity": production_item_doc.quantity,
                     "physical_cell": production_item_doc.physical_cell,
