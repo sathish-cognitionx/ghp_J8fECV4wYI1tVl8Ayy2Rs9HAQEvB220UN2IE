@@ -4,7 +4,7 @@ import hashlib
 from frappe import _
 
 @frappe.whitelist()
-def get_defects_by_operations(operation_names, page=1, page_size=5, sort_by="defect", sort_order="asc", search=None):
+def get_defects_by_operations(operation_names, page=1, page_size=1000, sort_by="defect", sort_order="asc", search=None):
     try:
         # Normalize input (list, JSON string, or CSV string)
         if isinstance(operation_names, str):
@@ -17,16 +17,8 @@ def get_defects_by_operations(operation_names, page=1, page_size=5, sort_by="def
             return {"error": "No operation names provided."}
 
         # Create cache key (based on params)
-        cache_key_data = {
-            "operation_names": sorted(operation_names),
-            "page": int(page),
-            "page_size": int(page_size),
-            "sort_by": sort_by,
-            "sort_order": sort_order,
-            "search": search or ""
-        }
-        raw_key = json.dumps(cache_key_data, sort_keys=True)
-        cache_key = "defects_by_operation_map_" + hashlib.md5(raw_key.encode()).hexdigest()
+        cache_key = generate_cache_key(operation_names)
+        
 
         cache = frappe.cache()
         cached_result = cache.get_value(cache_key)
@@ -117,3 +109,29 @@ def get_defects_by_operations(operation_names, page=1, page_size=5, sort_by="def
     except Exception as e:
         frappe.log_error(frappe.get_traceback(), "get_defects_by_operations_main_error")
         return {"error": str(e)}
+    
+
+def generate_cache_key(operation_names):
+    cache_key_data = {
+        "operation_names": sorted(operation_names),
+        # "page": int(page),
+        # "page_size": int(page_size),
+        # "sort_by": sort_by,
+        # "sort_order": sort_order,
+        # "search": search or ""
+    }
+    raw_key = json.dumps(cache_key_data, sort_keys=True)
+    cache_key = "defects_by_operation_map_" + hashlib.md5(raw_key.encode()).hexdigest()
+
+
+@frappe.whitelist()
+def get_defects_by_operations_clear_cache(operation_names):
+    cache_key = generate_cache_key(operation_names=operation_names)
+    frappe.cache.delete_value(cache_key)
+
+@frappe.whitelist()
+def get_top_10_defects_by_operation(operation_name):
+    return {
+        "operation": operation_name,
+        "defects": []
+    }
