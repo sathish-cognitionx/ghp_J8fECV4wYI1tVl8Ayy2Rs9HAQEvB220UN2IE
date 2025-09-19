@@ -27,7 +27,10 @@ def log_defective_units(scan_id=None, defective_units=None, device_id=None):
 
     try:
         if not (scan_id and defective_units is not None):
-            return {"error": "Missing required parameters: scan_id, defective_units"}
+            frappe.throw(
+                f"Missing required parameters: scan_id, defective_units",
+                frappe.ValidationError
+            )
 
         if isinstance(defective_units, str):
             defective_units = json.loads(defective_units)
@@ -36,7 +39,11 @@ def log_defective_units(scan_id=None, defective_units=None, device_id=None):
         parent_scan = frappe.get_doc("Item Scan Log", scan_id)
         parent_prod_name = parent_scan.get("production_item")
         if not parent_prod_name:
-            return {"error": "Parent scan does not have linked Production Item"}
+            frappe.throw(
+                f"Parent scan does not have linked Production Item",
+                frappe.ValidationError
+            )
+            
 
         parent_prod = frappe.get_doc("Production Item", parent_prod_name)
         prod_type = (parent_prod.get("type") or "").strip().lower()
@@ -52,7 +59,7 @@ def log_defective_units(scan_id=None, defective_units=None, device_id=None):
         parent_scan.set("defect_list", [])
 
         # ====== Component Flow ======
-        if prod_type == "component":
+        if prod_type == "Component":
             for unit in defective_units:
                 unit_defect_type = (unit.get("defect_type") or "QC Rework").strip()
                 for d in unit.get("defects", []):
@@ -75,7 +82,7 @@ def log_defective_units(scan_id=None, defective_units=None, device_id=None):
             }
 
         # ====== Unit Flow ======
-        elif prod_type == "unit":
+        elif prod_type == "Unit":
             parent_scan.save(ignore_permissions=True)
             created = []
 
@@ -112,7 +119,10 @@ def log_defective_units(scan_id=None, defective_units=None, device_id=None):
 
                 tag_value = unit.get("tag") or unit.get("tag_number")
                 if not tag_value:
-                    return {"error": "Missing tag number for defective unit. User must provide tag."}
+                    frappe.throw(
+                        f"Missing tag number for defective unit. User must provide tag.",
+                        frappe.ValidationError
+                    )
 
                 tag_name = frappe.db.get_value("Tracking Tag", {"tag_number": tag_value}, "name")
 
@@ -135,7 +145,10 @@ def log_defective_units(scan_id=None, defective_units=None, device_id=None):
                         tag_name = frappe.db.get_value("Tracking Tag", {"tag_number": tag_value}, "name")
 
                 if not tag_name:
-                    return {"error": f"Failed to find or create Tracking Tag for value: {tag_value}"}
+                    frappe.throw(
+                        f"Failed to find or create Tracking Tag for value: {tag_value}",
+                        frappe.ValidationError
+                    )
 
                 child_prod_number = f"{parent_number}-{seq:03d}"
                 while frappe.db.exists("Production Item", {"production_item_number": child_prod_number}):
@@ -227,6 +240,11 @@ def log_defective_units(scan_id=None, defective_units=None, device_id=None):
         else:
             return {"error": f"Invalid Production Item.type: {prod_type}"}
 
+    except frappe.ValidationError as e:
+        frappe.log_error(frappe.get_traceback(), "log_defective_units() error")
+        frappe.local.response.http_status_code = 400
+        return {"status": "error", "message": str(e)} 
     except Exception as e:
-        frappe.log_error(frappe.get_traceback(), "log_defective_units_error")
-        return {"error": str(e)}
+        frappe.log_error(frappe.get_traceback(), "log_defective_units() error")
+        frappe.local.response.http_status_code = 500
+        return {"status": "error", "message": str(e)} 
