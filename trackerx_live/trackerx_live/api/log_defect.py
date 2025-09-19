@@ -248,3 +248,29 @@ def log_defective_units(scan_id=None, defective_units=None, device_id=None):
         frappe.log_error(frappe.get_traceback(), "log_defective_units() error")
         frappe.local.response.http_status_code = 500
         return {"status": "error", "message": str(e)} 
+    
+
+@frappe.whitelist()
+def unit_scan(scan_id=None, unit_tag=None, existing_defective_units=[]):
+    try:
+        if not scan_id or not unit_tag:
+            frappe.throw(
+                f"Oops something went wrong from our end, Please contact system admin, required info empty"
+            )
+
+        #Check if the unit tag already used for any, if used then it must be used as DUT tag from this bundle itself, otherwise throw error
+
+        #If its the new tag then it must not create more unit tags than the bundle quantity, use existing defective units (local) and existing db together to verify
+
+        #if all the above validations pass, then just return as valid possible item, we must return item number of this tag, if new possible item number for now 
+
+        return "Success"
+
+    except frappe.ValidationError as e:
+        frappe.log_error(frappe.get_traceback(), "unit_scan() error")
+        frappe.local.response.http_status_code = 400
+        return {"status": "error", "message": str(e)} 
+    except Exception as e:
+        frappe.log_error(frappe.get_traceback(), "unit_scan() error")
+        frappe.local.response.http_status_code = 500
+        return {"status": "error", "message": str(e)} 
