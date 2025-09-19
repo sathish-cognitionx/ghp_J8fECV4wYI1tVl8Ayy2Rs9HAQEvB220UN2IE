@@ -1,53 +1,68 @@
 import frappe
-
-def is_last_operation(production_item, current_operation):
-    """
-    Temporary hardcoded logic for last operation check.
-    Toggle True/False for testing.
-    Later we will replace with actual operation map check.
-    """
-    return False  
-
+from trackerx_live.trackerx_live.utils.operation_map_util import OperationMapManager
 
 def check_and_complete_production_item(production_item_doc, current_operation):
-
     try:
-       
         tracking_order = frappe.get_doc("Tracking Order", production_item_doc.tracking_order)
 
-        if not is_last_operation(production_item_doc, current_operation):
+        op_map = OperationMapManager().get_operation_map(tracking_order.name)
+
+        if not op_map.is_final_operation(current_operation, production_item_doc.component):
             return
 
         if production_item_doc.status != "Completed":
             production_item_doc.status = "Completed"
             production_item_doc.save()
 
-        completed_items = frappe.db.count(
+            if production_item_doc.tracking_tag:
+                pitm = frappe.get_all(
+                    "Production Item Tag Map",
+                    filters={
+                        "production_item": production_item_doc.name,
+                        "tracking_tag": production_item_doc.tracking_tag,
+                        "is_active": 1
+                    },
+                    fields=["name"]
+                )
+                for record in pitm:
+                    frappe.db.set_value(
+                        "Production Item Tag Map",
+                        record.name,
+                        {
+                            "is_active": 0,
+                            "deactivated_source": "Final Operation"
+                        }
+                    )
+
+                # Update production item tracking status
+                frappe.db.set_value(
+                    "Production Item",
+                    production_item_doc.name,
+                    {
+                        "tracking_status": "Unlinked",
+                        "unlinked_source": "Final Process"
+                    }
+                )
+
+        result = frappe.db.get_all(
             "Production Item",
             filters={
                 "tracking_order": production_item_doc.tracking_order,
                 "status": "Completed"
-            }
+            },
+            fields=["sum(quantity) as total"]
         )
+        completed_qty = result[0].get("total") or 0
 
-        total_bundles = 0
-        if tracking_order.component_bundle_configurations:
-            for row in tracking_order.component_bundle_configurations:
-                total_bundles += row.number_of_bundles or 0
-
-        if completed_items < total_bundles:
-            return
-
-        if tracking_order.order_status != "Completed":
+        if completed_qty >= tracking_order.quantity and tracking_order.order_status != "Completed":
             frappe.db.set_value(
                 "Tracking Order",
                 tracking_order.name,
                 "order_status",
                 "Completed"
             )
-            
 
-    except Exception as e:
+    except Exception:
         frappe.log_error(
             message=frappe.get_traceback(),
             title="Error in check_and_complete_production_item"

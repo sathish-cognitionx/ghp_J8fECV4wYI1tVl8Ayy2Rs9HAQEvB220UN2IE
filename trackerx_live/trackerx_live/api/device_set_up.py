@@ -26,9 +26,11 @@ def get_workstation_by_device_id(device_identifier=None):
     except frappe.ValidationError as e:
         frappe.log_error(frappe.get_traceback(), "get_workstation_by_device_id() error")
         frappe.local.response.http_status_code = 400
+        return {"status": "error", "message": str(e)} 
     except Exception as e:
         frappe.log_error(frappe.get_traceback(), "get_workstation_by_device_id() error")
-        return {"status": "error", "message": str(e)}
+        frappe.local.response.http_status_code = 500
+        return {"status": "error", "message": str(e)} 
 
 
 @frappe.whitelist()

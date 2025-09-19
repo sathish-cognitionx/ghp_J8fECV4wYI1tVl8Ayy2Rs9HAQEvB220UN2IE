@@ -1,49 +1,134 @@
 import frappe
+import json
 from frappe import _
 
 @frappe.whitelist()
-def auto_unlink_tags(tag_numbers):
-  
-    if not tag_numbers:
-        return {"status": "error", "message": "No tracking numbers provided"}
+def auto_unlink_tags(tag_numbers, ws_name=None):
+    try:
+        if isinstance(tag_numbers, str):
+            try:
+                tag_numbers = json.loads(tag_numbers)
+            except Exception:
+                tag_numbers = [tag_numbers]
 
-    updated_tags = []
-    skipped_tags = []
-    not_found_tags = []
+        if not isinstance(tag_numbers, list) or not tag_numbers:
+            return {"status": "error", "message": "Tag numbers are required"}
 
-    for tracking_tag_number in tag_numbers:
-        # Get Tag ID from Tracking Tag doctype
-        tag = frappe.get_all(
-            "Tracking Tag",
-            filters={"tag_number": tracking_tag_number},
-            fields=["name"]
-        )
+        if not ws_name:
+            return {"status": "error", "message": "Workstation name is required"}
 
-        if not tag:
-            not_found_tags.append(tracking_tag_number)
-            continue
+        updated_tags, skipped_tags, not_found_tags = [], [], []
+        qcg_bulk_error_beans = []
+        production_item_doc = None
 
-        tag_id = tag[0].name
+        for tracking_tag_number in tag_numbers:
+            tag = frappe.get_all(
+                "Tracking Tag",
+                filters={"tag_number": tracking_tag_number},
+                fields=["name"]
+            )
 
-        # Check Production Item Tag Map for active mapping
-        tag_map = frappe.get_all(
-            "Production Item Tag Map",
-            filters={"tracking_tag": tag_id, "is_active": 1},
-            fields=["name"]
-        )
+            if not tag:
+                not_found_tags.append(tracking_tag_number)
+                continue
 
-        if tag_map:
+            tag_id = tag[0].name
+            tag_map = frappe.get_all(
+                "Production Item Tag Map",
+                filters={"tracking_tag": tag_id, "is_active": 1},
+                fields=["name", "production_item"]
+            )
+
+            if not tag_map:
+                skipped_tags.append(tracking_tag_number)
+                continue
+
             tag_doc = frappe.get_doc("Production Item Tag Map", tag_map[0].name)
             tag_doc.is_active = 0
+            tag_doc.deactivated_source = "EOL UnLink"
             tag_doc.save()
-            frappe.db.commit()
-            updated_tags.append(tracking_tag_number)
-        else:
-            skipped_tags.append(tracking_tag_number)
 
-    return {
-        "status": "success",
-        "updated_tags": updated_tags,
-        "skipped_tags": skipped_tags,
-        "not_found_tags": not_found_tags
-    }
+            production_item_name = tag_map[0].get("production_item")
+            if production_item_name:
+                production_item_doc = frappe.get_doc("Production Item", production_item_name)
+                production_item_doc.tracking_status = "Unlinked"
+                production_item_doc.unlinked_source = "EOL"
+                production_item_doc.save()
+
+                # build qcg bean entry for this tag
+                qcg_bulk_error_beans.append({
+                    "rfid": tracking_tag_number,
+                    "bulkSkippedRfidBeen": {
+                        "process": production_item_doc.current_operation,
+                        "sequence": 4,  # static for now
+                        "ws": [ws_name],
+                        "scanStatus": "success",
+                        "processGroup": "",
+                        "cell": production_item_doc.physical_cell,
+                        "processId": production_item_doc.current_operation,
+                        "processGroupId": "",
+                        "cellNames": [production_item_doc.physical_cell] if production_item_doc.physical_cell else []
+                    },
+                    "bulkDefectiveRfidBeen": {
+                        "process": production_item_doc.current_operation,
+                        "sequence": 4,  # static for now
+                        "ws": [ws_name],
+                        "scanStatus": "success",
+                        "processGroup": "",
+                        "cell": production_item_doc.physical_cell,
+                        "processId": production_item_doc.current_operation,
+                        "processGroupId": "",
+                        "cellNames": [production_item_doc.physical_cell] if production_item_doc.physical_cell else []
+                    },
+                    "sizeAndWidth": ""
+                })
+
+            updated_tags.append(tracking_tag_number)
+
+        frappe.db.commit()
+
+        # tracking order + item info
+        factory_product_id, work_order_no, style, colour, material = "", "", "", "", ""
+        if production_item_doc:
+            if production_item_doc.tracking_order:
+                trk_order = frappe.get_doc("Tracking Order", production_item_doc.tracking_order)
+                factory_product_id = trk_order.item
+                work_order_no = trk_order.reference_order_type
+                # fetch extra item fields if they exist
+                if trk_order.item:
+                    item_doc = frappe.get_doc("Item", trk_order.item)
+                    style = getattr(item_doc, "custom_style_master", "")
+                    colour = getattr(item_doc, "custom_colour_name", "")
+                    material = getattr(item_doc, "custom_material_composition", "")
+
+        # final structured response
+        response = {
+            "data": {
+                "workOrderWiseSkippedProcessBeanList": [
+                    {
+                        "qcgBulkErrorBeans": qcg_bulk_error_beans,
+                        "totalRfidCount": len(tag_numbers),
+                        "skippedAndDefectiveRfidCount": len(skipped_tags),
+                        "defectiveRfidCount": len(not_found_tags),
+                        "factoryProductId": factory_product_id,
+                        "workOrderNo": work_order_no,
+                        "style": style,
+                        "colour": colour,
+                        "material": material,
+                        "poLineItem": None
+                    }
+                ],
+                "totalRfidSkippedCount": len(skipped_tags),
+                "todayScanCountAtEol": len(tag_numbers)
+            },
+            "code": 0,
+            "message": "Unlink tag success",
+            "status": "success",
+            "cause": None
+        }
+
+        return response
+
+    except Exception as e:
+        frappe.log_error(frappe.get_traceback(), "auto_unlink_tags() error")
+        return {"status": "error", "message": str(e)}

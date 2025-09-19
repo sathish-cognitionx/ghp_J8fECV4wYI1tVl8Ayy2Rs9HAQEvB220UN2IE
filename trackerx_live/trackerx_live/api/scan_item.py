@@ -133,7 +133,7 @@ def scan_item(tags, workstation, remarks=None):
                     "log_type": "User Scanned",
                     "remarks": remarks or ""
                 })
-                scan_log_doc.insert()
+                scan_log_doc.insert(ignore_permissions=True)
                 
                 
                 results.append({
@@ -143,6 +143,7 @@ def scan_item(tags, workstation, remarks=None):
                     "tracking_order": production_item_doc.tracking_order,
                     "bundle_configuration": production_item_doc.bundle_configuration,
                     "component": production_item_doc.component,
+                    "component_name": production_item_doc.component,
                     "size": production_item_doc.size,
                     "quantity": production_item_doc.quantity,
                     "physical_cell": production_item_doc.physical_cell,
@@ -192,4 +193,5 @@ def scan_item(tags, workstation, remarks=None):
 
 
 def is_dut_on(type):
-    return frappe.db.get_single_value("TrackerX Live Settings", "component_defective_unit_tagging") if type == "Component" else frappe.db.get_single_value("TrackerX Live Settings", "progressive_defective_unit_tagging") 
+    is_on =  frappe.db.get_single_value("TrackerX Live Settings", "component_defective_unit_tagging") if type == "Component" else frappe.db.get_single_value("TrackerX Live Settings", "progressive_defective_unit_tagging") 
+    return "ON" if is_on else "OFF"
