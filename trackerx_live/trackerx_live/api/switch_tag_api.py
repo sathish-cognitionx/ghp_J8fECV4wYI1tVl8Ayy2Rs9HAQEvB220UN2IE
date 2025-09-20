@@ -21,7 +21,6 @@ def switch_tag():
                 "message": "Fields required: current_tag_number, new_tag_number, new_tag_type"
             }
 
-        # ----------------------------
         # Get current tag doc
         current_tag = frappe.get_all(
             "Tracking Tag",
@@ -33,9 +32,9 @@ def switch_tag():
 
         current_tag_id = current_tag[0].name
 
-        # ----------------------------
+
         # Find active mapping for current tag
-      
+
         current_mapping = frappe.get_all(
             "Production Item Tag Map",
             filters={"tracking_tag": current_tag_id, "is_active": 1},
@@ -48,9 +47,7 @@ def switch_tag():
         production_item = current_mapping[0].production_item
         current_mapping_name = current_mapping[0].name
 
-        # ----------------------------
         # Get or Create new tag
-
         new_tag = frappe.get_all(
             "Tracking Tag",
             filters={"tag_number": new_tag_number, "tag_type": new_tag_type},
@@ -60,25 +57,20 @@ def switch_tag():
         if new_tag:
             new_tag_id = new_tag[0].name
         else:
-            # Create new Tracking Tag
             new_tag_doc = frappe.get_doc({
                 "doctype": "Tracking Tag",
                 "tag_number": new_tag_number,
                 "tag_type": new_tag_type,
                 "status": "Active",
-                "activation_time":frappe.utils.now_datetime()
+                "activation_time": frappe.utils.now_datetime()
             })
             new_tag_doc.insert()
             new_tag_id = new_tag_doc.name
 
-        # ----------------------------
         # Deactivate current mapping
-      
         frappe.db.set_value("Production Item Tag Map", current_mapping_name, "is_active", 0)
 
-        # ----------------------------
         #  Create new mapping
-      
         new_mapping = frappe.get_doc({
             "doctype": "Production Item Tag Map",
             "production_item": production_item,
@@ -98,6 +90,11 @@ def switch_tag():
             "new_mapping": new_mapping.name
         }
 
+    except frappe.ValidationError as e:
+        frappe.log_error(frappe.get_traceback(), "switch_tag() error")
+        frappe.local.response.http_status_code = 400
+        return {"status": "error", "message": str(e)}
     except Exception as e:
-        frappe.log_error(frappe.get_traceback(), "Switch Tag API Error")
+        frappe.log_error(frappe.get_traceback(), "switch_tag() error")
+        frappe.local.response.http_status_code = 500
         return {"status": "error", "message": str(e)}

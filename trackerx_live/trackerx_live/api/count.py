@@ -2,6 +2,7 @@ import frappe
 import json
 from frappe import _
 from frappe.utils import now_datetime
+from frappe.exceptions import ValidationError
 from trackerx_live.trackerx_live.utils.production_completion_util import check_and_complete_production_item
 from trackerx_live.trackerx_live.api.counted_info import get_counted_info
 
@@ -11,7 +12,7 @@ def count_tags(tag_numbers, ws_name):
         if not ws_name:
             frappe.throw(
                 _("No mapping found for workstation: {0}").format(ws_name),
-                exc=frappe.ValidationError
+                ValidationError
             )
 
         if isinstance(tag_numbers, str):
@@ -21,7 +22,7 @@ def count_tags(tag_numbers, ws_name):
                 tag_numbers = [tag_numbers]
 
         if not isinstance(tag_numbers, list) or not tag_numbers:
-            frappe.throw(_("tag_numbers must be a non-empty list"), frappe.ValidationError)
+            frappe.throw(_("tag_numbers must be a non-empty list"), ValidationError)
 
         created_logs = []
         errors = []
@@ -84,7 +85,8 @@ def count_tags(tag_numbers, ws_name):
             # Check and complete production item
             check_and_complete_production_item(production_item_doc, current_operation)
 
-        frappe.db.commit() if created_logs else None
+        if created_logs:
+            frappe.db.commit()
 
         # Fetch today's and current hour's info
         today_info = get_counted_info(ws_name, "today")
@@ -108,5 +110,12 @@ def count_tags(tag_numbers, ws_name):
             "errors_info": errors
         }
 
-    except Exception:
-        frappe.throw(_("Update Scan Logs by Tags API failed"), exc=frappe.ValidationError)
+    except frappe.ValidationError as e:
+        frappe.log_error(frappe.get_traceback(), "count_tags() error")
+        frappe.local.response.http_status_code = 400
+        return {"status": "error", "message": str(e)}
+
+    except Exception as e:
+        frappe.log_error(frappe.get_traceback(), "count_tags() error")
+        frappe.local.response.http_status_code = 500
+        return {"status": "error", "message": str(e)}
