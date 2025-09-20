@@ -69,13 +69,10 @@ def get_tracking_orders_pending_activation():
         }
 
     except Exception as e:
-        frappe.log_error(frappe.get_traceback(), "Get Tracking Orders With Components Error")
-        return {
-            "message": {
-                "status": "error",
-                "error": str(e)
-            }
-        }
+        frappe.log_error(frappe.get_traceback(), "get_tracking_orders_pending_activation() error")
+        frappe.local.response.http_status_code = 500
+        return {"status": "error", "message": str(e)}
+
 
 @frappe.whitelist()
 def get_operation_map_test_api(tracking_order_number, component=None, current_operation=None):

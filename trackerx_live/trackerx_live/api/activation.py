@@ -3,6 +3,7 @@ from frappe import _
 import json
 from trackerx_live.trackerx_live.utils.cell_operator_ws_util import get_cell_operator_by_ws
 from trackerx_live.trackerx_live.api.bundle_configuration_info import get_bundle_configuration_info
+from frappe.exceptions import ValidationError
 
 #------------------------------------------------
 # function for production_item_number autoname 
@@ -70,7 +71,7 @@ def update_activation_status(tracking_order, bundle_configuration,
 @frappe.whitelist()
 def create_production_item(tracking_order, component_name, tracking_tags,
                            device_id, bundle_configuration,
-                           current_workstation,tag_type="RFID"):
+                           current_workstation, tag_type="RFID"):
     try:
         # ---------------------------
         # Convert tracking_tags to list
@@ -78,7 +79,7 @@ def create_production_item(tracking_order, component_name, tracking_tags,
             tracking_tags = json.loads(tracking_tags)
 
         if not isinstance(tracking_tags, list) or not tracking_tags:
-            return {"status": "error", "message": _("Invalid tags input")}
+            frappe.throw(_("Invalid tags input"), ValidationError)
 
         # ---------------------------
         # Validation 1 – Handle Tags
@@ -91,8 +92,8 @@ def create_production_item(tracking_order, component_name, tracking_tags,
                 new_tag = frappe.get_doc({
                     "doctype": "Tracking Tag",
                     "tag_number": tag_number,
-                    "tag_type":tag_type,
-                    "activation_time":frappe.utils.now_datetime(),
+                    "tag_type": tag_type,
+                    "activation_time": frappe.utils.now_datetime(),
                     "status": "Active"  
                 })
                 new_tag.insert()
@@ -107,7 +108,7 @@ def create_production_item(tracking_order, component_name, tracking_tags,
                 fields=["production_item"]
             )
             if existing_mapping:
-                return {"status": "error", "message": _(f"Tag {tag_number} already in use")}
+                frappe.throw(_(f"Tag {tag_number} already in use"), ValidationError)
 
             # Check if already linked to another Production Item
             existing_pi = frappe.get_all(
@@ -116,14 +117,14 @@ def create_production_item(tracking_order, component_name, tracking_tags,
                 fields=["production_item_number"]
             )
             if existing_pi:
-                return {"status": "error", "message": _(f"Tag {tag_number} already linked")}
+                frappe.throw(_(f"Tag {tag_number} already linked"), ValidationError)
 
             tag_ids.append(tag_id)
 
         # ---------------------------
         # Validation 2 – Bundle Configuration (required always)
         if not bundle_configuration:
-            return {"status": "error", "message": _("Bundle configuration required")}
+            frappe.throw(_("Bundle configuration required"), ValidationError)
 
         tracking_order_doc = frappe.get_doc("Tracking Order", tracking_order)
 
@@ -134,7 +135,7 @@ def create_production_item(tracking_order, component_name, tracking_tags,
                 break
 
         if not bundle_row:
-            return {"status": "error", "message": _("Invalid bundle configuration")}
+            frappe.throw(_("Invalid bundle configuration"), ValidationError)
 
         # ---------------------------
         # Validation 3 – Component check
@@ -145,10 +146,10 @@ def create_production_item(tracking_order, component_name, tracking_tags,
                 break
 
         if not component_id:
-            return {"status": "error", "message": _("Component not found in order")}
+            frappe.throw(_("Component not found in order"), ValidationError)
 
         if bundle_row.component and bundle_row.component != component_id:
-            return {"status": "error", "message": _("Bundle not linked to component ")}
+            frappe.throw(_("Bundle not linked to component"), ValidationError)
 
         # ---------------------------
         # Validation 4 – Activation limit
@@ -157,7 +158,7 @@ def create_production_item(tracking_order, component_name, tracking_tags,
             {"tracking_order": tracking_order, "bundle_configuration": bundle_configuration}
         )
         if activated_count >= bundle_row.number_of_bundles:
-            return {"status": "error", "message": _("Bundle activation limit reached")}
+            frappe.throw(_("Bundle activation limit reached"), ValidationError)
 
         # ---------------------------
         # Validation 5 – Size handling
@@ -168,13 +169,14 @@ def create_production_item(tracking_order, component_name, tracking_tags,
             size = tracking_order_doc.single_unit_size
 
         if not size:
-            return {"status": "error", "message": _("Size not defined")}
+            frappe.throw(_("Size not defined"), ValidationError)
 
         # ---------------------------
         # Validation 6 – Operation & Physical Cell from workstation
         ws_info_list = get_cell_operator_by_ws(current_workstation)
         if not ws_info_list:
-            return {"status": "error", "message": f"No operation/cell mapped for workstation {current_workstation}"}
+            frappe.throw(_(f"No operation/cell mapped for workstation {current_workstation}"), ValidationError)
+
         ws_info = ws_info_list[0]
         current_operation = ws_info["operation_name"]
         physical_cell = ws_info["cell_id"]
@@ -186,7 +188,7 @@ def create_production_item(tracking_order, component_name, tracking_tags,
             next_operation = first_row.get("next_operation")
 
         if not current_operation or not next_operation:
-            return {"status": "error", "message": _("Operation map missing")}
+            frappe.throw(_("Operation map missing"), ValidationError)
 
         # ---------------------------
         # Status always "Activated"
@@ -249,9 +251,8 @@ def create_production_item(tracking_order, component_name, tracking_tags,
             })
             scan_log_doc.insert()
 
-
         # --------------------------------
-        # Validation 7- Call function for Post-Activation Status Updates
+        # Post-Activation Status Updates
         update_activation_status(tracking_order, bundle_configuration, activated_count, len(tag_ids))
 
         bundle_info=get_bundle_configuration_info(tracking_order, component_name)
@@ -264,6 +265,12 @@ def create_production_item(tracking_order, component_name, tracking_tags,
             "bundle_info":bundle_info
         }
 
+    except frappe.ValidationError as e:
+        frappe.log_error(frappe.get_traceback(), "create_production_item() error")
+        frappe.local.response.http_status_code = 400
+        return {"status": "error", "message": str(e)}
+
     except Exception as e:
-        frappe.log_error(frappe.get_traceback(), "Create Production Item API Error")
+        frappe.log_error(frappe.get_traceback(), "create_production_item() error")
+        frappe.local.response.http_status_code = 500
         return {"status": "error", "message": str(e)}
