@@ -46,7 +46,7 @@ def log_defective_units(scan_id=None, defective_units=None, device_id=None):
             
 
         parent_prod = frappe.get_doc("Production Item", parent_prod_name)
-        prod_type = (parent_prod.get("type") or "").strip().lower()
+        prod_type = (parent_prod.get("type") or "").strip()
 
         # Update parent scan log (status fixed for now)
         # Take defect_type from first unit, if available
