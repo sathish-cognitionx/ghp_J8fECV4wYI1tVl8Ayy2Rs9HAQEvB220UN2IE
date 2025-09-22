@@ -18,7 +18,8 @@
   "remarks",
   "defect_list",
   "production_item_type",
-  "dut"
+  "dut",
+  "device_id"
  ],
  "fields": [
   {
@@ -117,12 +118,17 @@
    "label": "Physical Cell",
    "options": "Physical Cell",
    "reqd": 1
+  },
+  {
+   "fieldname": "device_id",
+   "fieldtype": "Data",
+   "label": "Device Id"
   }
  ],
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2025-09-18 10:26:02.581595",
+ "modified": "2025-09-22 18:19:57.238665",
  "modified_by": "Administrator",
  "module": "TrackerX Live",
  "name": "Item Scan Log",
