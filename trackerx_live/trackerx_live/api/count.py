@@ -5,6 +5,8 @@ from frappe.utils import now_datetime
 from frappe.exceptions import ValidationError
 from trackerx_live.trackerx_live.utils.production_completion_util import check_and_complete_production_item
 from trackerx_live.trackerx_live.api.counted_info import get_counted_info
+from trackerx_live.trackerx_live.utils.cell_operator_ws_util import validate_workstation_for_supported_operation
+
 
 @frappe.whitelist()
 def count_tags(tag_numbers, ws_name):
@@ -56,6 +58,10 @@ def count_tags(tag_numbers, ws_name):
             if not current_operation or not current_workstation:
                 errors.append({"tag": tag_number, "reason": "Missing operation/workstation"})
                 continue
+            
+            # validate workstation for supported operation
+            validate_workstation_for_supported_operation(workstation=current_workstation, operation=current_operation, api_source="Count")        
+
 
             # Log scan
             new_log = frappe.get_doc({

@@ -1,6 +1,8 @@
 import frappe
 import json
 from frappe import _
+from trackerx_live.trackerx_live.utils.cell_operator_ws_util import get_cell_operator_by_ws, validate_workstation_for_supported_operation
+
 
 @frappe.whitelist()
 def auto_unlink_tags(tag_numbers, ws_name=None):
@@ -42,6 +44,14 @@ def auto_unlink_tags(tag_numbers, ws_name=None):
             if not tag_map:
                 skipped_tags.append(tracking_tag_number)
                 continue
+                
+            # Validate workstation for operation         
+            ws_info_list = get_cell_operator_by_ws(current_workstation)
+            if not ws_info_list:
+                frappe.throw(_(f"No operation/cell mapped for workstation {current_workstation}"), ValidationError)
+            ws_info = ws_info_list[0]
+            current_operation = ws_info["operation_name"]
+            validate_workstation_for_supported_operation(workstation=ws_name, operation=current_operation, api_source="Unlink")        
 
             tag_doc = frappe.get_doc("Production Item Tag Map", tag_map[0].name)
             tag_doc.is_active = 0

@@ -1,10 +1,10 @@
 import frappe
 from frappe import _
-from trackerx_live.trackerx_live.utils.cell_operator_ws_util import get_cell_operator_by_ws
+from trackerx_live.trackerx_live.utils.cell_operator_ws_util import get_cell_operator_by_ws, validate_workstation_for_supported_operation
 import json
 
 @frappe.whitelist()
-def scan_item(tags, workstation, remarks=None):
+def scan_item(tags, workstation, scan_source="QC",remarks=None):
     try:
         # If tags is string, convert to list
         if isinstance(tags, str):
@@ -97,6 +97,8 @@ def scan_item(tags, workstation, remarks=None):
                     frappe.throw(
                         f"This Unit/Bundle is rejected by QC at {last_scan_log_doc.current_operation}"
                     )
+                # validate_workstation_for_supported_operation
+                validate_workstation_for_supported_operation(workstation=workstation, operation=operation, api_source=scan_source)        
 
                 # --- Cancel existing logs for same op/ws ---
                 existing_logs = frappe.get_all(
