@@ -1,6 +1,6 @@
 import frappe
 from frappe.utils import flt
-
+from trackerx_live.trackerx_live.enums.operation_type import OperationType
 
 
 def get_cell_operator_by_ws(ws_name):
@@ -32,4 +32,20 @@ def get_cell_operator_by_ws(ws_name):
             pass
     
     return workstation_info_list
+
+
+def validate_workstation_for_supported_opeation(workstation, opeation, api_source):
+    try:
+        
+        # get the operation type
+        
+        if workstation:
+               1=1
+    except Exception as e:
+        frappe.throw(
+              f"This workstation is not supported for Activation"
+        )
+     
+def get_operation_type(opeation):
+    return OperationType.ACTIVATION
     
