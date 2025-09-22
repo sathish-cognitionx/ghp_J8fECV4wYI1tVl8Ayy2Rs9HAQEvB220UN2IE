@@ -38,7 +38,7 @@
   "name": "Operation-custom_operation_type",
   "no_copy": 0,
   "non_negative": 0,
-  "options": "Production\nQC\nActivation\nSwitch\nUnlink Link\nUnlink",
+  "options": "Production\nQC\nActivation\nSwitch\nUnlink Link\nUnlink\nCount",
   "permlevel": 0,
   "placeholder": null,
   "precision": "",
