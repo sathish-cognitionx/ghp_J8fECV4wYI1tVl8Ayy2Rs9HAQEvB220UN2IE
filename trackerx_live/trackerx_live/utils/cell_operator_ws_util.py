@@ -34,18 +34,31 @@ def get_cell_operator_by_ws(ws_name):
     return workstation_info_list
 
 
-def validate_workstation_for_supported_opeation(workstation, opeation, api_source):
+def validate_workstation_for_supported_operation(workstation, operation, api_source):
+    if not workstation or not operation or not api_source:
+        frappe.throw("Workstation, Operation, and API Source must be provided.")
+
     try:
-        
-        # get the operation type
-        
-        if workstation:
-               1=1
+        enum_value = get_operation_type(operation)
+
+        if enum_value.value == api_source: 
+            return True
+        else:
+            frappe.throw(
+                f"This workstation is not supported for Activation."
+            )
+            
     except Exception as e:
         frappe.throw(
               f"This workstation is not supported for Activation"
         )
-     
-def get_operation_type(opeation):
-    return OperationType.ACTIVATION
-    
+
+
+def get_operation_type(operation):
+    operation_doc = frappe.get_doc("Operation", operation)
+    operation_type = operation_doc.custom_operation_type
+
+    try:
+        return OperationType[operation_type.upper().replace(" ", "_")]
+    except KeyError:
+        frappe.throw(f"Operation type is not recognized in OperationType enum.")
