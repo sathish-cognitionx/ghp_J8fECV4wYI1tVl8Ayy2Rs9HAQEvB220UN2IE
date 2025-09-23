@@ -1,20 +1,11 @@
 import frappe
-import json
-from frappe import _
+from trackerx_live.trackerx_live.utils.cell_operator_ws_util import get_cell_operator_by_ws, validate_workstation_for_supported_operation
 
 @frappe.whitelist()
-def switch_tag():
+def switch_tag(current_tag_number, new_tag_number, new_tag_type, 
+                workstation, device_id=None):
     try:
-        # Parse input
-        if frappe.request.data:
-            data = json.loads(frappe.request.data)
-        else:
-            return {"status": "error", "message": "Empty request body"}
-
-        current_tag_number = data.get("current_tag_number")
-        new_tag_number = data.get("new_tag_number")
-        new_tag_type = data.get("new_tag_type")
-
+        # Validate mandatory fields
         if not current_tag_number or not new_tag_number or not new_tag_type:
             frappe.throw(
                 f"Fields required: current_tag_number, new_tag_number, new_tag_type",
@@ -32,18 +23,14 @@ def switch_tag():
                 f"Invalid Tag! Tag {current_tag_number} not linked to any production item",
                 frappe.ValidationError
             )
-
         current_tag_id = current_tag[0].name
 
-
         # Find active mapping for current tag
-
         current_mapping = frappe.get_all(
             "Production Item Tag Map",
             filters={"tracking_tag": current_tag_id, "is_active": 1},
             fields=["name", "production_item"]
         )
-
         if not current_mapping:
             frappe.throw(
                 f"Invalid Tag! Tag {current_tag_number} not linked to any production item",
@@ -53,13 +40,19 @@ def switch_tag():
         production_item = current_mapping[0].production_item
         current_mapping_name = current_mapping[0].name
 
-        # Get or Create new tag
+        # Fetch current operation for the production item
+        production_item_doc = frappe.get_doc("Production Item", production_item)
+        current_operation = production_item_doc.current_operation
+
+        # Validate workstation for operation
+        validate_workstation_for_supported_operation(workstation=workstation, operation=current_operation, api_source="Switch")        
+
+        # Get or create new tag
         new_tag = frappe.get_all(
             "Tracking Tag",
             filters={"tag_number": new_tag_number, "tag_type": new_tag_type},
             fields=["name"]
         )
-
         if new_tag:
             new_tag_id = new_tag[0].name
         else:
@@ -76,7 +69,7 @@ def switch_tag():
         # Deactivate current mapping
         frappe.db.set_value("Production Item Tag Map", current_mapping_name, "is_active", 0)
 
-        #  Create new mapping
+        # Create new mapping
         new_mapping = frappe.get_doc({
             "doctype": "Production Item Tag Map",
             "production_item": production_item,
@@ -86,14 +79,28 @@ def switch_tag():
         })
         new_mapping.insert()
 
-        frappe.db.commit()
+        # Log in Item Scan Log
+        item_scan_log = frappe.get_doc({
+            "doctype": "Item Scan Log",
+            "production_item": production_item,
+            "workstation": workstation,
+            "operation": current_operation,
+            "physical_cell": production_item_doc.physical_cell,
+            "scanned_by": frappe.session.user,
+            "scan_time": frappe.utils.now_datetime(),
+            "logged_time": frappe.utils.now_datetime(),
+            "status": "Tag Switched",
+            "remarks": f"Tag switched from {current_tag_number} to {new_tag_number}"
+        })
+        item_scan_log.insert()
 
         return {
             "status": "success",
-            "message": f"Tag switched from {current_tag_number} to {new_tag_number} for Production Item {production_item}",
+            "message": f"Tag switched from {current_tag_number} to {new_tag_number}",
             "production_item": production_item,
             "old_mapping": current_mapping_name,
-            "new_mapping": new_mapping.name
+            "new_mapping": new_mapping.name,
+            "item_scan_log": item_scan_log.name
         }
 
     except frappe.ValidationError as e:

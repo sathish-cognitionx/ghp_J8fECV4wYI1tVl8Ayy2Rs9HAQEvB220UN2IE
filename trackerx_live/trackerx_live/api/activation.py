@@ -1,7 +1,7 @@
 import frappe
 from frappe import _
 import json
-from trackerx_live.trackerx_live.utils.cell_operator_ws_util import get_cell_operator_by_ws
+from trackerx_live.trackerx_live.utils.cell_operator_ws_util import get_cell_operator_by_ws, validate_workstation_for_supported_operation
 from trackerx_live.trackerx_live.api.bundle_configuration_info import get_bundle_configuration_info
 from frappe.exceptions import ValidationError
 
@@ -180,6 +180,8 @@ def create_production_item(tracking_order, component_name, tracking_tags,
         ws_info = ws_info_list[0]
         current_operation = ws_info["operation_name"]
         physical_cell = ws_info["cell_id"]
+
+        validate_workstation_for_supported_operation(workstation=current_workstation, operation=current_operation, api_source="Activation")        
 
         # Derive next_operation from order operation map
         next_operation = None
