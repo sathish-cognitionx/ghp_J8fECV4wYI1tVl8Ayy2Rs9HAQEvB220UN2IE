@@ -45,7 +45,7 @@ def validate_workstation_for_supported_operation(workstation, operation, api_sou
             return True
         else:
             frappe.throw(
-                f"This workstation is not supported for {api_source}."
+                f"This workstation is not supported for {api_source}. Workstation is mapped to the operation for {enum_value.value}"
             )
             
     except Exception as e:
