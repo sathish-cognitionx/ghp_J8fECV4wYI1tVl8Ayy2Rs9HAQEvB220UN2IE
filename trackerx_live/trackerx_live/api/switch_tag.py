@@ -7,10 +7,7 @@ def switch_tag(current_tag_number, new_tag_number, new_tag_type,
     try:
         # Validate mandatory fields
         if not current_tag_number or not new_tag_number or not new_tag_type:
-            frappe.throw(
-                f"Fields required: current_tag_number, new_tag_number, new_tag_type",
-                frappe.ValidationError
-            )
+            frappe.throw("Fields required: current_tag_number, new_tag_number, new_tag_type")
 
         # Get current tag doc
         current_tag = frappe.get_all(
@@ -19,10 +16,7 @@ def switch_tag(current_tag_number, new_tag_number, new_tag_type,
             fields=["name"]
         )
         if not current_tag:
-            frappe.throw(
-                f"Invalid Tag! Tag {current_tag_number} not linked to any production item",
-                frappe.ValidationError
-            )
+            frappe.throw(f"No Tracking Tag found for number {current_tag_number}")
         current_tag_id = current_tag[0].name
 
         # Find active mapping for current tag
@@ -32,10 +26,7 @@ def switch_tag(current_tag_number, new_tag_number, new_tag_type,
             fields=["name", "production_item"]
         )
         if not current_mapping:
-            frappe.throw(
-                f"Invalid Tag! Tag {current_tag_number} not linked to any production item",
-                frappe.ValidationError
-            )
+            frappe.throw(f"No active mapping found for tag {current_tag_number}")
 
         production_item = current_mapping[0].production_item
         current_mapping_name = current_mapping[0].name
@@ -93,6 +84,18 @@ def switch_tag(current_tag_number, new_tag_number, new_tag_type,
             "remarks": f"Tag switched from {current_tag_number} to {new_tag_number}"
         })
         item_scan_log.insert()
+       
+        # Create Switch Log
+        switch_log = frappe.get_doc({
+            "doctype": "Switch Log",
+            "switch_type": "Tag to Tag",  
+            "from_production_items": production_item,
+            "to_production_items": production_item,  
+            "switched_on": frappe.utils.now_datetime(),
+            "switched_by": frappe.session.user,
+            "remarks": f"Tag switched from {current_tag_number} to {new_tag_number}"
+        })
+        switch_log.insert() 
 
         return {
             "status": "success",
@@ -100,7 +103,8 @@ def switch_tag(current_tag_number, new_tag_number, new_tag_type,
             "production_item": production_item,
             "old_mapping": current_mapping_name,
             "new_mapping": new_mapping.name,
-            "item_scan_log": item_scan_log.name
+            "item_scan_log": item_scan_log.name,
+            "switch_log": switch_log.name 
         }
 
     except frappe.ValidationError as e:
