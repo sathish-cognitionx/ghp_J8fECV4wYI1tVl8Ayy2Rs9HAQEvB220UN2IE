@@ -32,9 +32,9 @@ def count_tags(tag_numbers, ws_name):
         current_components_map = {}
 
 
-        ws_info_list = get_cell_operator_by_ws(current_workstation)
+        ws_info_list = get_cell_operator_by_ws(ws_name)
         if not ws_info_list:
-            frappe.throw(_(f"No operation/cell mapped for workstation {current_workstation}"), ValidationError)
+            frappe.throw(_(f"No operation/cell mapped for workstation {ws_name}"), ValidationError)
 
         ws_info = ws_info_list[0]
         current_operation = ws_info["operation_name"]
