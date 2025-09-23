@@ -5,7 +5,8 @@ from frappe.utils import now_datetime
 from frappe.exceptions import ValidationError
 from trackerx_live.trackerx_live.utils.production_completion_util import check_and_complete_production_item
 from trackerx_live.trackerx_live.api.counted_info import get_counted_info
-from trackerx_live.trackerx_live.utils.cell_operator_ws_util import validate_workstation_for_supported_operation
+from trackerx_live.trackerx_live.utils.cell_operator_ws_util import validate_workstation_for_supported_operation 
+from trackerx_live.trackerx_live.utils.cell_operator_ws_util import get_cell_operator_by_ws 
 
 
 @frappe.whitelist()
@@ -30,6 +31,17 @@ def count_tags(tag_numbers, ws_name):
         errors = []
         current_components_map = {}
 
+
+        ws_info_list = get_cell_operator_by_ws(current_workstation)
+        if not ws_info_list:
+            frappe.throw(_(f"No operation/cell mapped for workstation {current_workstation}"), ValidationError)
+
+        ws_info = ws_info_list[0]
+        current_operation = ws_info["operation_name"]
+        physical_cell = ws_info["cell_id"]
+        current_workstation = ws_info["workstation"]
+
+
         for tag_number in tag_numbers:
             tag = frappe.get_all("Tracking Tag", filters={"tag_number": tag_number}, fields=["name"])
             if not tag:
@@ -52,8 +64,6 @@ def count_tags(tag_numbers, ws_name):
                 continue
 
             production_item_doc = frappe.get_doc("Production Item", tag_map.production_item)
-            current_operation = production_item_doc.current_operation
-            current_workstation = production_item_doc.current_workstation
 
             if not current_operation or not current_workstation:
                 errors.append({"tag": tag_number, "reason": "Missing operation/workstation"})
