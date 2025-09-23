@@ -101,8 +101,8 @@ def count_tags(tag_numbers, ws_name):
             # Check and complete production item
             check_and_complete_production_item(production_item_doc, current_operation)
 
-        if created_logs:
-            frappe.db.commit()
+        # if created_logs:
+        #     frappe.db.commit()
 
         # Fetch today's and current hour's info
         today_info = get_counted_info(ws_name, "today")
