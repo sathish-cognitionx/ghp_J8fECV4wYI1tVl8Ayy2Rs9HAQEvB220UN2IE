@@ -82,9 +82,9 @@ def count_tags(tag_numbers, ws_name):
             new_scan_log.scanned_by = frappe.session.user,
             new_scan_log.scan_time = now_datetime(),
             new_scan_log.logged_time = now_datetime(),
-            new_scan_log.status = "Counted",
-            new_scan_log.log_status = "Completed",
-            new_scan_log.log_type = "User Scanned",
+            new_scan_log.status = 'Counted',
+            new_scan_log.log_status = 'Completed',
+            new_scan_log.log_type = 'User Scanned',
             new_scan_log.production_item_type = production_item_doc.type,
           
             new_scan_log.insert()
