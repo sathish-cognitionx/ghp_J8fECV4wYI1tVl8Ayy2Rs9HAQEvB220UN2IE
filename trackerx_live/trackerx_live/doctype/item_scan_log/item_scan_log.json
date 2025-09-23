@@ -102,7 +102,7 @@
    "fieldname": "production_item_type",
    "fieldtype": "Select",
    "label": "Production Item Type",
-   "options": "Unit\nBundle"
+   "options": "Unit\nComponent"
   },
   {
    "fieldname": "dut",
@@ -128,7 +128,7 @@
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2025-09-22 18:19:57.238665",
+ "modified": "2025-09-23 16:14:21.583638",
  "modified_by": "Administrator",
  "module": "TrackerX Live",
  "name": "Item Scan Log",
