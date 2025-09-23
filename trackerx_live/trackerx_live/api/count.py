@@ -75,17 +75,17 @@ def count_tags(tag_numbers, ws_name):
 
             # Log scan
             new_scan_log = frappe.new_doc("Item Scan Log")
-            new_scan_log.production_item = production_item_doc.name,
-            new_scan_log.operation = current_operation,
-            new_scan_log.workstation = current_workstation,
-            new_scan_log.physical_cell = physical_cell,
-            new_scan_log.scanned_by = frappe.session.user,
-            new_scan_log.scan_time = now_datetime(),
-            new_scan_log.logged_time = now_datetime(),
-            new_scan_log.status = 'Counted',
-            new_scan_log.log_status = 'Completed',
-            new_scan_log.log_type = 'User Scanned',
-            new_scan_log.production_item_type = production_item_doc.type,
+            new_scan_log.production_item = production_item_doc.name
+            new_scan_log.operation = current_operation
+            new_scan_log.workstation = current_workstation
+            new_scan_log.physical_cell = physical_cell
+            new_scan_log.scanned_by = frappe.session.user
+            new_scan_log.scan_time = now_datetime()
+            new_scan_log.logged_time = now_datetime()
+            new_scan_log.status = "Counted"
+            new_scan_log.log_status = "Completed"
+            new_scan_log.log_type = "User Scanned"
+            new_scan_log.production_item_type = production_item_doc.type
           
             new_scan_log.insert()
             created_logs.append({"tag": tag_number, "log": new_scan_log.name})
