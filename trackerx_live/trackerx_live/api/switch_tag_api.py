@@ -16,10 +16,10 @@ def switch_tag():
         new_tag_type = data.get("new_tag_type")
 
         if not current_tag_number or not new_tag_number or not new_tag_type:
-            return {
-                "status": "error",
-                "message": "Fields required: current_tag_number, new_tag_number, new_tag_type"
-            }
+            frappe.throw(
+                f"Fields required: current_tag_number, new_tag_number, new_tag_type",
+                frappe.ValidationError
+            )
 
         # Get current tag doc
         current_tag = frappe.get_all(
@@ -28,7 +28,10 @@ def switch_tag():
             fields=["name"]
         )
         if not current_tag:
-            return {"status": "error", "message": f"No Tracking Tag found for number {current_tag_number}"}
+            frappe.throw(
+                f"Invalid Tag! Tag {current_tag_number} not linked to any production item",
+                frappe.ValidationError
+            )
 
         current_tag_id = current_tag[0].name
 
@@ -42,7 +45,10 @@ def switch_tag():
         )
 
         if not current_mapping:
-            return {"status": "error", "message": f"No active mapping found for tag {current_tag_number}"}
+            frappe.throw(
+                f"Invalid Tag! Tag {current_tag_number} not linked to any production item",
+                frappe.ValidationError
+            )
 
         production_item = current_mapping[0].production_item
         current_mapping_name = current_mapping[0].name
