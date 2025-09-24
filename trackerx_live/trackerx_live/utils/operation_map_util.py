@@ -21,6 +21,7 @@ class OperationType(Enum):
     PRODUCTION = "Production"
     QC = "QC"
     COUNT = "Count"
+    UNLINK = "Unlink"
     OTHER = "Other"
 
 
@@ -535,6 +536,14 @@ class OperationMapData:
             return True
         
         return False
+    
+    def get_final_production_operation(self):
+        only_component = next(iter(self._components))
+        final_operations = self.get_final_operations(only_component)
+        final_operation = final_operations[0]
+        if final_operation.operation_type == OperationType.UNLINK:
+            return final_operation.previous_operations[0].operation
+        return final_operation.operation
 
     
     def get_operation_flow(self, component: str) -> List[List[OperationNode]]:
