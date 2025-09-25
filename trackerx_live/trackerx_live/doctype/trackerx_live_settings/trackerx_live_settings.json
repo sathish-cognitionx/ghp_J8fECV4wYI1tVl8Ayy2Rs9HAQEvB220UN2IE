@@ -24,7 +24,16 @@
   "display_previous_defect_section",
   "display_previously_logged_defects_for_the_unit",
   "tracking_tag_tab",
-  "auto_unlink_at_final_operation"
+  "auto_unlink_at_final_operation",
+  "tv_dashboard_tab",
+  "cell_output_quality_vs_ie_target_section",
+  "hourly_output_display_time",
+  "column_break_vjkm",
+  "top_5_defects_display_time",
+  "cell_output_quality_efficiency_vs_ie_target_section",
+  "efficiency_screen_display_time",
+  "cell_output_quality_and_capacity_section",
+  "capacity_screen_display_time"
  ],
  "fields": [
   {
@@ -143,13 +152,61 @@
    "fieldname": "auto_unlink_at_final_operation",
    "fieldtype": "Check",
    "label": "Auto Unlink Tag (only if its RFID/NFC) at the final operation of the production flow"
+  },
+  {
+   "fieldname": "tv_dashboard_tab",
+   "fieldtype": "Tab Break",
+   "label": "TV Dashboard Display Timing"
+  },
+  {
+   "fieldname": "cell_output_quality_vs_ie_target_section",
+   "fieldtype": "Section Break",
+   "label": "Cell Output Quality vs IE Target"
+  },
+  {
+   "fieldname": "hourly_output_display_time",
+   "fieldtype": "Int",
+   "label": "Hourly Output Graph",
+   "non_negative": 1
+  },
+  {
+   "fieldname": "column_break_vjkm",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "top_5_defects_display_time",
+   "fieldtype": "Int",
+   "label": "Top 5 Defects / DHUs / DPMUs",
+   "non_negative": 1
+  },
+  {
+   "fieldname": "cell_output_quality_efficiency_vs_ie_target_section",
+   "fieldtype": "Section Break",
+   "label": "Cell Output Quality Efficiency vs IE Target"
+  },
+  {
+   "fieldname": "efficiency_screen_display_time",
+   "fieldtype": "Int",
+   "label": "Cell Output Quality Efficiency vs IE Target",
+   "non_negative": 1
+  },
+  {
+   "fieldname": "cell_output_quality_and_capacity_section",
+   "fieldtype": "Section Break",
+   "label": "Cell Output Quality and Capacity"
+  },
+  {
+   "fieldname": "capacity_screen_display_time",
+   "fieldtype": "Int",
+   "label": "Cell Output Quality and Capacity",
+   "non_negative": 1
   }
  ],
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
  "issingle": 1,
  "links": [],
- "modified": "2025-09-17 18:36:28.424979",
+ "modified": "2025-09-25 19:43:28.086233",
  "modified_by": "Administrator",
  "module": "TrackerX Live",
  "name": "TrackerX Live Settings",

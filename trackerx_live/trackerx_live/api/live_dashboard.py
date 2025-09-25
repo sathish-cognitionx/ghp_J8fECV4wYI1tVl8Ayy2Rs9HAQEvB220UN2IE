@@ -641,3 +641,19 @@ def output_line_graph_api():
         kwargs = frappe.request.json or {}
     
     return get_output_line_graph(**kwargs)
+
+
+
+@frappe.whitelist()
+def tv_dashboards_display_time():
+
+    timings={
+        "hourly_output_display_time" : frappe.db.get_single_value("TrackerX Live Settings", "hourly_output_display_time") or 0,
+        "top_5_defects_display_time" : frappe.db.get_single_value("TrackerX Live Settings", "top_5_defects_display_time") or 0,
+        "efficiency_screen_display_time" : frappe.db.get_single_value("TrackerX Live Settings", "efficiency_screen_display_time") or 0,
+        "capacity_screen_display_time" : frappe.db.get_single_value("TrackerX Live Settings", "capacity_screen_display_time") or 0,
+    }
+    return {
+        "status": "success",
+        "data": timings
+    }
