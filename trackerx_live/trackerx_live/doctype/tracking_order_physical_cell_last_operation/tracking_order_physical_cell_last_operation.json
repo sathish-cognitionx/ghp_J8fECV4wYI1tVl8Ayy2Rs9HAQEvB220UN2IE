@@ -21,6 +21,7 @@
   {
    "fieldname": "operation",
    "fieldtype": "Link",
+   "in_list_view": 1,
    "label": "Operation",
    "options": "Operation"
   }
@@ -29,7 +30,7 @@
  "index_web_pages_for_search": 1,
  "istable": 1,
  "links": [],
- "modified": "2025-09-24 14:18:38.277533",
+ "modified": "2025-09-24 15:30:24.600704",
  "modified_by": "Administrator",
  "module": "TrackerX Live",
  "name": "Tracking Order Physical Cell Last Operation",

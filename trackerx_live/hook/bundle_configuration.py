@@ -68,6 +68,10 @@ def create_tracking_order_from_bundle_creation(doc, method=None):
                 bundle_config_row.parenttype = "Tracking Order"
                 bundle_config_row.parentfield = "bundle_configurations"
                 bundle_config_row.source = "Configuration"
+                bundle_config_row.work_order = bundle_item.work_order
+                bundle_config_row.sales_order = bundle_item.sales_order
+                bundle_config_row.shade = bundle_item.shade
+                
                 
                 tracking_order.bundle_configurations.append(bundle_config_row)
         

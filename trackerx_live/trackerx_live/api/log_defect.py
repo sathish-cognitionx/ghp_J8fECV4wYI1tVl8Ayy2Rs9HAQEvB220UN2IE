@@ -87,6 +87,7 @@ def log_defective_units(scan_id=None, defective_units=None, device_id=None):
             created = []
 
             parent_number = parent_prod.get("production_item_number") or parent_prod.name
+            parent_bc = frappe.get_doc("Tracking Order Bundle Configuration", parent_prod.get("bundle_configuration"))
             existing = frappe.get_all(
                 "Production Item",
                 filters={"production_item_number": ["like", f"{parent_number}-%"]},
@@ -109,7 +110,10 @@ def log_defective_units(scan_id=None, defective_units=None, device_id=None):
                 "parent": parent_prod.get("tracking_order"),
                 "parenttype": "Tracking Order",
                 "parentfield": "bundle_configurations",
-                "source": "Defective Unit Tagging"
+                "source": "Defective Unit Tagging",
+                "work_order": parent_bc.work_order,
+                "sales_order": parent_bc.sales_order,
+                "shade": parent_bc.shade,
             })
             bc.insert(ignore_permissions=True)
             bc_name = bc.name

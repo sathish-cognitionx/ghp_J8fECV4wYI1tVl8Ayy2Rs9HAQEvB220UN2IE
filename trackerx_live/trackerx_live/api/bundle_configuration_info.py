@@ -42,7 +42,11 @@ def activate_component_bundle_configuration(tracking_order, component_id):
                 "component": component_id,
                 "parent_bundle_configuration": row.name,
                 "source": "Activation",
-                "activation_status": "Ready"
+                "activation_status": "Ready",
+                "work_order": row.work_order,
+                "sales_order": row.sales_order,
+                "shade": row.shade
+                
             }).insert()
 
 
