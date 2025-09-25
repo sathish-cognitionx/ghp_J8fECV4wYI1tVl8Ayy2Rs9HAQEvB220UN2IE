@@ -46,9 +46,9 @@ def auto_unlink_tags(tag_numbers, ws_name=None):
                 continue
                 
             # Validate workstation for operation         
-            ws_info_list = get_cell_operator_by_ws(current_workstation)
+            ws_info_list = get_cell_operator_by_ws(ws_name)
             if not ws_info_list:
-                frappe.throw(_(f"No operation/cell mapped for workstation {current_workstation}"), ValidationError)
+                frappe.throw(_(f"No operation/cell mapped for workstation {ws_name}"), frappe.ValidationError)
             ws_info = ws_info_list[0]
             current_operation = ws_info["operation_name"]
             validate_workstation_for_supported_operation(workstation=ws_name, operation=current_operation, api_source="Unlink")        
