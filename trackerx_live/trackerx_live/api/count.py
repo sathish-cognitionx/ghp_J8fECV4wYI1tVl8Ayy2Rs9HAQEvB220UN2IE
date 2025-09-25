@@ -5,7 +5,8 @@ from frappe.utils import now_datetime
 from frappe.exceptions import ValidationError
 from trackerx_live.trackerx_live.utils.production_completion_util import check_and_complete_production_item
 from trackerx_live.trackerx_live.api.counted_info import get_counted_info
-from trackerx_live.trackerx_live.utils.cell_operator_ws_util import validate_workstation_for_supported_operation
+from trackerx_live.trackerx_live.utils.cell_operator_ws_util import validate_workstation_for_supported_operation 
+from trackerx_live.trackerx_live.utils.cell_operator_ws_util import get_cell_operator_by_ws 
 
 
 @frappe.whitelist()
@@ -30,6 +31,17 @@ def count_tags(tag_numbers, ws_name):
         errors = []
         current_components_map = {}
 
+
+        ws_info_list = get_cell_operator_by_ws(ws_name)
+        if not ws_info_list:
+            frappe.throw(_(f"No operation/cell mapped for workstation {ws_name}"), ValidationError)
+
+        ws_info = ws_info_list[0]
+        current_operation = ws_info["operation_name"]
+        physical_cell = ws_info["cell_id"]
+        current_workstation = ws_info["workstation"]
+
+
         for tag_number in tag_numbers:
             tag = frappe.get_all("Tracking Tag", filters={"tag_number": tag_number}, fields=["name"])
             if not tag:
@@ -52,8 +64,6 @@ def count_tags(tag_numbers, ws_name):
                 continue
 
             production_item_doc = frappe.get_doc("Production Item", tag_map.production_item)
-            current_operation = production_item_doc.current_operation
-            current_workstation = production_item_doc.current_workstation
 
             if not current_operation or not current_workstation:
                 errors.append({"tag": tag_number, "reason": "Missing operation/workstation"})
@@ -64,22 +74,21 @@ def count_tags(tag_numbers, ws_name):
 
 
             # Log scan
-            new_log = frappe.get_doc({
-                "doctype": "Item Scan Log",
-                "production_item": production_item_doc.name,
-                "operation": current_operation,
-                "workstation": current_workstation,
-                "physical_cell": production_item_doc.physical_cell,
-                "scanned_by": frappe.session.user,
-                "scan_time": now_datetime(),
-                "logged_time": now_datetime(),
-                "status": "Counted",
-                "log_status": "Completed",
-                "log_type": "User Scanned",
-                "production_item_type": production_item_doc.type,
-            })
-            new_log.insert()
-            created_logs.append({"tag": tag_number, "log": new_log.name})
+            new_scan_log = frappe.new_doc("Item Scan Log")
+            new_scan_log.production_item = production_item_doc.name
+            new_scan_log.operation = current_operation
+            new_scan_log.workstation = current_workstation
+            new_scan_log.physical_cell = physical_cell
+            new_scan_log.scanned_by = frappe.session.user
+            new_scan_log.scan_time = now_datetime()
+            new_scan_log.logged_time = now_datetime()
+            new_scan_log.status = "Counted"
+            new_scan_log.log_status = "Completed"
+            new_scan_log.log_type = "User Scanned"
+            new_scan_log.production_item_type = production_item_doc.type
+          
+            new_scan_log.insert()
+            created_logs.append({"tag": tag_number, "log": new_scan_log.name})
 
             # Track component-wise totals
             comp_name = frappe.db.get_value("Tracking Component", production_item_doc.component, "component_name")
@@ -91,8 +100,8 @@ def count_tags(tag_numbers, ws_name):
             # Check and complete production item
             check_and_complete_production_item(production_item_doc, current_operation)
 
-        if created_logs:
-            frappe.db.commit()
+        # if created_logs:
+        #     frappe.db.commit()
 
         # Fetch today's and current hour's info
         today_info = get_counted_info(ws_name, "today")

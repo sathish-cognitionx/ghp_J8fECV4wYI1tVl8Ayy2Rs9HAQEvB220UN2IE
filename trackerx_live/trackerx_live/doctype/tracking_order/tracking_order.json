@@ -26,7 +26,9 @@
   "tracking_components",
   "section_break_op_map",
   "operation_map",
-  "company"
+  "company",
+  "last_operation",
+  "physical_cell_last_operation"
  ],
  "fields": [
   {
@@ -172,13 +174,25 @@
    "label": "Company",
    "options": "Company",
    "reqd": 1
+  },
+  {
+   "fieldname": "last_operation",
+   "fieldtype": "Link",
+   "label": "Last Operation",
+   "options": "Operation"
+  },
+  {
+   "fieldname": "physical_cell_last_operation",
+   "fieldtype": "Table",
+   "label": "Physical Cell Last Operation",
+   "options": "Tracking Order Physical Cell Last Operation"
   }
  ],
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
  "is_submittable": 1,
  "links": [],
- "modified": "2025-09-16 20:05:57.935765",
+ "modified": "2025-09-24 14:19:49.335096",
  "modified_by": "Administrator",
  "module": "TrackerX Live",
  "name": "Tracking Order",

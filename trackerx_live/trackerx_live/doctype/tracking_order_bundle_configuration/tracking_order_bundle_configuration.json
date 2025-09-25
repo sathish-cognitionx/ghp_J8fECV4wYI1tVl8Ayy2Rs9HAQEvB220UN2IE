@@ -16,7 +16,10 @@
   "parent_bundle_configuration",
   "source",
   "activation_status",
-  "type"
+  "type",
+  "work_order",
+  "sales_order",
+  "shade"
  ],
  "fields": [
   {
@@ -96,13 +99,30 @@
    "fieldtype": "Select",
    "label": "Type",
    "options": "Unit\nComponent"
+  },
+  {
+   "fieldname": "sales_order",
+   "fieldtype": "Link",
+   "label": "Sales Order",
+   "options": "Sales Order"
+  },
+  {
+   "fieldname": "shade",
+   "fieldtype": "Data",
+   "label": "Shade"
+  },
+  {
+   "fieldname": "work_order",
+   "fieldtype": "Link",
+   "label": "Work Order",
+   "options": "Work Order"
   }
  ],
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
  "istable": 1,
  "links": [],
- "modified": "2025-09-12 11:13:03.339165",
+ "modified": "2025-09-25 13:28:31.268845",
  "modified_by": "Administrator",
  "module": "TrackerX Live",
  "name": "Tracking Order Bundle Configuration",
