@@ -657,3 +657,20 @@ def tv_dashboards_display_time():
         "status": "success",
         "data": timings
     }
+
+
+@frappe.whitelist()
+def get_rft_wip_style_operators_count():
+    return {
+        "status": "success",
+        "data": {
+            "rft": 90,
+            "wip": 20,
+            "cell_wip": 25,
+            "style": "Round Neck T Shirt",
+            "operator": {
+                "count": 10,
+                "type": "plan"
+            }
+        }
+    }
