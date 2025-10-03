@@ -674,7 +674,7 @@ class OperationMapManager:
     def __init__(self):
         if not hasattr(self, '_initialized'):
             self._operation_maps: Dict[str, OperationMapData] = {}
-            print("OperationMapManager initialized.")
+            # print("OperationMapManager initialized.")
             self._initialized = True
     
     def _create_operation_map(self, tracking_order_number: str, 
