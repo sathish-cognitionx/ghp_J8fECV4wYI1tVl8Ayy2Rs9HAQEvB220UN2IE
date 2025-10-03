@@ -107,36 +107,47 @@ def create_tracking_order_from_bundle_creation(doc, method=None):
         try:
             from trackerx_live.trackerx_live.utils.process_map_to_operation_map_util import generate_operation_map_from_item
             result = generate_operation_map_from_item(doc.fg_item)
-            
-            for entry in result["operation_map_entries"]:
-                operation_row = frappe.new_doc("Operation Map")
-                operation_row.operation = entry["operation"]
-                operation_row.component = entry["component"]
-                operation_row.next_operation = entry["next_operation"]
-                operation_row.sequence_no = entry["sequence_no"]
-                operation_row.configs = entry["configs"]
-                operation_row.parent = tracking_order.name
-                operation_row.parenttype = "Tracking Order"
-                operation_row.parentfield = "operation_map"
-                
-                tracking_order.operation_map.append(operation_row)
-                
+
+            if result and "operation_map_entries" in result and result["operation_map_entries"]:
+                for entry in result["operation_map_entries"]:
+                    operation_row = frappe.new_doc("Operation Map")
+                    operation_row.operation = entry["operation"]
+                    operation_row.component = entry["component"]
+                    operation_row.next_operation = entry["next_operation"]
+                    operation_row.sequence_no = entry["sequence_no"]
+                    operation_row.configs = entry["configs"]
+                    operation_row.parent = tracking_order.name
+                    operation_row.parenttype = "Tracking Order"
+                    operation_row.parentfield = "operation_map"
+
+                    tracking_order.operation_map.append(operation_row)
+            else:
+                raise Exception("No operation map entries generated")
+
         except Exception as process_map_error:
-            frappe.log_error(f"Process map error for item {doc.fg_item}: {str(process_map_error)}")
-            
-            # Create a default operation map if process map generation fails
-            default_operation = frappe.new_doc("Operation Map")
-            default_operation.operation = "Sewing QC"
-            default_operation.component = "__Default__"
-            default_operation.next_operation = "Final QC"
-            default_operation.sequence_no = 1
-            default_operation.configs = ""
-            default_operation.parent = tracking_order.name
-            default_operation.parenttype = "Tracking Order"
-            default_operation.parentfield = "operation_map"
-            
-            tracking_order.operation_map.append(default_operation)
-            
+            # Truncate error message to prevent character length exceeded errors
+            error_msg = str(process_map_error)[:80] + "..." if len(str(process_map_error)) > 80 else str(process_map_error)
+            frappe.log_error(f"Process map error: {error_msg}", "Bundle Configuration Process Map")
+
+            # Create a comprehensive default operation map if process map generation fails
+            default_operations = [
+                {"operation": "Sewing QC", "next_operation": "Final QC", "sequence_no": 1},
+                {"operation": "Final QC", "next_operation": "", "sequence_no": 2}
+            ]
+
+            for op_data in default_operations:
+                default_operation = frappe.new_doc("Operation Map")
+                default_operation.operation = op_data["operation"]
+                default_operation.component = "__Default__"
+                default_operation.next_operation = op_data["next_operation"]
+                default_operation.sequence_no = op_data["sequence_no"]
+                default_operation.configs = ""
+                default_operation.parent = tracking_order.name
+                default_operation.parenttype = "Tracking Order"
+                default_operation.parentfield = "operation_map"
+
+                tracking_order.operation_map.append(default_operation)
+
             frappe.msgprint(f"Warning: Using default operation map for item {doc.fg_item}. Please check process map configuration.")
 
         # Insert the document
@@ -149,9 +160,15 @@ def create_tracking_order_from_bundle_creation(doc, method=None):
             operation_map_manager = OperationMapManager()
             operation_map = operation_map_manager.get_operation_map(tracking_order.name)
             validation_result = operation_map.get_validation_result
-            tracking_order.last_operation = operation_map.get_final_production_operation()
+            final_operation = operation_map.get_final_production_operation()
+            if final_operation:
+                tracking_order.last_operation = final_operation
+            else:
+                tracking_order.last_operation = "Final QC"
         except Exception as e:
-            frappe.log_error(f"Operation map manager error: {str(e)}")
+            # Truncate error message to prevent character length exceeded errors
+            error_msg = str(e)[:100] + "..." if len(str(e)) > 100 else str(e)
+            frappe.log_error(f"Operation map error: {error_msg}", "Bundle Configuration Operation Map")
             # Set a default last operation if operation map manager fails
             tracking_order.last_operation = "Final QC"
 
@@ -194,8 +211,10 @@ def create_tracking_order_from_bundle_creation(doc, method=None):
         frappe.logger().info(f"Auto-created Tracking Order {tracking_order.name} from Bundle Creation {doc.name}")
         
     except Exception as e:
-        frappe.log_error(f"Error creating Tracking Order from Bundle Creation {doc.name}: {str(e)}")
-        frappe.throw(f"Failed to submit Bundle Configuration: {str(e)}")
+        # Truncate error message to prevent character length exceeded errors
+        error_msg = str(e)[:100] + "..." if len(str(e)) > 100 else str(e)
+        frappe.log_error(f"Error creating Tracking Order: {error_msg}", "Bundle Configuration Creation Error")
+        frappe.throw(f"Failed to submit Bundle Configuration: {error_msg}")
 
 
 def create_production_items(doc, tracking_order):
