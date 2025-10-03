@@ -538,11 +538,21 @@ class OperationMapData:
         return False
     
     def get_final_production_operation(self):
+        if not self._components:
+            return None
+
         only_component = next(iter(self._components))
         final_operations = self.get_final_operations(only_component)
+
+        if not final_operations:
+            return None
+
         final_operation = final_operations[0]
         if final_operation.operation_type == OperationType.UNLINK:
-            return final_operation.previous_operations[0].operation
+            if final_operation.previous_operations:
+                return final_operation.previous_operations[0].operation
+            else:
+                return final_operation.operation
         return final_operation.operation
 
     
