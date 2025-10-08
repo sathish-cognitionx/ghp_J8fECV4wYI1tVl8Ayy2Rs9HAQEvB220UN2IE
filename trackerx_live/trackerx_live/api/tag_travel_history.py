@@ -18,22 +18,25 @@ def tag_travel_history(tag_number):
                 frappe.ValidationError
             )
 
-        tag_map = frappe.db.get_value(
-            "Production Item Tag Map",
+        production_item_name = frappe.db.get_value(
+            "Production Item",
             {"tracking_tag": tag_id},
-            ["name", "is_active", "production_item"],
-            as_dict=True
+            "name",
+            order_by="creation desc"
         )
 
-        if not tag_map or not tag_map.is_active:
+        if not production_item_name:
             frappe.throw(
-                f"Invalid Tag! Tag already unlinked, Please use activated tag. Contact your supervisor"
+                f"No Production Item found for this tag. Please contact your supervisor.",
+                frappe.ValidationError
             )
 
-        production_item_doc = frappe.get_doc("Production Item", tag_map.production_item)
+        production_item_doc = frappe.get_doc("Production Item", production_item_name)
         tracking_order_doc = frappe.get_doc("Tracking Order", production_item_doc.tracking_order)
         fg_item_doc = frappe.get_doc("Item", tracking_order_doc.item)
         style_master_doc = frappe.get_doc("Style Master", fg_item_doc.custom_style_master) if fg_item_doc.custom_style_master else None
+        
+        coupled_status = "active" if production_item_doc.tracking_status == "Active" else "unlinked"
 
         item_status = {
             "rfidTagNo": tag_id,
@@ -41,16 +44,17 @@ def tag_travel_history(tag_number):
             "woNo": tracking_order_doc.reference_order_number,
             "ftyProdId": production_item_doc.name,
             "style": style_master_doc.style_name if style_master_doc else None,
-            "season": fg_item_doc.custom_season,
+            "season": fg_item_doc.custom_season if getattr(fg_item_doc, "custom_season", None) else None,
             "color": fg_item_doc.custom_colour_name,
             "material": fg_item_doc.custom_material_composition,
             "bundleOrUnit": production_item_doc.bundle_configuration,
-            "coupledStatus": production_item_doc.status,
+            "coupledStatus": coupled_status,
             "qualityStatus": None,
             "quantity": production_item_doc.quantity,
             "unitComponentType": production_item_doc.type,
             "pfpVersionId": None,
-            "sizeAndWidth": production_item_doc.size
+            "sizeAndWidth": production_item_doc.size,
+            "productionUnitType": "Bundle" if production_item_doc.type == "Component" or production_item_doc.bundle_configuration else "Unit"
         }
 
         scan_logs = frappe.get_all(
@@ -67,7 +71,7 @@ def tag_travel_history(tag_number):
         item_flow_data = []
 
         for log in scan_logs:
-            user = frappe.get_value("User", log.scanned_by, ["first_name", "last_name"], as_dict=True) if log.scanned_by else {}
+            user = frappe.db.get_value("User", log.scanned_by, ["first_name", "last_name"], as_dict=True) if log.scanned_by else {}
 
             operation_doc = frappe.get_doc("Operation", log.operation) if log.operation else None
             process_type = operation_doc.custom_operation_type if operation_doc else None
@@ -99,7 +103,7 @@ def tag_travel_history(tag_number):
                 "rfGeneratedId": None,
                 "type": log.log_type,
                 "parentTagNo": None,
-                "productionUnitType": production_item_doc.type,
+                "productionUnitType": "Bundle" if production_item_doc.type == "Component" or production_item_doc.bundle_configuration else "Unit",
                 "decoupledType": None,
                 "defects": defects or [],
                 "scanId": log.name,
