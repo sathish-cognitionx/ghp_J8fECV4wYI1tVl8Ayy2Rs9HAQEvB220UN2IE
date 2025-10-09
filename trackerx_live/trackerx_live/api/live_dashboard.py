@@ -50,8 +50,8 @@ def get_production_count(**kwargs):
         
         # Calculate other targets (placeholder functions for future integration)
         ie_target = get_ie_target(inputs)
-        full_ie_target = get_full_ie_target(filters)
-        plan_target = get_plan_target(filters)
+        full_ie_target = get_full_ie_target(inputs)
+        plan_target = get_plan_target(inputs)
         output_color = get_output_color(output_count, ie_target, full_ie_target, plan_target)
         
         return {
@@ -201,12 +201,14 @@ def get_ie_target(inputs):
 
 
 
-def get_full_ie_target(filters):
+def get_full_ie_target(inputs):
     """
     Placeholder function to calculate Full IE Target
     To be implemented based on your business logic
     """
-    return ""
+    from trackerx_live.trackerx_live.services.target_service import ConfigTargetService
+    target_service = ConfigTargetService()
+    return target_service.get_total_target(inputs=inputs, from_date=None, to_date=None)
 
 
 def get_plan_target(filters):
