@@ -1,6 +1,7 @@
 from datetime import datetime, timedelta
 import random
 import abc
+import math
 
 class TargetService(abc.ABC):
 
@@ -64,7 +65,7 @@ class ConfigTargetService(TargetService):
         self._initialized = True
 
     def get_total_target(self, inputs: dict, from_date: datetime, to_date: datetime) -> float:
-        return random.uniform(1000.0, 5000.0)
+        return math.ceil(random.uniform(1000.0, 5000.0))
 
     def get_hourly_target(self, inputs: dict, from_date: datetime, to_date: datetime) -> dict:
         hourly_targets = {}
