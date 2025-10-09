@@ -36,12 +36,20 @@ def get_production_count(**kwargs):
         
         # Build filters
         filters = build_filters(period, device_id, workstation, operation, physical_cell, status_filter='Pass')
+
+        inputs = {
+            "period": period,
+            "device_id": device_id,
+            "workstation": workstation,
+            "operation": operation,
+            "physical_cell": physical_cell            
+        }
         
         # Get production count
         output_count = get_output_count(filters)
         
         # Calculate other targets (placeholder functions for future integration)
-        ie_target = get_ie_target(filters)
+        ie_target = get_ie_target(inputs)
         full_ie_target = get_full_ie_target(filters)
         plan_target = get_plan_target(filters)
         output_color = get_output_color(output_count, ie_target, full_ie_target, plan_target)
@@ -182,12 +190,15 @@ def get_output_count(filters):
 
 
 # Placeholder functions for future integration
-def get_ie_target(filters):
+def get_ie_target(inputs):
     """
     Placeholder function to calculate IE Target
     To be implemented based on your business logic
     """
-    return ""
+    from trackerx_live.trackerx_live.services.target_service import ConfigTargetService
+    target_service = ConfigTargetService()
+    return target_service.get_total_target(inputs=inputs, from_date=None, to_date=None)
+
 
 
 def get_full_ie_target(filters):
@@ -216,9 +227,22 @@ def get_output_color(output_count, ie_target, full_ie_target, plan_target):
     # Default logic - can be customized later
     if output_count == 0:
         return "RED"
+    elif ie_target == 0:
+        return "GREEN"
     else:
-        return "WHITE"  # Default color until logic is implemented
-
+        production_percentage = output_count*100/ie_target
+        threshold = get_threshold_percentage()
+        if production_percentage >= 100:
+            return "GREEN"
+        elif production_percentage >= threshold:
+            return "YELLOW"
+        else:
+            return "RED"
+        
+    
+    
+def get_threshold_percentage():
+    return 90
 
 # Alternative API endpoint for direct HTTP calls
 @frappe.whitelist(allow_guest=False, methods=['GET', 'POST'])
@@ -577,7 +601,8 @@ def get_output_line_graph(**kwargs):
             hourly_data.append({
                 "hour": f"{hour:02d}:00",
                 "hour_label": f"{hour:02d}:00-{(hour+1)%24:02d}:00",
-                "output_count": hour_count
+                "output_count": hour_count,
+                "target": 10
             })
         
         return {
