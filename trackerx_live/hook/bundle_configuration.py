@@ -5,6 +5,8 @@
 import frappe
 from frappe.model.document import Document
 from frappe.utils import flt
+import math
+import json
 
 def cuttingx_bundle_configuration_on_submit(doc, method=None):
     create_tracking_order_from_bundle_creation(doc, method=None)
@@ -38,14 +40,7 @@ def create_tracking_order_from_bundle_creation(doc, method=None):
         current_company = frappe.defaults.get_user_default("company")
         tracking_order.company = current_company
 
-        # Calculate total quantity from Bundle Creation Items
-        total_quantity = 0
-        for item in doc.table_bundle_creation_item:
-            if item.unitsbundle and item.no_of_bundles:
-                total_quantity += item.no_of_bundles * item.unitsbundle
         
-        tracking_order.quantity = total_quantity
-        tracking_order.pending_production_quantity = total_quantity
 
         main_component = None
         fg_item = frappe.get_doc("Item", tracking_order.item)
@@ -54,14 +49,19 @@ def create_tracking_order_from_bundle_creation(doc, method=None):
                 if fg_component.is_main_component:
                     main_component = fg_component.component_name
 
+        total_quantity = 0
         # Create Bundle Configurations from Bundle Creation Items
+        
         for bundle_item in doc.table_bundle_creation_item:
             if bundle_item.no_of_bundles and bundle_item.unitsbundle:
+                qty = bundle_item.shade_cut_quantity
+                full_bundles =math.floor(qty / bundle_item.unitsbundle)
+
                 bundle_config_row = frappe.new_doc("Tracking Order Bundle Configuration")
                 bundle_config_row.bc_name = f"BC-{bundle_item.size}-{bundle_item.shade}"
                 bundle_config_row.size = bundle_item.size
                 bundle_config_row.bundle_quantity = bundle_item.unitsbundle
-                bundle_config_row.number_of_bundles = bundle_item.no_of_bundles
+                bundle_config_row.number_of_bundles = full_bundles
                 bundle_config_row.component = "__Default__"
                 bundle_config_row.production_type = "Bundle"
                 bundle_config_row.parent = tracking_order.name
@@ -71,9 +71,38 @@ def create_tracking_order_from_bundle_creation(doc, method=None):
                 bundle_config_row.work_order = bundle_item.work_order
                 bundle_config_row.sales_order = bundle_item.sales_order
                 bundle_config_row.shade = bundle_item.shade
+
+                total_quantity += bundle_config_row.bundle_quantity * bundle_config_row.number_of_bundles
                 
                 
                 tracking_order.bundle_configurations.append(bundle_config_row)
+
+                # add odd bundles if any
+                pending_units_in_odd_bundle = qty - full_bundles * bundle_item.unitsbundle
+                if pending_units_in_odd_bundle > 0:
+                    odd_bundle_config_row = frappe.new_doc("Tracking Order Bundle Configuration")
+                    odd_bundle_config_row.bc_name = f"BC-{bundle_item.size}-{bundle_item.shade}-O"
+                    odd_bundle_config_row.size = bundle_item.size
+                    odd_bundle_config_row.bundle_quantity = pending_units_in_odd_bundle
+                    odd_bundle_config_row.number_of_bundles = 1
+                    odd_bundle_config_row.component = "__Default__"
+                    odd_bundle_config_row.production_type = "Bundle"
+                    odd_bundle_config_row.parent = tracking_order.name
+                    odd_bundle_config_row.parenttype = "Tracking Order"
+                    odd_bundle_config_row.parentfield = "bundle_configurations"
+                    odd_bundle_config_row.source = "Configuration"
+                    odd_bundle_config_row.work_order = bundle_item.work_order
+                    odd_bundle_config_row.sales_order = bundle_item.sales_order
+                    odd_bundle_config_row.shade = bundle_item.shade
+
+                    tracking_order.bundle_configurations.append(odd_bundle_config_row)
+
+                    total_quantity += odd_bundle_config_row.bundle_quantity * odd_bundle_config_row.number_of_bundles
+
+        
+        tracking_order.quantity = total_quantity
+        tracking_order.pending_production_quantity = total_quantity
+
         
         # Create Tracking Components based on Bundle Details
         components_added = set()
@@ -107,48 +136,38 @@ def create_tracking_order_from_bundle_creation(doc, method=None):
         try:
             from trackerx_live.trackerx_live.utils.process_map_to_operation_map_util import generate_operation_map_from_item
             result = generate_operation_map_from_item(doc.fg_item)
-
-            if result and "operation_map_entries" in result and result["operation_map_entries"]:
-                for entry in result["operation_map_entries"]:
-                    operation_row = frappe.new_doc("Operation Map")
-                    operation_row.operation = entry["operation"]
-                    operation_row.component = entry["component"]
-                    operation_row.next_operation = entry["next_operation"]
-                    operation_row.sequence_no = entry["sequence_no"]
-                    operation_row.configs = entry["configs"]
-                    operation_row.parent = tracking_order.name
-                    operation_row.parenttype = "Tracking Order"
-                    operation_row.parentfield = "operation_map"
-
-                    tracking_order.operation_map.append(operation_row)
-            else:
-                raise Exception("No operation map entries generated")
-
+            
+            for entry in result["operation_map_entries"]:
+                operation_row = frappe.new_doc("Operation Map")
+                operation_row.operation = entry["operation"]
+                operation_row.component = entry["component"]
+                operation_row.next_operation = entry["next_operation"]
+                operation_row.sequence_no = entry["sequence_no"]
+                operation_row.configs = entry["configs"] or {}
+                operation_row.parent = tracking_order.name
+                operation_row.parenttype = "Tracking Order"
+                operation_row.parentfield = "operation_map"
+                
+                tracking_order.operation_map.append(operation_row)
+                
         except Exception as process_map_error:
-            # Truncate error message to prevent character length exceeded errors
-            error_msg = str(process_map_error)[:80] + "..." if len(str(process_map_error)) > 80 else str(process_map_error)
-            frappe.log_error(f"Process map error: {error_msg}", "Bundle Configuration Process Map")
-
-            # Create a comprehensive default operation map if process map generation fails
-            default_operations = [
-                {"operation": "Sewing QC", "next_operation": "Final QC", "sequence_no": 1},
-                {"operation": "Final QC", "next_operation": "", "sequence_no": 2}
-            ]
-
-            for op_data in default_operations:
-                default_operation = frappe.new_doc("Operation Map")
-                default_operation.operation = op_data["operation"]
-                default_operation.component = "__Default__"
-                default_operation.next_operation = op_data["next_operation"]
-                default_operation.sequence_no = op_data["sequence_no"]
-                default_operation.configs = ""
-                default_operation.parent = tracking_order.name
-                default_operation.parenttype = "Tracking Order"
-                default_operation.parentfield = "operation_map"
-
-                tracking_order.operation_map.append(default_operation)
-
-            frappe.msgprint(f"Warning: Using default operation map for item {doc.fg_item}. Please check process map configuration.")
+            frappe.log_error(f"Process map error for item {doc.fg_item}", f"{str(process_map_error)}")
+            frappe.throw(f"Operation map error: {process_map_error}", frappe.ValidationError)
+            
+            # # Create a default operation map if process map generation fails
+            # default_operation = frappe.new_doc("Operation Map")
+            # default_operation.operation = "Sewing QC"
+            # default_operation.component = "__Default__"
+            # default_operation.next_operation = "Final QC"
+            # default_operation.sequence_no = 1
+            # default_operation.configs = ""
+            # default_operation.parent = tracking_order.name
+            # default_operation.parenttype = "Tracking Order"
+            # default_operation.parentfield = "operation_map"
+            
+            # tracking_order.operation_map.append(default_operation)
+            
+            # frappe.msgprint(f"Warning: Using default operation map for item {doc.fg_item}. Please check process map configuration.")
 
         # Insert the document
         tracking_order.insert(ignore_permissions=True)
@@ -201,30 +220,37 @@ def create_tracking_order_from_bundle_creation(doc, method=None):
         tracking_order.save()
         
         # Submit the Tracking Order
-        tracking_order.submit()
+        tracking_order = tracking_order.submit()
 
         is_auto_activation_required = doc.tracking_tech in ('Barcode', 'QR Code')
 
         if is_auto_activation_required:
+            import copy
             create_production_items(doc, tracking_order)
+
+        
+            frappe.db.set_value('Tracking Order', tracking_order.name, 'activation_status', 'Completed')
+
+            
+            
         
         frappe.logger().info(f"Auto-created Tracking Order {tracking_order.name} from Bundle Creation {doc.name}")
         
     except Exception as e:
-        # Truncate error message to prevent character length exceeded errors
-        error_msg = str(e)[:100] + "..." if len(str(e)) > 100 else str(e)
-        frappe.log_error(f"Error creating Tracking Order: {error_msg}", "Bundle Configuration Creation Error")
-        frappe.throw(f"Failed to submit Bundle Configuration: {error_msg}")
+        frappe.log_error(f"Error creating Tracking Order from Bundle Creation {doc.name}", f"{str(e)}")
+        frappe.throw(f"{str(e)}", frappe.ValidationError, "Failed to submit Bundle Configuration")
 
 
 def create_production_items(doc, tracking_order):
+
+
     try:
         # Create bundle configurations for each component
         component_bc_dict = {}
         
         for bundle_configuration in tracking_order.bundle_configurations:
             for component in tracking_order.tracking_components:
-                key = f'{bundle_configuration.size}---{component.component_name}'
+                key = f'{bundle_configuration.size}---{component.component_name}---{bundle_configuration.shade}---{bundle_configuration.bundle_quantity}'
                 
                 if key not in component_bc_dict:
                     component_bundle_configuration = frappe.new_doc("Tracking Order Bundle Configuration")
@@ -245,7 +271,8 @@ def create_production_items(doc, tracking_order):
 
         component_by_name = {}
         for comp in tracking_order.tracking_components:
-            component_by_name[comp.component_name] = comp.name
+            key = comp.component_name
+            component_by_name[key] = comp.name
 
         for bundle in doc.table_bundle_details:
             # Create tracking tag
@@ -260,7 +287,7 @@ def create_production_items(doc, tracking_order):
             tag.insert(ignore_permissions=True)
 
             # Build the key for component lookup
-            key = f'{bundle.size}---{bundle.component}'
+            key = f'{bundle.size}---{bundle.component}---{bundle.shade}---{bundle.unitsbundle}'
             
             if key not in component_bc_dict:
                 frappe.log_error(f"Component bundle configuration not found for key: {key}")
@@ -310,19 +337,16 @@ def create_production_items(doc, tracking_order):
             item_scan_log.status = 'Activated'
             item_scan_log.log_status = 'Completed'
             item_scan_log.log_type = 'Auto'
-            item_scan_log.production_item_type = 'Bundle'
+            item_scan_log.production_item_type = production_item.type 
             item_scan_log.dut = None
             item_scan_log.insert(ignore_permissions=True)
 
             # FIXED: Proper method call
             production_item.last_scan_log = item_scan_log.name  # Set as attribute, not method call
             production_item.save()
-
-        tracking_order.activation_status = "Completed"
-        tracking_order.save()
             
     except Exception as e:
-        frappe.log_error(f"Error in create_production_items: {str(e)}")
+        frappe.log_error(f"Error in create_production_items", f"{str(e)}")
         frappe.throw(f"Failed to create production items: {str(e)}")
 
 
