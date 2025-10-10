@@ -57,13 +57,13 @@
    "fieldname": "activation_source",
    "fieldtype": "Select",
    "label": "Activation Source",
-   "options": "\nApp\nCut Bundle"
+   "options": "\nApp\nCut Bundle\nFaulty Tag Replacement"
   }
  ],
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2025-09-03 23:11:40.186200",
+ "modified": "2025-10-10 12:31:16.076725",
  "modified_by": "Administrator",
  "module": "TrackerX Live",
  "name": "Tracking Tag",
