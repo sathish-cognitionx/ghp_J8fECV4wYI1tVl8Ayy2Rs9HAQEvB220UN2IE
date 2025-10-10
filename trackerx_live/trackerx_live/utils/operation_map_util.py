@@ -538,11 +538,21 @@ class OperationMapData:
         return False
     
     def get_final_production_operation(self):
+        if not self._components:
+            return None
+
         only_component = next(iter(self._components))
         final_operations = self.get_final_operations(only_component)
+
+        if not final_operations:
+            return None
+
         final_operation = final_operations[0]
         if final_operation.operation_type == OperationType.UNLINK:
-            return final_operation.previous_operations[0].operation
+            if final_operation.previous_operations:
+                return final_operation.previous_operations[0].operation
+            else:
+                return final_operation.operation
         return final_operation.operation
 
     
@@ -653,19 +663,18 @@ class OperationMapManager:
     _lock = threading.Lock()
 
     def __new__(cls, *args, **kwargs):
-        with cls._lock: # Ensure only one thread can create the instance
-            if cls._instance is None:
-                cls._instance = super().__new__(cls)
-                # Initialize attributes here if needed, or in __init__
-                # cls._instance._settings = {} 
-            return cls._instance
+        if cls._instance is None:
+            with cls._lock:
+                if cls._instance is None:
+                    cls._instance = super().__new__(cls)
+                    cls._instance._operation_maps = {}
+                    cls._instance._initialized = True
+        return cls._instance
 
-    
+
     def __init__(self):
-        if not hasattr(self, '_initialized'):
-            self._operation_maps: Dict[str, OperationMapData] = {}
-            print("OperationMapManager initialized.")
-            self._initialized = True
+        # Do nothing if already initialized, avoiding any potential stdout/stderr operations
+        pass
     
     def _create_operation_map(self, tracking_order_number: str, 
                            operation_map_data: List[Dict]) -> ValidationResult:
@@ -765,21 +774,21 @@ if __name__ == "__main__":
     
     # Build operation map
     result = op_map_data.build_from_operation_map(operation_data)
-    print(f"Validation Result: {result.is_valid}")
-    
+    # print(f"Validation Result: {result.is_valid}")
+
     if result.is_valid:
         # Test public API methods
-        print(f"Components: {op_map_data.get_all_components()}")
-        
+        # print(f"Components: {op_map_data.get_all_components()}")
+
         # Get next operations
         next_ops = op_map_data.get_next_operations('Fabric Cutting', 'Body')
-        print(f"Next operations after Fabric Cutting: {[op.operation for op in next_ops]}")
-        
+        # print(f"Next operations after Fabric Cutting: {[op.operation for op in next_ops]}")
+
         # Get component status
         status = op_map_data.get_component_current_status('Body', 'Sewing')
-        print(f"Component status: {status}")
-        
+        # print(f"Component status: {status}")
+
         # Get operation stats
         stats = op_map_data.get_operation_stats()
-        print(f"Operation stats: {stats}")
+        # print(f"Operation stats: {stats}")
 

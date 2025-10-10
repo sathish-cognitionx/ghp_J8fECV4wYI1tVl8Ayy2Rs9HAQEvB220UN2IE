@@ -179,9 +179,15 @@ def create_tracking_order_from_bundle_creation(doc, method=None):
             operation_map_manager = OperationMapManager()
             operation_map = operation_map_manager.get_operation_map(tracking_order.name)
             validation_result = operation_map.get_validation_result
-            tracking_order.last_operation = operation_map.get_final_production_operation()
+            final_operation = operation_map.get_final_production_operation()
+            if final_operation:
+                tracking_order.last_operation = final_operation
+            else:
+                tracking_order.last_operation = "Final QC"
         except Exception as e:
-            frappe.log_error(f"Operation map manager error: {str(e)}")
+            # Truncate error message to prevent character length exceeded errors
+            error_msg = str(e)[:100] + "..." if len(str(e)) > 100 else str(e)
+            frappe.log_error(f"Operation map error: {error_msg}", "Bundle Configuration Operation Map")
             # Set a default last operation if operation map manager fails
             tracking_order.last_operation = "Final QC"
 
