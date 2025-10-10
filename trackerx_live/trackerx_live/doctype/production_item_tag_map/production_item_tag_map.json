@@ -48,19 +48,19 @@
    "fieldname": "activated_source",
    "fieldtype": "Select",
    "label": "Activated Source",
-   "options": "\nApp\nCut Bundle"
+   "options": "\nApp\nCut Bundle\nFaulty Tag Replacement"
   },
   {
    "fieldname": "deactivated_source",
    "fieldtype": "Select",
    "label": "Deactivated Source",
-   "options": "\nFinal Operation\nEOL UnLink\nTag Switch\nUnlink Link\nPartial Bundle Unlink"
+   "options": "\nFinal Operation\nEOL UnLink\nTag Switch\nUnlink Link\nPartial Bundle Unlink\nFaulty Tag Replacement"
   }
  ],
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2025-09-03 23:15:10.452463",
+ "modified": "2025-10-10 12:31:01.080228",
  "modified_by": "Administrator",
  "module": "TrackerX Live",
  "name": "Production Item Tag Map",
