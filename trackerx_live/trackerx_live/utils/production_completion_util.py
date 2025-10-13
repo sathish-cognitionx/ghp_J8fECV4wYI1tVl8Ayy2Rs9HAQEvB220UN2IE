@@ -63,3 +63,36 @@ def check_and_complete_production_item(production_item_doc, current_operation):
             title="Error in check_and_complete_production_item"
         )
         raise
+
+def check_and_unlink_if_final_operation(production_item_doc):
+
+    return
+    if production_item_doc.tracking_tag:
+        pitm = frappe.get_all(
+            "Production Item Tag Map",
+            filters={
+                "production_item": production_item_doc.name,
+                "tracking_tag": production_item_doc.tracking_tag,
+                "is_active": 1
+            },
+            fields=["name"]
+        )
+        for record in pitm:
+            frappe.db.set_value(
+                "Production Item Tag Map",
+                record.name,
+                {
+                    "is_active": 0,
+                    "deactivated_source": "Final Operation"
+                }
+            )
+
+        # Update production item tracking status
+        frappe.db.set_value(
+            "Production Item",
+            production_item_doc.name,
+            {
+                "tracking_status": "Unlinked",
+                "unlinked_source": "Final Process"
+            }
+        )

@@ -107,8 +107,10 @@
    "options": "Sales Order"
   },
   {
+   "columns": 1,
    "fieldname": "shade",
    "fieldtype": "Data",
+   "in_list_view": 1,
    "label": "Shade"
   },
   {
@@ -122,7 +124,7 @@
  "index_web_pages_for_search": 1,
  "istable": 1,
  "links": [],
- "modified": "2025-09-25 13:28:31.268845",
+ "modified": "2025-10-10 15:10:05.169728",
  "modified_by": "Administrator",
  "module": "TrackerX Live",
  "name": "Tracking Order Bundle Configuration",
