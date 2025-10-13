@@ -3,6 +3,8 @@ from frappe import _
 from trackerx_live.trackerx_live.utils.cell_operator_ws_util import get_cell_operator_by_ws
 import json
 
+from trackerx_live.trackerx_live.utils.trackerx_live_settings_util import TrackerXLiveSettings
+
 @frappe.whitelist()
 def get_item_information(tags, workstation, remarks=None):
     try:
@@ -98,6 +100,8 @@ def get_item_information(tags, workstation, remarks=None):
                     frappe.throw(
                         f"This Unit/Bundle is rejected by QC at {last_scan_log_doc.current_operation}"
                     )
+
+                
          
                 results.append({
                     "production_item_number": production_item_doc.production_item_number,
@@ -109,7 +113,7 @@ def get_item_information(tags, workstation, remarks=None):
                     "quantity": production_item_doc.quantity,
                     "physical_cell": production_item_doc.physical_cell,
                     "production_type": production_item_bc_doc.production_type,
-                    "dut": is_dut_on(production_item_doc.type),
+                    "dut": TrackerXLiveSettings.is_dut_on(production_item_doc.type),
                     "type": production_item_doc.type,
                     "operation": operation,
                     "operation_name": operation,
@@ -150,7 +154,3 @@ def get_item_information(tags, workstation, remarks=None):
         frappe.local.response.http_status_code = 500
         return {"status": "error", "message": str(e)}
     
-
-
-def is_dut_on(type):
-    return frappe.db.get_single_value("TrackerX Live Settings", "component_defective_unit_tagging") if type == "Component" else frappe.db.get_single_value("TrackerX Live Settings", "progressive_defective_unit_tagging") 
