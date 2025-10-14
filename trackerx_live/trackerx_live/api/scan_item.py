@@ -99,6 +99,12 @@ def scan_item(tags, workstation, scan_source="QC",remarks=None):
                     frappe.throw(
                         f"This Unit/Bundle is rejected by QC at {last_scan_log_doc.current_operation}"
                     )
+
+                
+                if production_item_doc.tracking_status == "Defective Unit Tagging" and not is_defective_last:
+                    frappe.throw(
+                        f"This is Defective Unit tagged Item, cannot be scaneed unless its a rework."
+                    )
                 # validate_workstation_for_supported_operation
                 validate_workstation_for_supported_operation(workstation=workstation, operation=operation, api_source=scan_source)        
 
