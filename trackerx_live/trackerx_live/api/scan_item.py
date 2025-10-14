@@ -3,6 +3,8 @@ from frappe import _
 from trackerx_live.trackerx_live.utils.cell_operator_ws_util import get_cell_operator_by_ws, validate_workstation_for_supported_operation
 import json
 
+from trackerx_live.trackerx_live.utils.trackerx_live_settings_util import TrackerXLiveSettings
+
 @frappe.whitelist()
 def scan_item(tags, workstation, scan_source="QC",remarks=None):
     try:
@@ -53,7 +55,7 @@ def scan_item(tags, workstation, scan_source="QC",remarks=None):
 
                 tag_map = frappe.db.get_value(
                     "Production Item Tag Map",
-                    {"tracking_tag": tag_id},
+                    {"tracking_tag": tag_id, "is_active": True},
                     ["name", "is_active", "production_item"],
                     as_dict=True
                 )
@@ -150,7 +152,7 @@ def scan_item(tags, workstation, scan_source="QC",remarks=None):
                     "quantity": production_item_doc.quantity,
                     "physical_cell": production_item_doc.physical_cell,
                     "production_type": production_item_bc_doc.production_type,
-                    "dut": is_dut_on(production_item_doc.type),
+                    "dut": TrackerXLiveSettings.is_dut_on(production_item_doc.type),
                     "type": production_item_doc.type,
                     "operation": operation,
                     "operation_name": operation,
@@ -175,7 +177,8 @@ def scan_item(tags, workstation, scan_source="QC",remarks=None):
 
             except Exception as inner_e:
                 raise inner_e
-
+        
+        frappe.db.commit()
         return {
             "status": "completed",
             "code": 1200,
@@ -184,16 +187,14 @@ def scan_item(tags, workstation, scan_source="QC",remarks=None):
         }
 
     except frappe.ValidationError as e:
+        frappe.db.rollback()
         frappe.log_error(frappe.get_traceback(), "Scan Item API Error")
         frappe.local.response.http_status_code = 400
         return {"status": "error", "message": str(e)}
     except Exception as e:
+        frappe.db.rollback()
         frappe.log_error(frappe.get_traceback(), "Scan Item API Error")
         frappe.local.response.http_status_code = 500
         return {"status": "error", "message": str(e)}
     
 
-
-def is_dut_on(type):
-    is_on =  frappe.db.get_single_value("TrackerX Live Settings", "component_defective_unit_tagging") if type == "Component" else frappe.db.get_single_value("TrackerX Live Settings", "progressive_defective_unit_tagging") 
-    return "ON" if is_on else "OFF"

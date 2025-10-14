@@ -66,7 +66,7 @@
    "fieldname": "status",
    "fieldtype": "Select",
    "label": "Status",
-   "options": "\nPass\nQC Rework\nQC Rejected\nQC Recut\nCounted\nActivated\nTag Switched\nUnlink Link"
+   "options": "\nPass\nQC Rework\nQC Rejected\nQC Recut\nCounted\nActivated\nTag Switched\nUnlink Link\nDUT Parent Defect"
   },
   {
    "fieldname": "remarks",
@@ -128,7 +128,7 @@
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2025-09-23 16:14:21.583638",
+ "modified": "2025-10-14 12:45:27.444404",
  "modified_by": "Administrator",
  "module": "TrackerX Live",
  "name": "Item Scan Log",

@@ -48,7 +48,7 @@
    "fieldname": "activated_source",
    "fieldtype": "Select",
    "label": "Activated Source",
-   "options": "\nApp\nCut Bundle\nFaulty Tag Replacement"
+   "options": "\nApp\nCut Bundle\nFaulty Tag Replacement\nPartial Bundle"
   },
   {
    "fieldname": "deactivated_source",
@@ -60,7 +60,7 @@
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2025-10-10 12:31:01.080228",
+ "modified": "2025-10-14 12:25:24.742013",
  "modified_by": "Administrator",
  "module": "TrackerX Live",
  "name": "Production Item Tag Map",
