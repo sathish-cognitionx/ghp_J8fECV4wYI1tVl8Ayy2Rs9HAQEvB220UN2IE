@@ -374,7 +374,7 @@ def reduced_the_bundle_to_good_units_bundle(parent_scan, parent_prod, parent_bc,
   
 
 @frappe.whitelist()
-def unit_scan(scan_id=None, unit_tag=None, existing_defective_units=[]):
+def unit_scan(production_item_id=None, scan_id=None, unit_tag=None, existing_defective_units=[]):
     try:
         if not scan_id or not unit_tag:
             frappe.throw(
@@ -385,9 +385,29 @@ def unit_scan(scan_id=None, unit_tag=None, existing_defective_units=[]):
         tag = frappe.db.get_value(
             "Tracking Tag",
             {"tag_number": unit_tag},
+            ["name"],
+            as_dict=True
+        )
+
+        if not tag:
+            return "Success"
+
+        tag_map = frappe.db.get_value(
+            "Production Item Tag Map",
+            {"tracking_tag": tag.name, "is_active": True},
             ["name", "is_active", "production_item"],
             as_dict=True
         )
+
+        if not tag_map:
+            return "Success"
+        
+        
+
+
+
+
+
 
         #TODO
         #If its the new tag then it must not create more unit tags than the bundle quantity, use existing defective units (local) and existing db together to verify
