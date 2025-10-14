@@ -27,7 +27,7 @@
    "fieldtype": "Select",
    "in_list_view": 1,
    "label": "Tag Type",
-   "options": "RFID\nQR Code\nBarcode\nNFC",
+   "options": "Unknown\nRFID\nQR Code\nBarcode\nNFC",
    "reqd": 1
   },
   {
@@ -57,13 +57,13 @@
    "fieldname": "activation_source",
    "fieldtype": "Select",
    "label": "Activation Source",
-   "options": "\nApp\nCut Bundle\nFaulty Tag Replacement"
+   "options": "\nApp\nCut Bundle\nFaulty Tag Replacement\nPartial Bundle"
   }
  ],
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2025-10-10 12:31:16.076725",
+ "modified": "2025-10-14 12:24:46.747657",
  "modified_by": "Administrator",
  "module": "TrackerX Live",
  "name": "Tracking Tag",

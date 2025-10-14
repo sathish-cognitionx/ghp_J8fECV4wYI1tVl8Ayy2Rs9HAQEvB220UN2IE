@@ -123,7 +123,7 @@
    "fieldname": "source",
    "fieldtype": "Select",
    "label": "Source",
-   "options": "Activation\nDefective Unit Tagging\nUnlink Link\nRecut Activation"
+   "options": "Activation\nDefective Unit Tagging\nUnlink Link\nRecut Activation\nPartial Bundle"
   },
   {
    "default": "Active",
@@ -160,7 +160,7 @@
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2025-09-23 13:18:13.852100",
+ "modified": "2025-10-14 12:23:24.119793",
  "modified_by": "Administrator",
  "module": "TrackerX Live",
  "name": "Production Item",
