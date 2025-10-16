@@ -67,6 +67,7 @@ def count_tags(tag_numbers, ws_name):
 
             result = SequenceOfOpeationUtil.can_this_item_scan_in_this_operation(production_item=tag_map.production_item, workstation=current_workstation, operation=current_operation, physical_cell=physical_cell)
             if not result["is_allowed"]:
+                errors.append({"tag": tag_number, "reason": result["reason"], "data": result["old_logs"]})
                 continue
 
             production_item_doc = frappe.get_doc("Production Item", tag_map.production_item)
@@ -140,7 +141,7 @@ def count_tags(tag_numbers, ws_name):
 
         # Compute current_bundle_count for this session
         
-
+        frappe.db.commit()
         return {
             "status": "success",
             "total_tags": len(tag_numbers),
@@ -157,11 +158,13 @@ def count_tags(tag_numbers, ws_name):
         }
 
     except frappe.ValidationError as e:
+        frappe.db.rollback()
         frappe.log_error(frappe.get_traceback(), "count_tags() error")
         frappe.local.response.http_status_code = 400
         return {"status": "error", "message": str(e)}
 
     except Exception as e:
+        frappe.db.rollback()
         frappe.log_error(frappe.get_traceback(), "count_tags() error")
         frappe.local.response.http_status_code = 500
         return {"status": "error", "message": str(e)}
