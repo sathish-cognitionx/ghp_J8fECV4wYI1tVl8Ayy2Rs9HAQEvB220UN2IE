@@ -111,13 +111,31 @@ def count_tags(tag_numbers, ws_name):
         # if created_logs:
         #     frappe.db.commit()
 
+        transformed_list = []
+    
+        # Iterate through the key-value pairs of the input dictionary
+        # The key is the component name, and the value is the total count.
+        for name, count in current_components_map.items():
+            # Create a new dictionary in the desired format
+            component_data = {
+                "component_name": name,
+                "total_count": count
+            }
+            # Add the new dictionary to the list
+            transformed_list.append(component_data)
+
+        current_bundle_count = len(created_logs)
         # Fetch today's and current hour's info
         today_info = get_counted_info(ws_name, "today")
         current_hour_info = get_counted_info(ws_name, "current_hour")
-        counted_info_data = get_counted_info(ws_name)
+        counted_info_data = {
+            "total_count": current_unit_count,
+            "bundle_count": current_bundle_count,
+            "components": transformed_list
+        }
 
         # Compute current_bundle_count for this session
-        current_bundle_count = len(created_logs)
+        
 
         return {
             "status": "success",
