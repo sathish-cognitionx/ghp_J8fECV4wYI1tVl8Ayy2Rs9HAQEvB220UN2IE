@@ -4,6 +4,7 @@ from trackerx_live.trackerx_live.utils.cell_operator_ws_util import get_cell_ope
 import json
 
 from trackerx_live.trackerx_live.utils.trackerx_live_settings_util import TrackerXLiveSettings
+from trackerx_live.trackerx_live.utils.sequence_of_operation import SequenceOfOpeationUtil
 
 @frappe.whitelist()
 def scan_item(tags, workstation, scan_source="QC",remarks=None):
@@ -35,7 +36,6 @@ def scan_item(tags, workstation, scan_source="QC",remarks=None):
         operation = ws_info["operation_name"]
         physical_cell = ws_info["cell_id"]
 
-        
 
         for tag_number in tags:
             try:
@@ -64,10 +64,19 @@ def scan_item(tags, workstation, scan_source="QC",remarks=None):
                     frappe.throw(
                         f"Invalid Tag! Tag already unlinked, Please use activated tag. Contact your supervisor"
                     )
+
+
                 
 
                 # --- Get Production Item ---
                 production_item_name = tag_map.production_item
+
+                result = SequenceOfOpeationUtil.can_this_item_scan_in_this_operation(production_item=production_item_name, workstation=workstation, operation=operation, physical_cell=physical_cell)
+                if not result.is_allowed:
+                    frappe.throw(
+                        f"This item already scanned in this operation",
+                        frappe.ValidationError
+                    )
 
                 production_item_doc = frappe.get_doc("Production Item", production_item_name)
 
@@ -158,7 +167,7 @@ def scan_item(tags, workstation, scan_source="QC",remarks=None):
                     "quantity": production_item_doc.quantity,
                     "physical_cell": production_item_doc.physical_cell,
                     "production_type": production_item_bc_doc.production_type,
-                    "dut": TrackerXLiveSettings.is_dut_on(production_item_doc.type),
+                    "dut": "ON" if TrackerXLiveSettings.is_dut_on(production_item_doc.type) else "OFF",
                     "type": production_item_doc.type,
                     "operation": operation,
                     "operation_name": operation,
