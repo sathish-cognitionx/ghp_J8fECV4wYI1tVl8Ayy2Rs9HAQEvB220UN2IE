@@ -72,7 +72,7 @@ def scan_item(tags, workstation, scan_source="QC",remarks=None):
                 production_item_name = tag_map.production_item
 
                 result = SequenceOfOpeationUtil.can_this_item_scan_in_this_operation(production_item=production_item_name, workstation=workstation, operation=operation, physical_cell=physical_cell)
-                if not result.is_allowed:
+                if not result["is_allowed"]:
                     frappe.throw(
                         f"This item already scanned in this operation",
                         frappe.ValidationError
