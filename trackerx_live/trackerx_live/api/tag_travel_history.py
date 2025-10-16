@@ -2,6 +2,17 @@ import frappe
 from frappe import _
 from frappe.utils import now_datetime
 from trackerx_live.trackerx_live.utils.operation_map_util import OperationMapManager
+import pytz
+
+
+def format_datetime(dt):
+    """Format datetime to yyyy-MM-dd'T'HH:mm:ss.SSS (no timezone)"""
+    if not dt:
+        return None
+    if dt.tzinfo is not None:
+        dt = dt.astimezone(pytz.UTC).replace(tzinfo=None)
+    return dt.strftime("%Y-%m-%dT%H:%M:%S.%f")[:-3]
+
 
 @frappe.whitelist()
 def tag_travel_history(tag_number):
@@ -38,6 +49,15 @@ def tag_travel_history(tag_number):
         
         coupled_status = "active" if production_item_doc.tracking_status == "Active" else "unlinked"
 
+        quality_status = frappe.db.get_value(
+            "Item Scan Log",
+            {
+                "production_item": production_item_doc.name,
+                "operation": production_item_doc.current_operation
+            },
+            "status"
+        )
+
         item_status = {
             "rfidTagNo": tag_id,
             "itemNo": production_item_doc.production_item_number,
@@ -49,7 +69,7 @@ def tag_travel_history(tag_number):
             "material": fg_item_doc.custom_material_composition,
             "bundleOrUnit": production_item_doc.bundle_configuration,
             "coupledStatus": coupled_status,
-            "qualityStatus": None,
+            "qualityStatus": quality_status,
             "quantity": production_item_doc.quantity,
             "unitComponentType": production_item_doc.type,
             "pfpVersionId": None,
@@ -61,14 +81,12 @@ def tag_travel_history(tag_number):
             "Item Scan Log",
             filters={"production_item": production_item_doc.name},
             fields=["name", "operation", "workstation", "physical_cell", "scanned_by",
-                    "scan_time", "status", "remarks", "log_type", "log_status"],
-            order_by="scan_time asc"
+                    "scan_time", "logged_time", "status", "remarks", "log_type", "log_status"],
+            order_by="logged_time asc, scan_time asc"
         )
 
-        operation_map_manager = OperationMapManager()
-        operation_map = operation_map_manager.get_operation_map(tracking_order_number=tracking_order_doc.name)
-
         item_flow_data = []
+        prev_cell = None 
 
         for log in scan_logs:
             user = frappe.db.get_value("User", log.scanned_by, ["first_name", "last_name"], as_dict=True) if log.scanned_by else {}
@@ -84,6 +102,12 @@ def tag_travel_history(tag_number):
                         "name as defectLogId"]
             )
 
+            cell_transition = False
+            if log.status == "Pass" and prev_cell and log.physical_cell and log.physical_cell != prev_cell:
+                cell_transition = True
+
+            prev_cell = log.physical_cell  
+
             details = {
                 "uuid": log.name,
                 "icUuid": None,
@@ -91,7 +115,7 @@ def tag_travel_history(tag_number):
                 "userFirstName": user.get("first_name"),
                 "userLastName": user.get("last_name"),
                 "createdBy": log.scanned_by,
-                "createdAt": log.scan_time,
+                "createdAt": format_datetime(log.logged_time or log.scan_time),
                 "cellId": log.physical_cell,
                 "cell": log.physical_cell,
                 "wsId": log.workstation,
@@ -119,10 +143,10 @@ def tag_travel_history(tag_number):
                 "defectiveUnitCount": len(defects),
                 "inputLabel": None,
                 "outputLabel": None,
-                "createdAt": log.scan_time,
+                "createdAt": format_datetime(log.logged_time or log.scan_time),
                 "bundleToBundle": False,
                 "unitToUnit": False,
-                "cellTranistion": False,
+                "cellTranistion": cell_transition,
                 "bundleToUnit": False
             }
 
