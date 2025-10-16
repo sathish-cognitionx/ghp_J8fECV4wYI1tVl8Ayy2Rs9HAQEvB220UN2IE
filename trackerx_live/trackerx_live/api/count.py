@@ -66,7 +66,7 @@ def count_tags(tag_numbers, ws_name):
                 continue
 
             result = SequenceOfOpeationUtil.can_this_item_scan_in_this_operation(production_item=tag_map.production_item, workstation=current_workstation, operation=current_operation, physical_cell=physical_cell)
-            if not result.is_allowed:
+            if not result["is_allowed"]:
                 continue
 
             production_item_doc = frappe.get_doc("Production Item", tag_map.production_item)
