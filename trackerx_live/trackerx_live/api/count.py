@@ -43,7 +43,7 @@ def count_tags(tag_numbers, ws_name):
         current_workstation = ws_info["workstation"]
 
 
-
+        current_unit_count = 0
         for tag_number in tag_numbers:
             tag = frappe.get_all("Tracking Tag", filters={"tag_number": tag_number}, fields=["name"])
             if not tag:
@@ -68,6 +68,7 @@ def count_tags(tag_numbers, ws_name):
             result = SequenceOfOpeationUtil.can_this_item_scan_in_this_operation(production_item=tag_map.production_item, workstation=current_workstation, operation=current_operation, physical_cell=physical_cell)
             if not result.is_allowed:
                 continue
+
             production_item_doc = frappe.get_doc("Production Item", tag_map.production_item)
 
             if not current_operation or not current_workstation:
@@ -77,7 +78,7 @@ def count_tags(tag_numbers, ws_name):
             # validate workstation for supported operation
             validate_workstation_for_supported_operation(workstation=current_workstation, operation=current_operation, api_source="Count")        
 
-
+            
             # Log scan
             new_scan_log = frappe.new_doc("Item Scan Log")
             new_scan_log.production_item = production_item_doc.name
@@ -94,6 +95,8 @@ def count_tags(tag_numbers, ws_name):
           
             new_scan_log.insert()
             created_logs.append({"tag": tag_number, "log": new_scan_log.name})
+
+            current_unit_count += production_item_doc.quantity
 
             # Track component-wise totals
             comp_name = frappe.db.get_value("Tracking Component", production_item_doc.component, "component_name")
@@ -122,6 +125,7 @@ def count_tags(tag_numbers, ws_name):
             "logged_tags": len(created_logs),
             "error_tags": len(errors),
             "current_bundle_count": current_bundle_count,
+            "current_unit_count": current_unit_count,
             "today_count": today_info.get("total_count", 0),
             "current_hour_count": current_hour_info.get("total_count", 0),
             "component_wise_current_count": current_components_map,
