@@ -148,7 +148,7 @@ def replace_rfid_tag(old_tag_number=None, new_tag_number=None):
                 return {
                     "status": "active",
                     "prodution_item_tag_map":production_item_map.name,
-                    "message": "New Tag is linked to Production Item Tag Map we can not replace"
+                    "message": "We cannot replace this tag it is already linked. "
                 }
         
     if not new_tag:
