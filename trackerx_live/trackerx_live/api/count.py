@@ -125,6 +125,10 @@ def count_tags(tag_numbers, ws_name):
             transformed_list.append(component_data)
 
         current_bundle_count = len(created_logs)
+        if current_bundle_count <= 0:
+            frappe.throw(
+                f"None of the bundle/units have counted, Becuase all of them have already counted earlier"
+            )
         # Fetch today's and current hour's info
         today_info = get_counted_info(ws_name, "today")
         current_hour_info = get_counted_info(ws_name, "current_hour")

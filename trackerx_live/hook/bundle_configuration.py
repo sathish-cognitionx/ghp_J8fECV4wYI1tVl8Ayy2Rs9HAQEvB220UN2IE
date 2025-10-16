@@ -265,6 +265,8 @@ def create_production_items(doc, tracking_order):
                     component_bundle_configuration.parenttype = "Tracking Order"
                     component_bundle_configuration.parentfield = "component_bundle_configuration"
                     component_bundle_configuration.source = "Activation"
+                    component_bundle_configuration.activation_status = "Completed"
+
 
                     component_bundle_configuration.insert(ignore_permissions=True)
                     component_bc_dict[key] = component_bundle_configuration
