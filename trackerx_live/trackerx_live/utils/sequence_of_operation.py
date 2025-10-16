@@ -8,8 +8,10 @@ class SequenceOfOpeationUtil:
         old_logs = frappe.get_list("Item Scan Log",
             filters = {
                 "production_item": production_item,
-                "operation": operation
-            }
+                "operation": operation,
+                "log_status": "Completed"
+            },
+            fields=["name", "status", "creation"]
         )
 
         if not old_logs:
@@ -18,13 +20,14 @@ class SequenceOfOpeationUtil:
             }
         
         for log in old_logs:
-            if log.status in ('Pass', 'SP Pass'):
+            if log.status in ('Pass', 'SP Pass', 'Counted'):
                 # frappe.throw(
                 #     f"Item is already scanned in this operation"
                 # )
                 return {
                     "is_allowed": False,
-                    "reason": "ALREADY_PASSED"
+                    "reason": "ALREADY_PASSED",
+                    "old_logs": old_logs
                 }
             
         return {
