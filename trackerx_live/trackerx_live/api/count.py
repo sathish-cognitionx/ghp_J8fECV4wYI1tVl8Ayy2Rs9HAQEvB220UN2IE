@@ -7,6 +7,7 @@ from trackerx_live.trackerx_live.utils.production_completion_util import check_a
 from trackerx_live.trackerx_live.api.counted_info import get_counted_info
 from trackerx_live.trackerx_live.utils.cell_operator_ws_util import validate_workstation_for_supported_operation 
 from trackerx_live.trackerx_live.utils.cell_operator_ws_util import get_cell_operator_by_ws 
+from trackerx_live.trackerx_live.utils.sequence_of_operation import SequenceOfOpeationUtil
 
 
 @frappe.whitelist()
@@ -42,6 +43,7 @@ def count_tags(tag_numbers, ws_name):
         current_workstation = ws_info["workstation"]
 
 
+
         for tag_number in tag_numbers:
             tag = frappe.get_all("Tracking Tag", filters={"tag_number": tag_number}, fields=["name"])
             if not tag:
@@ -63,6 +65,9 @@ def count_tags(tag_numbers, ws_name):
                 errors.append({"tag": tag_number, "reason": "Tag is deactivated"})
                 continue
 
+            result = SequenceOfOpeationUtil.can_this_item_scan_in_this_operation(production_item=tag_map.production_item, workstation=current_workstation, operation=current_operation, physical_cell=physical_cell)
+            if not result.is_allowed:
+                continue
             production_item_doc = frappe.get_doc("Production Item", tag_map.production_item)
 
             if not current_operation or not current_workstation:
