@@ -701,3 +701,126 @@ def get_rft_wip_style_operators_count():
             }
         }
     }
+
+
+
+
+
+'''
+Efficiency apis
+starts here
+'''
+
+
+@frappe.whitelist()
+def get_efficiency_count(**kwargs):
+    return {
+        "data": {
+            "output": 85,
+            "target": 100,
+            "color": "GREEN"
+        }
+    }
+
+@frappe.whitelist()
+def get_efficiency_line_graph(**kwargs):
+
+    hourly_output = [
+        {
+          "hour": "07:00",
+          "hour_label": "07:00-08:00",
+          "output": 20,
+          "target": 100,
+          "color": "RED"
+        },
+        {
+          "hour": "08:00",
+          "hour_label": "08:00-09:00",
+          "output": 45,
+          "target": 100,
+          "color": "RED"
+        },
+        {
+          "hour": "09:00",
+          "hour_label": "09:00-10:00",
+          "output": 67,
+          "target": 100,
+          "color": "RED"
+        },
+        {
+          "hour": "10:00",
+          "hour_label": "10:00-11:00",
+          "output": 78,
+          "target": 100,
+          "color": "RED"
+        },
+        {
+          "hour": "11:00",
+          "hour_label": "11:00-12:00",
+          "output": 80,
+          "target": 100,
+          "color": "YELLOW"
+        },
+        {
+          "hour": "12:00",
+          "hour_label": "12:00-13:00",
+          "output": 90,
+          "target": 100,
+          "color": "GREEN"
+        },
+        {
+          "hour": "13:00",
+          "hour_label": "13:00-14:00",
+          "output": 0,
+          "target": 0,
+          "color": "RED"
+        },
+        {
+          "hour": "14:00",
+          "hour_label": "14:00-15:00",
+          "output": 0,
+          "target": 0,
+          "color": "RED"
+        },
+        {
+          "hour": "15:00",
+          "hour_label": "15:00-16:00",
+          "output": 0,
+          "target": 0,
+          "color": "RED"
+        },
+        {
+          "hour": "16:00",
+          "hour_label": "16:00-17:00",
+          "output": 0,
+          "target": 0,
+          "color": "RED"
+        },
+        {
+          "hour": "17:00",
+          "hour_label": "17:00-18:00",
+          "output": 0,
+          "target": 0,
+          "color": "RED"
+        },
+        {
+          "hour": "18:00",
+          "hour_label": "18:00-19:00",
+          "output": 0,
+          "target": 0,
+          "color": "RED"
+        },
+        {
+          "hour": "19:00",
+          "hour_label": "19:00-20:00",
+          "output": 0,
+          "target": 0,
+          "color": "RED"
+        }
+      ]
+    return {
+        "data": {
+            "hourly_output": hourly_output
+           
+        }
+    }
