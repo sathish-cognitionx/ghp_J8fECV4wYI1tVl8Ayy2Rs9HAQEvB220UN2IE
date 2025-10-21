@@ -152,7 +152,7 @@ def create_tracking_order_from_bundle_creation(doc, method=None):
                 
         except Exception as process_map_error:
             frappe.log_error(f"Process map error for item {doc.fg_item}", f"{str(process_map_error)}")
-            frappe.throw(f"Operation map error: {process_map_error}", frappe.ValidationError)
+            # frappe.throw(f"Operation map error: {process_map_error}", frappe.ValidationError)
             
             # # Create a default operation map if process map generation fails
             # default_operation = frappe.new_doc("Operation Map")
@@ -188,8 +188,7 @@ def create_tracking_order_from_bundle_creation(doc, method=None):
             # Truncate error message to prevent character length exceeded errors
             error_msg = str(e)[:100] + "..." if len(str(e)) > 100 else str(e)
             frappe.log_error(f"Operation map error: {error_msg}", "Bundle Configuration Operation Map")
-            # Set a default last operation if operation map manager fails
-            tracking_order.last_operation = "Final QC"
+            
 
         # Create physical cell wise last operation - FIXED FILTER SYNTAX
         physical_cell_wise_last_operation = []
@@ -215,7 +214,7 @@ def create_tracking_order_from_bundle_creation(doc, method=None):
             
         except Exception as physical_cell_error:
             frappe.log_error(f"Physical cell configuration error: {str(physical_cell_error)}")
-            frappe.msgprint("Warning: Could not configure physical cells. Please check Physical Cell master data.")
+            #frappe.msgprint("Warning: Could not configure physical cells. Please check Physical Cell master data.")
 
         tracking_order.save()
         

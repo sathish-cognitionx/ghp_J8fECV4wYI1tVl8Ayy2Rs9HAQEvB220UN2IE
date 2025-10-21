@@ -687,23 +687,74 @@ def tv_dashboards_display_time():
 
 
 @frappe.whitelist()
-def get_rft_wip_style_operators_count():
+def get_rft_wip_style_operators_count(**kwargs):
+
+    period = kwargs.get('period', 'today')
+    device_id = kwargs.get('device_id')
+    workstation = kwargs.get('workstation')
+    operation = kwargs.get('operation')
+    physical_cell = kwargs.get('physical_cell')
+
+    running_fg = get_running_style(workstation, operation, physical_cell)
+     
     return {
         "status": "success",
         "data": {
-            "rft": 90,
-            "wip": 20,
-            "cell_wip": 25,
-            "style": "Round Neck T Shirt",
-            "operator": {
-                "count": 10,
-                "type": "plan"
-            }
+            "rft": get_rft(workstation, operation, physical_cell),
+            "wip": get_wip(workstation, operation, physical_cell),
+            "cell_wip": get_cell_wip(workstation, operation, physical_cell),
+            "style": running_fg.style,
+            "operator": get_operator_count(workstation, operation, physical_cell)
         }
     }
 
+def get_rft(workstation, operation, physical_cell):
+    return 90
+
+def get_wip(workstation, operation, physical_cell):
+    return 1
 
 
+def get_cell_wip(workstation, operation, physical_cell):
+    return 1
+
+
+def get_running_style(workstation, operation, physical_cell):
+    result = frappe.db.sql("""
+            SELECT 
+                itm.item_name as style,
+                itm.name as item
+            FROM `tabItem Scan Log` sl
+            INNER JOIN `tabProduction Item` pi on pi.name = sl.production_item
+            INNER JOIN `tabTracking Order` tor on tor.name = pi.tracking_order
+            INNER JOIN `tabItem` itm on itm.name = tor.item
+            WHERE sl.physical_cell = %(physical_cell)s
+            AND DATE(sl.creation) = CURDATE()
+            ORDER BY sl.creation DESC LIMIT 1
+        """, {'physical_cell': physical_cell}, as_dict=True)
+    
+    if not result:
+        result = frappe.db.sql("""
+            SELECT 
+                itm.item_name as style,
+                itm.name as item
+            FROM `tabItem Scan Log` sl
+            INNER JOIN `tabProduction Item` pi on pi.name = sl.production_item
+            INNER JOIN `tabTracking Order` tor on tor.name = pi.tracking_order
+            INNER JOIN `tabItem` itm on itm.name = tor.item
+            WHERE sl.physical_cell = %(physical_cell)s
+            AND DATE(sl.creation) >= DATE_SUB(CURDATE(), INTERVAL 1 MONTH)
+            ORDER BY sl.creation DESC LIMIT 1
+        """, {'physical_cell': physical_cell}, as_dict=True)
+    
+    return result[0]
+    
+
+def get_operator_count(workstation, operation, physical_cell):
+    return {
+        "count": 10,
+        "type": "plan"
+    }
 
 
 '''
