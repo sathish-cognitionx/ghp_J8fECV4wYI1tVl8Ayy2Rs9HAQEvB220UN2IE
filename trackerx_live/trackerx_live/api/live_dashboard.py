@@ -122,6 +122,33 @@ def build_filters(period, device_id=None, workstation=None, operation=None, phys
     
     return filters
 
+def get_start_and_end_time(period):
+    """Get time-based filters based on period"""
+    current_time = now_datetime()
+    
+    if period == 'current_hour':
+        # From current hour start to now
+        start_time = current_time.replace(minute=0, second=0, microsecond=0)
+        return start_time, current_time
+    
+    elif period == 'last_one_hour':
+        # From now-1hour to now
+        end_time = current_time
+        start_time = current_time - timedelta(hours=1)
+        return start_time, end_time
+    
+    elif period == 'today':
+        # Today's data
+        start_time = get_datetime(today() + " 00:00:00")
+        end_time = get_datetime(today() + " 23:59:59")
+        return start_time, end_time
+    
+    else:
+        # Default to today
+        start_time = get_datetime(today() + " 00:00:00")
+        end_time = get_datetime(today() + " 23:59:59")
+        return start_time, end_time
+
 
 def get_time_filters(period):
     """Get time-based filters based on period"""
@@ -195,9 +222,10 @@ def get_ie_target(inputs):
     Placeholder function to calculate IE Target
     To be implemented based on your business logic
     """
-    from trackerx_live.trackerx_live.services.target_service import ConfigTargetService
-    target_service = ConfigTargetService()
-    return target_service.get_total_target(inputs=inputs, from_date=None, to_date=None)
+    start_time, end_time = get_start_and_end_time(inputs["period"])
+    from trackerx_live.trackerx_live.services.target_service import LiveTargetService
+    target_service = LiveTargetService()
+    return target_service.get_total_target(inputs=inputs, from_date=start_time, to_date=end_time)
 
 
 
@@ -206,9 +234,10 @@ def get_full_ie_target(inputs):
     Placeholder function to calculate Full IE Target
     To be implemented based on your business logic
     """
-    from trackerx_live.trackerx_live.services.target_service import ConfigTargetService
-    target_service = ConfigTargetService()
-    return target_service.get_total_target(inputs=inputs, from_date=None, to_date=None)
+    start_time, end_time = get_start_and_end_time(inputs["period"])
+    from trackerx_live.trackerx_live.services.target_service import LiveTargetService
+    target_service = LiveTargetService()
+    return target_service.get_total_target(inputs=inputs, from_date=start_time, to_date=end_time)
 
 
 def get_plan_target(filters):
@@ -720,6 +749,7 @@ def get_cell_wip(workstation, operation, physical_cell):
 
 
 def get_running_style(workstation, operation, physical_cell):
+
     result = frappe.db.sql("""
             SELECT 
                 itm.item_name as style,
@@ -747,6 +777,8 @@ def get_running_style(workstation, operation, physical_cell):
             ORDER BY sl.creation DESC LIMIT 1
         """, {'physical_cell': physical_cell}, as_dict=True)
     
+    if not result:
+        return None
     return result[0]
     
 
