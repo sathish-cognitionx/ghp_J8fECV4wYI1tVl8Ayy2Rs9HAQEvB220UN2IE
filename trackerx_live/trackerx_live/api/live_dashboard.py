@@ -1,6 +1,7 @@
 import frappe
 from datetime import datetime, timedelta
 from frappe.utils import now_datetime, today, get_datetime
+import math
 
 
 @frappe.whitelist()
@@ -225,7 +226,7 @@ def get_ie_target(inputs):
     start_time, end_time = get_start_and_end_time(inputs["period"])
     from trackerx_live.trackerx_live.services.target_service import LiveTargetService
     target_service = LiveTargetService()
-    return target_service.get_total_target(inputs=inputs, from_date=start_time, to_date=end_time)
+    return math.ceil(target_service.get_total_target(inputs=inputs, from_date=start_time, to_date=end_time))
 
 
 
@@ -237,7 +238,7 @@ def get_full_ie_target(inputs):
     start_time, end_time = get_start_and_end_time(inputs["period"])
     from trackerx_live.trackerx_live.services.target_service import LiveTargetService
     target_service = LiveTargetService()
-    return target_service.get_total_target(inputs=inputs, from_date=start_time, to_date=end_time)
+    return math.ceil(target_service.get_total_target(inputs=inputs, from_date=start_time, to_date=end_time))
 
 
 def get_plan_target(filters):
@@ -364,18 +365,26 @@ def get_defective_unit_count(**kwargs):
         operation = kwargs.get('operation')
         physical_cell = kwargs.get('physical_cell')
         
+        inputs = {
+            "period": period,
+            "device_id": device_id,
+            "workstation": workstation,
+            "operation": operation,
+            "physical_cell": physical_cell            
+        }
+        
         # Build filters with defect statuses
         defect_statuses = ['QC Rework', 'QC Reject', 'QC Recut']
         filters = build_filters(period, device_id, workstation, operation, physical_cell, status_filter=defect_statuses)
         
         # Get defective unit count (count of records, not sum of quantities)
         defective_count = frappe.db.count('Item Scan Log', filters)
-        
+        limit = math.floor(get_defective_unit_limit(inputs))
         return {
             "data": {
                 "defective_unit_count": defective_count,
-                "limit": 0,
-                "color": "YELLOW"
+                "limit": limit,
+                "color": get_defective_unit_threshold(defective_count, limit)
             }
         }
         
@@ -389,6 +398,35 @@ def get_defective_unit_count(**kwargs):
             },
             "error": str(e)
         }
+
+def get_defective_unit_limit(inputs):
+    start_time, end_time = get_start_and_end_time(inputs["period"])
+    from trackerx_live.trackerx_live.services.target_service import LiveTargetService
+    target_service = LiveTargetService()
+    return math.floor(target_service.get_defective_unit_limit(inputs=inputs, from_date=start_time, to_date=end_time)) or 0
+    
+
+def get_defects_limit(inputs):
+    start_time, end_time = get_start_and_end_time(inputs["period"])
+    from trackerx_live.trackerx_live.services.target_service import LiveTargetService
+    target_service = LiveTargetService()
+    return math.floor(target_service.get_defects_limit(inputs=inputs, from_date=start_time, to_date=end_time)) or 0
+
+def get_defective_unit_threshold(defective_count, limit):
+    if limit == 0:
+        return "GREEN"
+
+    threshold = get_threshold_percentage
+    defective_percentage = defective_count * 100 / limit
+
+    if defective_percentage >= 100:
+        return "RED"
+    
+    elif defective_percentage >= threshold:
+        return "YELLOW"
+    
+    else:
+        return "GREEN"
 
 
 @frappe.whitelist()
@@ -412,6 +450,14 @@ def get_defects_count(**kwargs):
         workstation = kwargs.get('workstation')
         operation = kwargs.get('operation')
         physical_cell = kwargs.get('physical_cell')
+
+        inputs = {
+            "period": period,
+            "device_id": device_id,
+            "workstation": workstation,
+            "operation": operation,
+            "physical_cell": physical_cell            
+        }
         
         # Build filters for Item Scan Log
         filters = build_filters(period, device_id, workstation, operation, physical_cell)
@@ -438,12 +484,14 @@ def get_defects_count(**kwargs):
             'Item Scan Log Defect',
             {'parent': ['in', parent_names]}
         )
+
+        limit = math.floor(get_defects_limit(inputs=inputs))
         
         return {
             "data": {
                 "defects_count": defects_count,
-                "limit": 0,
-                "color": "GREEN"
+                "limit": limit,
+                "color": get_defective_unit_threshold(defects_count, limit)
             }
         }
         
@@ -530,119 +578,130 @@ def get_top_defects_last_hour(**kwargs):
         }
 
 
+import frappe
+from frappe.utils import now_datetime, today, get_datetime
+from datetime import timedelta, datetime
+
 @frappe.whitelist()
 def get_output_line_graph(**kwargs):
     """
     API to get hourly output count for today (line graph data)
-    
-    Parameters:
-    - device_id: string or list of device IDs
-    - workstation: string or list of workstations
-    - operation: string or list of operations
-    - physical_cell: string or list of physical cells
-    
-    Returns hourly output data for the current day (max 24 points)
     """
     try:
-        # Get parameters
+        # --- Input params ---
         device_id = kwargs.get('device_id')
         workstation = kwargs.get('workstation')
         operation = kwargs.get('operation')
         physical_cell = kwargs.get('physical_cell')
-        
-        # Build base filters (without time filter)
-        filters = {
-            'log_status': 'Completed',
-            'status': 'Pass'
+        period = kwargs.get('period', 'today')
+
+        inputs = {
+            "period": period,
+            "device_id": device_id,
+            "workstation": workstation,
+            "operation": operation,
+            "physical_cell": physical_cell
         }
-        
-        # Add optional filters
-        if device_id:
-            if isinstance(device_id, str):
-                filters['device_id'] = device_id
-            elif isinstance(device_id, list):
-                filters['device_id'] = ['in', device_id]
-        
-        if workstation:
-            if isinstance(workstation, str):
-                filters['workstation'] = workstation
-            elif isinstance(workstation, list):
-                filters['workstation'] = ['in', workstation]
-        
-        if operation:
-            if isinstance(operation, str):
-                filters['operation'] = operation
-            elif isinstance(operation, list):
-                filters['operation'] = ['in', operation]
-        
-        if physical_cell:
-            if isinstance(physical_cell, str):
-                filters['physical_cell'] = physical_cell
-            elif isinstance(physical_cell, list):
-                filters['physical_cell'] = ['in', physical_cell]
-        
-        # Get today's start time
+
+        # --- Get Hourly Target from LiveTargetService ---
+        from trackerx_live.trackerx_live.services.target_service import LiveTargetService
+        start_time, end_time = get_start_and_end_time(period)
+        target_service = LiveTargetService()
+        hourly_target = target_service.get_hourly_target(inputs=inputs, from_date=start_time, to_date=end_time)
+        # hourly_target: dict like {datetime(2025,10,21,8,0): 100.0, ...}
+
+        # --- Base Filters ---
+        filters = {'log_status': 'Completed', 'status': 'Pass'}
+
+        # Optional filters
+        for field, val in {"device_id": device_id, "workstation": workstation, "operation": operation, "physical_cell": physical_cell}.items():
+            if val:
+                if isinstance(val, list):
+                    filters[field] = ["in", val]
+                else:
+                    filters[field] = val
+
+        # --- Today's time window ---
+        from frappe.utils import get_time
         today_start = get_datetime(today() + " 00:00:00")
         current_time = now_datetime()
-        
-        # Initialize hourly data
+
+        # --- Get Physical Cell timings ---
+        cell_start, cell_end = None, None
+        if physical_cell:
+            
+            cell_doc = frappe.get_doc("Physical Cell", physical_cell)
+            start_time_obj = get_time(cell_doc.start_time)
+            end_time_obj = get_time(cell_doc.end_time)
+            
+            cell_start = datetime.combine(today_start.date(), start_time_obj)
+            cell_end = datetime.combine(today_start.date(), end_time_obj)
+            # Handle cross-midnight scenario
+            if cell_end <= cell_start:
+                cell_end += timedelta(days=1)
+
+        # --- Collect Hourly Data ---
         hourly_data = []
-        
+
         for hour in range(24):
             hour_start = today_start + timedelta(hours=hour)
             hour_end = hour_start + timedelta(hours=1)
-            
+
             # Skip future hours
             if hour_start > current_time:
-                hourly_data.append({
-                    "hour": f"{hour:02d}:00",
-                    "hour_label": f"{hour:02d}:00-{(hour+1)%24:02d}:00",
-                    "output_count": 0
-                })
-                continue
-            
-            # Adjust end time for current hour
+                break
+
+            # Adjust end time for ongoing hour
             if hour_end > current_time:
                 hour_end = current_time
-            
-            # Build time-specific filters
+
+            # Build hour filter
             hour_filters = filters.copy()
             hour_filters['logged_time'] = ['between', [hour_start, hour_end]]
-            
-            # Get scan logs for this hour
-            scan_logs = frappe.get_all(
-                'Item Scan Log',
-                filters=hour_filters,
-                fields=['production_item']
-            )
-            
-            # Calculate quantity for this hour
+
+            # Fetch scan logs
+            scan_logs = frappe.get_all('Item Scan Log', filters=hour_filters, fields=['production_item'])
             hour_count = 0
             if scan_logs:
                 production_items = list(set([log.production_item for log in scan_logs]))
-                
                 for item in production_items:
                     try:
                         item_doc = frappe.get_doc('Production Item', item)
-                        quantity = item_doc.get('quantity', 1)
-                        hour_count += quantity
-                    except:
-                        hour_count += 1  # Default to 1 if item not found
-            
-            hourly_data.append({
-                "hour": f"{hour:02d}:00",
-                "hour_label": f"{hour:02d}:00-{(hour+1)%24:02d}:00",
-                "output_count": hour_count,
-                "target": 10
-            })
-        
+                        hour_count += item_doc.get('quantity', 1)
+                    except Exception:
+                        hour_count += 1
+
+            # --- Get target for this hour ---
+            target_value = 0
+            for target_time, value in hourly_target.items():
+                if target_time.hour == hour:
+                    target_value = value
+                    break
+
+            # --- Cell timing filter logic ---
+            in_cell_timing = (
+                cell_start is None or
+                (cell_start <= hour_start < cell_end)
+            )
+            include_hour = in_cell_timing or hour_count > 0
+
+            if include_hour:
+                hourly_data.append({
+                    "hour": f"{hour:02d}:00",
+                    "hour_label": f"{hour:02d}:00-{(hour+1)%24:02d}:00",
+                    "output_count": hour_count,
+                    "target": target_value
+                })
+
+        total_today = sum([h['output_count'] for h in hourly_data])
+
         return {
             "data": {
                 "hourly_output": hourly_data,
-                "total_today": sum([h['output_count'] for h in hourly_data])
+                "total_today": total_today
             }
         }
-        
+
     except Exception as e:
         frappe.log_error(f"Error in get_output_line_graph: {str(e)}")
         return {
