@@ -182,6 +182,13 @@ doc_events = {
 
 # Scheduled Tasks
 # ---------------
+scheduler_events = {
+    "cron": {
+        "* * * * *": [
+                "trackerx_live.trackerx_live.scheduler.target_scheduler.run_every_min"
+        ]
+    }
+}
 
 # scheduler_events = {
 # 	"all": [
@@ -200,6 +207,7 @@ doc_events = {
 # 		"trackerx_live.tasks.monthly"
 # 	],
 # }
+
 
 # Testing
 # -------

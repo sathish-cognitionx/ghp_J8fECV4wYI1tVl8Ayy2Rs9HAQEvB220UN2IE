@@ -2,6 +2,7 @@ from datetime import datetime, timedelta
 import random
 import abc
 import math
+import frappe
 
 class TargetService(abc.ABC):
 
@@ -34,7 +35,29 @@ class LiveTargetService(TargetService):
         self._initialized = True
 
     def get_total_target(self, inputs: dict, from_date: datetime, to_date: datetime) -> float:
-        return random.uniform(1000.0, 5000.0)
+        """
+        Returns the sum of 'target' from Hourly Target based on filters and date range using SQL.
+        """
+        conditions = ["`from_time` <= %(to_date)s", "`to_time` >= %(from_date)s"]
+        values = {"from_date": from_date, "to_date": to_date}
+
+        # Optional filters
+        for key in ["physical_cell", "operation", "workstation"]:
+            if key in inputs and inputs[key]:
+                conditions.append(f"`{key}` = %({key})s")
+                values[key] = inputs[key]
+
+        where_clause = " AND ".join(conditions)
+
+        query = f"""
+            SELECT SUM(target) as total_target
+            FROM `tabHourly Target`
+            WHERE {where_clause}
+        """
+
+        result = frappe.db.sql(query, values, as_dict=True)
+
+        return result[0]["total_target"] or 0.0
 
     def get_hourly_target(self, inputs: dict, from_date: datetime, to_date: datetime) -> dict:
         hourly_targets = {}
