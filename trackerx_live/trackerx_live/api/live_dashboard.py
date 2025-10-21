@@ -2,6 +2,7 @@ import frappe
 from datetime import datetime, timedelta
 from frappe.utils import now_datetime, today, get_datetime
 import math
+from frappe.utils import nowdate
 
 
 @frappe.whitelist()
@@ -841,11 +842,54 @@ def get_running_style(workstation, operation, physical_cell):
     return result[0]
     
 
-def get_operator_count(workstation, operation, physical_cell):
+def get_operator_count(workstation=None, operation=None, physical_cell=None):
+    """
+    Get today's operator count for a given physical cell.
+    If no attendance is found, fallback to Physical Cell operator_count.
+    Returns:
+        {
+            "count": <int>,
+            "type": "plan" or ""
+        }
+    """
+
+    if not physical_cell:
+        frappe.throw("Physical Cell is required")
+
+    # Get today's date (without time)
+    today = nowdate()
+
+    # --- Step 1: Get attendance count for today from Operator Attendance ---
+    attendance_query = """
+        SELECT COALESCE(SUM(value), 0) AS total_count
+        FROM `tabOperator Attendance`
+        WHERE physical_cell = %s
+          AND DATE(hour) = %s
+    """
+    result = frappe.db.sql(attendance_query, (physical_cell, today), as_dict=True)
+    attendance_count = result[0].total_count if result else 0
+
+    # --- Step 2: If attendance exists, return it ---
+    if attendance_count > 0:
+        return {
+            "count": attendance_count,
+            "type": ""
+        }
+
+    # --- Step 3: Fallback to default operator count from Physical Cell ---
+    fallback_query = """
+        SELECT operator_count
+        FROM `tabPhysical Cell`
+        WHERE name = %s
+    """
+    fallback = frappe.db.sql(fallback_query, (physical_cell,), as_dict=True)
+    fallback_count = fallback[0].operator_count if fallback else 0
+
     return {
-        "count": 10,
+        "count": fallback_count,
         "type": "plan"
     }
+
 
 
 '''
