@@ -7,6 +7,7 @@ from trackerx_live.trackerx_live.utils.production_completion_util import check_a
 from trackerx_live.trackerx_live.api.counted_info import get_counted_info
 from trackerx_live.trackerx_live.utils.cell_operator_ws_util import validate_workstation_for_supported_operation 
 from trackerx_live.trackerx_live.utils.cell_operator_ws_util import get_cell_operator_by_ws 
+from trackerx_live.trackerx_live.utils.sequence_of_operation import SequenceOfOpeationUtil
 
 
 @frappe.whitelist()
@@ -42,6 +43,7 @@ def count_tags(tag_numbers, ws_name):
         current_workstation = ws_info["workstation"]
 
 
+        current_unit_count = 0
         for tag_number in tag_numbers:
             tag = frappe.get_all("Tracking Tag", filters={"tag_number": tag_number}, fields=["name"])
             if not tag:
@@ -63,6 +65,11 @@ def count_tags(tag_numbers, ws_name):
                 errors.append({"tag": tag_number, "reason": "Tag is deactivated"})
                 continue
 
+            result = SequenceOfOpeationUtil.can_this_item_scan_in_this_operation(production_item=tag_map.production_item, workstation=current_workstation, operation=current_operation, physical_cell=physical_cell)
+            if not result["is_allowed"]:
+                errors.append({"tag": tag_number, "reason": result["reason"], "data": result["old_logs"]})
+                continue
+
             production_item_doc = frappe.get_doc("Production Item", tag_map.production_item)
 
             if not current_operation or not current_workstation:
@@ -72,7 +79,7 @@ def count_tags(tag_numbers, ws_name):
             # validate workstation for supported operation
             validate_workstation_for_supported_operation(workstation=current_workstation, operation=current_operation, api_source="Count")        
 
-
+            
             # Log scan
             new_scan_log = frappe.new_doc("Item Scan Log")
             new_scan_log.production_item = production_item_doc.name
@@ -90,6 +97,8 @@ def count_tags(tag_numbers, ws_name):
             new_scan_log.insert()
             created_logs.append({"tag": tag_number, "log": new_scan_log.name})
 
+            current_unit_count += production_item_doc.quantity
+
             # Track component-wise totals
             comp_name = frappe.db.get_value("Tracking Component", production_item_doc.component, "component_name")
             if comp_name:
@@ -103,20 +112,43 @@ def count_tags(tag_numbers, ws_name):
         # if created_logs:
         #     frappe.db.commit()
 
+        transformed_list = []
+    
+        # Iterate through the key-value pairs of the input dictionary
+        # The key is the component name, and the value is the total count.
+        for name, count in current_components_map.items():
+            # Create a new dictionary in the desired format
+            component_data = {
+                "component_name": name,
+                "total_count": count
+            }
+            # Add the new dictionary to the list
+            transformed_list.append(component_data)
+
+        current_bundle_count = len(created_logs)
+        if current_bundle_count <= 0:
+            frappe.throw(
+                f"None of the bundle/units have counted, Becuase all of them have already counted earlier"
+            )
         # Fetch today's and current hour's info
         today_info = get_counted_info(ws_name, "today")
         current_hour_info = get_counted_info(ws_name, "current_hour")
-        counted_info_data = get_counted_info(ws_name)
+        counted_info_data = {
+            "total_count": current_unit_count,
+            "bundle_count": current_bundle_count,
+            "components": transformed_list
+        }
 
         # Compute current_bundle_count for this session
-        current_bundle_count = len(created_logs)
-
+        
+        frappe.db.commit()
         return {
             "status": "success",
             "total_tags": len(tag_numbers),
             "logged_tags": len(created_logs),
             "error_tags": len(errors),
             "current_bundle_count": current_bundle_count,
+            "current_unit_count": current_unit_count,
             "today_count": today_info.get("total_count", 0),
             "current_hour_count": current_hour_info.get("total_count", 0),
             "component_wise_current_count": current_components_map,
@@ -126,11 +158,13 @@ def count_tags(tag_numbers, ws_name):
         }
 
     except frappe.ValidationError as e:
+        frappe.db.rollback()
         frappe.log_error(frappe.get_traceback(), "count_tags() error")
         frappe.local.response.http_status_code = 400
         return {"status": "error", "message": str(e)}
 
     except Exception as e:
+        frappe.db.rollback()
         frappe.log_error(frappe.get_traceback(), "count_tags() error")
         frappe.local.response.http_status_code = 500
         return {"status": "error", "message": str(e)}

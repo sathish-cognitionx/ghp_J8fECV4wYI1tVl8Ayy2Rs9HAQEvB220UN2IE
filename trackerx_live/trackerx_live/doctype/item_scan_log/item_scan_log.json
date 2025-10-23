@@ -19,7 +19,9 @@
   "defect_list",
   "production_item_type",
   "dut",
-  "device_id"
+  "device_id",
+  "sticker_number",
+  "transaction_id"
  ],
  "fields": [
   {
@@ -66,7 +68,7 @@
    "fieldname": "status",
    "fieldtype": "Select",
    "label": "Status",
-   "options": "\nPass\nQC Rework\nQC Rejected\nQC Recut\nCounted\nActivated\nTag Switched\nUnlink Link\nDUT Parent Defect"
+   "options": "\nPass\nQC Rework\nQC Rejected\nQC Recut\nSP Pass\nSP Rework\nSP Rejected\nSP Recut\nCounted\nActivated\nTag Switched\nUnlink Link\nDUT Parent Defect"
   },
   {
    "fieldname": "remarks",
@@ -88,7 +90,7 @@
    "fieldname": "log_status",
    "fieldtype": "Select",
    "label": "Log Status",
-   "options": "Draft\nCompleted\nCancelled",
+   "options": "Draft\nCompleted\nCancelled\nSP Override",
    "reqd": 1
   },
   {
@@ -123,12 +125,22 @@
    "fieldname": "device_id",
    "fieldtype": "Data",
    "label": "Device Id"
+  },
+  {
+   "fieldname": "sticker_number",
+   "fieldtype": "Data",
+   "label": "Sticker Number"
+  },
+  {
+   "fieldname": "transaction_id",
+   "fieldtype": "Data",
+   "label": "Transaction Id"
   }
  ],
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2025-10-14 12:45:27.444404",
+ "modified": "2025-10-16 10:28:42.411703",
  "modified_by": "Administrator",
  "module": "TrackerX Live",
  "name": "Item Scan Log",

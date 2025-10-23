@@ -172,12 +172,23 @@ doc_events = {
         "before_cancel": "trackerx_live.hook.bundle_configuration.cuttingx_bundle_configuration_before_cancel",
         "on_cancel": "trackerx_live.hook.bundle_configuration.cuttingx_bundle_configuration_before_on_cancel",
         "before_delete": "trackerx_live.hook.bundle_configuration.cuttingx_bundle_configuration_before_delete"
+    },
+    "Cut Kit Plan": {
+        "on_submit": "trackerx_live.hook.cut_kit_plan.cuttingx_cut_kit_plan_on_submit"
+       
     }
 }
 
 
 # Scheduled Tasks
 # ---------------
+scheduler_events = {
+    "cron": {
+        "* * * * *": [
+                "trackerx_live.trackerx_live.scheduler.target_scheduler.run_every_min"
+        ]
+    }
+}
 
 # scheduler_events = {
 # 	"all": [
@@ -196,6 +207,7 @@ doc_events = {
 # 		"trackerx_live.tasks.monthly"
 # 	],
 # }
+
 
 # Testing
 # -------

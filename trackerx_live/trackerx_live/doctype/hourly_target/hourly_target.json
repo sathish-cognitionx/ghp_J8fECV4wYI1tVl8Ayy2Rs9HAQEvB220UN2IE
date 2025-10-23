@@ -1,0 +1,143 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "creation": "2025-10-21 12:34:30.002076",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "physical_cell",
+  "operation",
+  "workstation",
+  "company",
+  "from_time",
+  "to_time",
+  "target",
+  "defective_unit_limit",
+  "defects_limit",
+  "output",
+  "cell_sam",
+  "cell_sam_per_minutes",
+  "no_of_operators",
+  "working_time_in_mins",
+  "produced_minutes",
+  "available_minutes",
+  "target_minutes"
+ ],
+ "fields": [
+  {
+   "fieldname": "physical_cell",
+   "fieldtype": "Link",
+   "label": "Physical Cell",
+   "options": "Physical Cell"
+  },
+  {
+   "fieldname": "operation",
+   "fieldtype": "Link",
+   "label": "Operation",
+   "options": "Operation"
+  },
+  {
+   "fieldname": "workstation",
+   "fieldtype": "Link",
+   "label": "Workstation",
+   "options": "Workstation"
+  },
+  {
+   "fieldname": "company",
+   "fieldtype": "Link",
+   "label": "Company",
+   "options": "Company"
+  },
+  {
+   "fieldname": "target",
+   "fieldtype": "Float",
+   "label": "Target"
+  },
+  {
+   "fieldname": "defective_unit_limit",
+   "fieldtype": "Float",
+   "label": "Defective Unit Limit"
+  },
+  {
+   "fieldname": "defects_limit",
+   "fieldtype": "Float",
+   "label": "Defects Limit"
+  },
+  {
+   "fieldname": "from_time",
+   "fieldtype": "Datetime",
+   "label": "From"
+  },
+  {
+   "fieldname": "to_time",
+   "fieldtype": "Datetime",
+   "label": "To"
+  },
+  {
+   "fieldname": "output",
+   "fieldtype": "Int",
+   "label": "Output"
+  },
+  {
+   "fieldname": "cell_sam",
+   "fieldtype": "Float",
+   "label": "Cell SAM"
+  },
+  {
+   "fieldname": "produced_minutes",
+   "fieldtype": "Float",
+   "label": "Produced Minutes"
+  },
+  {
+   "fieldname": "no_of_operators",
+   "fieldtype": "Float",
+   "label": "No of operators"
+  },
+  {
+   "fieldname": "working_time_in_mins",
+   "fieldtype": "Float",
+   "label": "Working time in mins"
+  },
+  {
+   "fieldname": "target_minutes",
+   "fieldtype": "Float",
+   "label": "Target Minutes"
+  },
+  {
+   "fieldname": "cell_sam_per_minutes",
+   "fieldtype": "Float",
+   "label": "Cell SAM per minutes"
+  },
+  {
+   "fieldname": "available_minutes",
+   "fieldtype": "Float",
+   "label": "Available Minutes"
+  }
+ ],
+ "grid_page_length": 50,
+ "index_web_pages_for_search": 1,
+ "links": [],
+ "modified": "2025-10-23 11:43:39.343042",
+ "modified_by": "Administrator",
+ "module": "TrackerX Live",
+ "name": "Hourly Target",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "row_format": "Dynamic",
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}
