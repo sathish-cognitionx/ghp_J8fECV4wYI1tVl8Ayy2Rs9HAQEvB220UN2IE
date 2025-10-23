@@ -63,6 +63,8 @@ def calculate_cell_target(cell_name: str, minute_from, minute_to, hours_from, ho
         cell = frappe.get_cached_doc("Physical Cell", cell_name)
         now_time = minute_from.time()
 
+        minutes = (minute_to - hours_from).total_seconds()/60
+
         # check breaks
         for br in (cell.get("cell_breaks") or []):
             b_start = _parse_time(br.get("break_start") or br.get("from") or br.get("start"))
@@ -77,6 +79,16 @@ def calculate_cell_target(cell_name: str, minute_from, minute_to, hours_from, ho
         if cell_start and cell_end and not _time_in_range(now_time, cell_start, cell_end):
             frappe.logger("target_scheduler").info(f"Cell {cell_name} outside working window. Skipping.")
             return
+        
+        # get attendance
+        attendance_query = """
+            SELECT COALESCE(value, 0) AS total_count
+            FROM `tabOperator Attendance`
+            WHERE physical_cell = %s
+            AND hour = %s
+            """
+        result = frappe.db.sql(attendance_query, (cell.name, hours_from), as_dict=True)
+        attendance_count = result[0].total_count if result else 0
 
         # running style resolution (ensure get_running_style returns expected doc)
         from trackerx_live.trackerx_live.api.live_dashboard import get_running_style
@@ -89,13 +101,14 @@ def calculate_cell_target(cell_name: str, minute_from, minute_to, hours_from, ho
 
         pt_filters = {"physical_cell": cell_name, "is_active": 1, "style": style}
         pt_list = frappe.get_all("Production Target Configuration", filters=pt_filters,
-                                 fields=["name", "hour_target", "start", "end", "style", "operator"],
+                                 fields=["name", "hour_target", "start", "end", "style", "operator", "sam"],
                                  order_by="modified desc")
         if not pt_list:
             frappe.logger("target_scheduler").info(f"No active Production Target Configuration for {cell_name} / style {style}")
             return
 
         hour_target = flt(pt_list[0].get("hour_target") or 0)
+        cell_sam = flt(pt_list[0].get("sam") or 0)
         if hour_target <= 0:
             frappe.logger("target_scheduler").info(f"hour_target <= 0 for {cell_name} / style {style}")
             return
@@ -176,15 +189,21 @@ def calculate_cell_target(cell_name: str, minute_from, minute_to, hours_from, ho
                         "workstation": ws,
                         "from_time": hours_from,
                         "to_time": hours_to
-                    }, ["name", "target", "defective_unit_limit", "defects_limit"])
+                    }, ["name", "target", "defective_unit_limit", "defects_limit", "cell_sam_per_minutes"])
 
                     if existing:
-                        name, prev_target, prev_def_unit, prev_defects = existing[0], flt(existing[1] or 0), flt(existing[2] or 0), flt(existing[3] or 0)
+                        name, prev_target, prev_def_unit, prev_defects, prev_cell_sam_per_minutes = existing[0], flt(existing[1] or 0), flt(existing[2] or 0), flt(existing[3] or 0), flt(existing[4] or 0)
+                        new_cell_sam_per_minutes = ((prev_cell_sam_per_minutes * (minutes - 1)) + cell_sam )/minutes
+
+                        produced_minutes = produced_qty * new_cell_sam_per_minutes
+                        available_minutes = attendance_count * minutes
+                        target_minutes = per_ws_target * new_cell_sam_per_minutes
                         # update atomically using ORM
                         frappe.db.sql("""UPDATE `tabHourly Target`
-                                         SET `target` = %s, `defective_unit_limit` = %s, `defects_limit` = %s
+                                         SET `target` = %s, `defective_unit_limit` = %s, `defects_limit` = %s,
+                                            `cell_sam_per_minutes` = %s, `working_time_in_mins` = %s, `produced_minutes` = %s, `available_minutes` = %s, `target_minutes` = %s
                                          WHERE name = %s""",
-                                      (prev_target + per_ws_target, prev_def_unit + defective_unit_limit, prev_defects + defects_limit, name))
+                                      (prev_target + per_ws_target, prev_def_unit + defective_unit_limit, prev_defects + defects_limit, new_cell_sam_per_minutes, minutes, produced_minutes, available_minutes, target_minutes, name))
                     else:
                         new_record = frappe.new_doc("Hourly Target")
                         new_record.physical_cell = cell_name
@@ -196,6 +215,14 @@ def calculate_cell_target(cell_name: str, minute_from, minute_to, hours_from, ho
                         new_record.target = per_ws_target
                         new_record.defective_unit_limit = defective_unit_limit
                         new_record.defects_limit = defects_limit
+                        new_record.output = produced_qty
+                        new_record.cell_sam = cell_sam
+                        new_record.cell_sam_per_minutes = cell_sam
+                        new_record.no_of_operators = attendance_count
+                        new_record.working_time_in_mins = minutes
+                        new_record.produced_minutes = new_record.output * new_record.cell_sam_per_minutes
+                        new_record.available_minutes = new_record.no_of_operators * new_record.working_time_in_mins
+                        new_record.target_minutes = new_record.target * new_record.cell_sam_per_minutes
                         new_record.insert(ignore_permissions=True)
                         # insert new row
                         # frappe.db.sql("""INSERT INTO `tabHourly Target`

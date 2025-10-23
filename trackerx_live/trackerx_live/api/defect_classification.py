@@ -44,7 +44,7 @@ def require_qc_roles(allowed_roles=None):
 
 @frappe.whitelist()
 @require_qc_roles()
-def get_qc_rejected_units():
+def get_qc_rejected_units(view="list"):
     """
     API 1: List all Production Items with QC Reject/Recut status
     Grouped by: Physical Cell -> Current Operation -> Current Workstation
@@ -89,6 +89,9 @@ def get_qc_rejected_units():
         """
         
         items = frappe.db.sql(query, as_dict=True)
+
+        data = None
+        list = []
         
         if not items:
             return {
@@ -133,6 +136,9 @@ def get_qc_rejected_units():
             tracking_tag = None
             if active_tags:
                 tracking_tag = active_tags[0]
+            
+            item_scan_log_doc = frappe.get_doc("Item Scan Log", item.scan_log_id)
+
             item_detail = {
                 "production_item": item.production_item,
                 "production_item_number": item.production_item_number,
@@ -146,9 +152,18 @@ def get_qc_rejected_units():
                 "scan_time": str(item.scan_time) if item.scan_time else None,
                 "scanned_by": item.scanned_by,
                 "remarks": item.remarks,
-                "scan_log_id": item.scan_log_id
+                "scan_log_id": item.scan_log_id,
+                "style": "Style",
+                "color": "Color",
+                "so_number": "SO Number",
+                "line_item_number": "Line Item Number",
+                "cell": physical_cell,
+                "operation": operation,
+                "workstation": workstation,
+                "defect_list": item_scan_log_doc.defect_list
             }
             
+            list.append(item_detail)
             grouped_data[physical_cell]["operations"][operation]["workstations"][workstation]["items"].append(item_detail)
             
             # Update counts
@@ -157,10 +172,14 @@ def get_qc_rejected_units():
             grouped_data[physical_cell]["count"] += 1
             total_count += 1
         
+        if view == "tree":
+            data = grouped_data
+        else:
+            data = list
         return {
             "success": True,
             "message": f"Found {total_count} items with QC Reject/Recut status",
-            "data": grouped_data,
+            "data": data,
             "total_count": total_count,
             "timestamp": now_datetime()
         }
