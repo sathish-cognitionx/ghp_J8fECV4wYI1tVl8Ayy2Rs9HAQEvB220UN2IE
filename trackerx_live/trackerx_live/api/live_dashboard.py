@@ -250,7 +250,7 @@ def get_plan_target(filters):
     return ""
 
 
-def get_output_color(output_count, ie_target, full_ie_target, plan_target):
+def get_output_color(output_count, ie_target, full_ie_target=None, plan_target=None):
     """
     Placeholder function to determine output color
     To be implemented based on your business logic
@@ -900,113 +900,132 @@ starts here
 
 @frappe.whitelist()
 def get_efficiency_count(**kwargs):
+    period = kwargs.get('period')
+    if not period:
+        frappe.throw("period is mandatory")
+
+    if period not in ['today', 'current_hour', 'last_one_hour']:
+        frappe.throw("Invalid period. Allowed values: today, current_hour, last_one_hour")
+
+    workstation = kwargs.get('workstation')
+    operation = kwargs.get('operation')
+    physical_cell = kwargs.get('physical_cell')
+
+    # Validate: At least one filter must be provided
+    if not (physical_cell or operation or workstation):
+        frappe.throw("At least one of physical_cell, operation, or workstation is required")
+
+    # Time Period
+    start_time, end_time = get_start_and_end_time(period)
+
+    # Dynamic Filters
+    filters = {
+        "from_time": [">=", start_time],
+        "to_time": ["<=", end_time]
+    }
+    if physical_cell: filters["physical_cell"] = physical_cell
+    if operation: filters["operation"] = operation
+    if workstation: filters["workstation"] = workstation
+
+    total_produced_minutes, total_available_minutes, total_target_minutes = frappe.db.get_value(
+        "Hourly Target",
+        filters,
+        ["SUM(produced_minutes)", "SUM(available_minutes)", "SUM(target_minutes)"]
+    ) or (0, 0, 0)
+
+    output_eff = 0
+    target_eff = 0
+
+    if total_available_minutes and total_available_minutes > 0:
+        output_eff = round((total_produced_minutes / total_available_minutes) * 100, 2)
+        target_eff = round((total_target_minutes / total_available_minutes) * 100, 2)
+
     return {
         "data": {
-            "output": 85,
-            "target": 100,
-            "color": "GREEN"
+            "output": output_eff,
+            "target": target_eff,
+            "color": get_output_color(output_count=output_eff, ie_target=target_eff)
         }
     }
 
+
 @frappe.whitelist()
 def get_efficiency_line_graph(**kwargs):
+    period = kwargs.get('period')
+    if not period:
+        frappe.throw("period is mandatory")
 
-    hourly_output = [
-        {
-          "hour": "07:00",
-          "hour_label": "07:00-08:00",
-          "output": 20,
-          "target": 100,
-          "color": "RED"
-        },
-        {
-          "hour": "08:00",
-          "hour_label": "08:00-09:00",
-          "output": 45,
-          "target": 100,
-          "color": "RED"
-        },
-        {
-          "hour": "09:00",
-          "hour_label": "09:00-10:00",
-          "output": 67,
-          "target": 100,
-          "color": "RED"
-        },
-        {
-          "hour": "10:00",
-          "hour_label": "10:00-11:00",
-          "output": 78,
-          "target": 100,
-          "color": "RED"
-        },
-        {
-          "hour": "11:00",
-          "hour_label": "11:00-12:00",
-          "output": 80,
-          "target": 100,
-          "color": "YELLOW"
-        },
-        {
-          "hour": "12:00",
-          "hour_label": "12:00-13:00",
-          "output": 90,
-          "target": 100,
-          "color": "GREEN"
-        },
-        {
-          "hour": "13:00",
-          "hour_label": "13:00-14:00",
-          "output": 0,
-          "target": 0,
-          "color": "RED"
-        },
-        {
-          "hour": "14:00",
-          "hour_label": "14:00-15:00",
-          "output": 0,
-          "target": 0,
-          "color": "RED"
-        },
-        {
-          "hour": "15:00",
-          "hour_label": "15:00-16:00",
-          "output": 0,
-          "target": 0,
-          "color": "RED"
-        },
-        {
-          "hour": "16:00",
-          "hour_label": "16:00-17:00",
-          "output": 0,
-          "target": 0,
-          "color": "RED"
-        },
-        {
-          "hour": "17:00",
-          "hour_label": "17:00-18:00",
-          "output": 0,
-          "target": 0,
-          "color": "RED"
-        },
-        {
-          "hour": "18:00",
-          "hour_label": "18:00-19:00",
-          "output": 0,
-          "target": 0,
-          "color": "RED"
-        },
-        {
-          "hour": "19:00",
-          "hour_label": "19:00-20:00",
-          "output": 0,
-          "target": 0,
-          "color": "RED"
-        }
-      ]
+    if period not in ['today', 'current_hour', 'last_one_hour']:
+        frappe.throw("Invalid period. Allowed values: today, current_hour, last_one_hour")
+
+    workstation = kwargs.get('workstation')
+    operation = kwargs.get('operation')
+    physical_cell = kwargs.get('physical_cell')
+
+    # Validate
+    if not (physical_cell or operation or workstation):
+        frappe.throw("At least one of physical_cell, operation, or workstation is required")
+
+    start_time, end_time = get_start_and_end_time(period)
+
+    # Dynamic SQL filter builder
+    conditions = []
+    params = []
+
+    if physical_cell:
+        conditions.append("H.physical_cell = %s")
+        params.append(physical_cell)
+
+    if operation:
+        conditions.append("H.operation = %s")
+        params.append(operation)
+
+    if workstation:
+        conditions.append("H.workstation = %s")
+        params.append(workstation)
+
+    conditions.append("H.from_time >= %s")
+    conditions.append("H.to_time <= %s")
+    params.append(start_time)
+    params.append(end_time)
+
+    where_clause = " AND ".join(conditions)
+
+    hourly_data = frappe.db.sql(f"""
+        SELECT
+            H.from_time,
+            H.to_time,
+            H.produced_minutes,
+            H.available_minutes,
+            H.target_minutes
+        FROM `tabHourly Target` H
+        WHERE {where_clause}
+        ORDER BY H.from_time ASC
+    """, params, as_dict=True)
+
+    hourly_output = []
+
+    for row in hourly_data:
+        available = row.available_minutes or 0
+        produced = row.produced_minutes or 0
+        target = row.target_minutes or 0
+        
+        output_eff = round((produced / available) * 100, 2) if available else 0
+        target_eff = round((target / available) * 100, 2) if available else 0
+
+        hour_label = f"{row.from_time.strftime('%H:%M')}-{row.to_time.strftime('%H:%M')}"
+        hour = row.from_time.strftime('%H:%M')
+
+        hourly_output.append({
+            "hour": hour,
+            "hour_label": hour_label,
+            "output": output_eff,
+            "target": target_eff,
+            "color": get_output_color(output_count=output_eff, ie_target=target_eff)
+        })
+
     return {
         "data": {
             "hourly_output": hourly_output
-           
         }
     }
