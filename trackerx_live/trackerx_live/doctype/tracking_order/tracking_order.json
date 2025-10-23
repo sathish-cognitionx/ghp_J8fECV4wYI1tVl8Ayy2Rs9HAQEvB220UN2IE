@@ -117,8 +117,7 @@
    "fieldname": "operation_map",
    "fieldtype": "Table",
    "label": "Operation Map",
-   "options": "Operation Map",
-   "reqd": 1
+   "options": "Operation Map"
   },
   {
    "fieldname": "section_break_op_map",
@@ -192,7 +191,7 @@
  "index_web_pages_for_search": 1,
  "is_submittable": 1,
  "links": [],
- "modified": "2025-09-24 14:19:49.335096",
+ "modified": "2025-10-23 17:32:36.406778",
  "modified_by": "Administrator",
  "module": "TrackerX Live",
  "name": "Tracking Order",
