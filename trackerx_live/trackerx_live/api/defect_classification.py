@@ -97,7 +97,7 @@ def get_qc_rejected_units(view="list"):
             return {
                 "success": True,
                 "message": "No items found with QC Reject/Recut status",
-                "data": {},
+                "data": [],
                 "total_count": 0
             }
         
@@ -185,6 +185,7 @@ def get_qc_rejected_units(view="list"):
         }
     
     except Exception as e:
+        frappe.local.response.http_status_code = 400
         frappe.log_error(message=str(e), title="QC Defective Items Grouped API Error")
         return {
             "success": False,
@@ -438,6 +439,7 @@ def reclassify(production_item_name, defective_units):
             raise e
     
     except Exception as e:
+        frappe.local.response.http_status_code = 400
         frappe.log_error(message=str(e), title="Review and Update QC Status API Error")
         return {
             "success": False,
