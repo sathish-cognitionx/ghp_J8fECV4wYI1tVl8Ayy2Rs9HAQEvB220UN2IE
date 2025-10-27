@@ -1,0 +1,19 @@
+{
+ "content": null,
+ "creation": "2025-10-18 19:47:11.587790",
+ "docstatus": 0,
+ "doctype": "Page",
+ "idx": 0,
+ "modified": "2025-10-18 19:47:11.587790",
+ "modified_by": "Administrator",
+ "module": "TrackerX Live",
+ "name": "aql",
+ "owner": "Administrator",
+ "page_name": "aql",
+ "roles": [],
+ "script": null,
+ "standard": "Yes",
+ "style": null,
+ "system_page": 0,
+ "title": "AQL Audit"
+}
