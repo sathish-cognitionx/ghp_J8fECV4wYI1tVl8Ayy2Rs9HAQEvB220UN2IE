@@ -184,8 +184,12 @@ def get_qc_rejected_units(view="list"):
             "timestamp": now_datetime()
         }
     
-    except Exception as e:
+    except frappe.ValidationError as e:
         frappe.local.response.http_status_code = 400
+        frappe.db.rollback()
+        return {"status": "error", "message": str(e)}
+    except Exception as e:
+        frappe.local.response.http_status_code = 500
         frappe.log_error(message=str(e), title="QC Defective Items Grouped API Error")
         return {
             "success": False,
@@ -211,38 +215,30 @@ def scan_qc_rejected_item(tag):
         production_item_name = tracking_tag_util.get_active_production_item_by_tag(tag)
         if not production_item_name:
             frappe.throw(
-                f"No item is activated against the the tag number {tag}, Contact supervisor"
+                f"No item is activated against the the tag number {tag}, Contact supervisor", 
+                frappe.ValidationError
             )
 
         # Check if production item exists
         if not frappe.db.exists("Production Item", production_item_name):
-            return {
-                "success": False,
-                "message": f"Production Item '{production_item_name}' not found",
-                "data": None
-            }
+            frappe.throw(f"Production Item '{production_item_name}' not found", frappe.ValidationError)
+
         
         # Get production item details
         prod_item = frappe.get_doc("Production Item", production_item_name)
         
         # Check if last_scan_log exists
         if not prod_item.last_scan_log:
-            return {
-                "success": False,
-                "message": "No scan log found for this production item",
-                "data": None
-            }
+            frappe.throw("No scan log found for this production item",frappe.ValidationError)
+
         
         # Get scan log details
         scan_log = frappe.get_doc("Item Scan Log", prod_item.last_scan_log)
         
         # Validate status
         if scan_log.status not in ["QC Rejected", "QC Recut"]:
-            return {
-                "success": False,
-                "message": f"Item status is '{scan_log.status}', not QC Rejected or QC Recut",
-                "data": production_item_name
-            }
+            frappe.throw(f"Item status is '{scan_log.status}', not QC Rejected or QC Recut",frappe.ValidationError)
+
         
         # Get defect details
         defects = []
@@ -301,7 +297,13 @@ def scan_qc_rejected_item(tag):
             "timestamp": now_datetime()
         }
     
+    except frappe.ValidationError as e:
+        frappe.local.response.http_status_code = 400
+        frappe.db.rollback()
+        return {"status": "error", "message": str(e)}
     except Exception as e:
+        frappe.local.response.http_status_code = 400
+        frappe.db.rollback()
         frappe.log_error(message=str(e), title="Validate QC Defective Item API Error")
         return {
             "success": False,
@@ -355,20 +357,15 @@ def reclassify(production_item_name, defective_units):
         
         # Validate old scan log status
         if old_scan_log.status not in ["QC Rejected", "QC Recut"]:
-            return {
-                "success": False,
-                "message": f"Item status is '{old_scan_log.status}', not QC Rejected or QC Recut"
-            }
+            frappe.throw(f"Item status is '{old_scan_log.status}', not QC Rejected or QC Recut", frappe.ValidationError)
+            
         
         # Validate new status
         valid_statuses = ["SP Rework", "SP Pass", "SP Rejected", "SP Recut"]
         defective_unit = defective_units[0]
         #TODO currently supporting only for DUT on so only one unit classfication no bundle classfication, so picking the only one obhect
         if defective_unit.get("status") not in valid_statuses:
-            return {
-                "success": False,
-                "message": f"Invalid status. Must be one of: {', '.join(valid_statuses)}"
-            }
+            frappe.throw(f"Invalid status. Must be one of: {', '.join(valid_statuses)}", frappe.ValidationError)
         
         # Start transaction
         frappe.db.begin()
@@ -440,10 +437,11 @@ def reclassify(production_item_name, defective_units):
     
     except Exception as e:
         frappe.local.response.http_status_code = 400
+        frappe.db.rollback()
         frappe.log_error(message=str(e), title="Review and Update QC Status API Error")
         return {
             "success": False,
-            "message": f"Error updating status: {str(e)}"
+            "message": f"{str(e)}"
         }
 
 
@@ -474,7 +472,7 @@ def bulk_review_and_update_qc_status(items_data):
         failure_count = 0
         
         for item in items_data:
-            result = review_and_update_qc_status(
+            result = reclassify(
                 production_item_name=item.get("production_item_name"),
                 updated_items={
                     "status": item.get("status"),
