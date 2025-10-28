@@ -1,7 +1,7 @@
 import frappe
 from frappe import _
-from trackerx_live.trackerx_live.utils.cell_operator_ws_util import get_cell_operator_by_ws,validate_workstation_for_supported_operation
-
+from trackerx_live.trackerx_live.utils.cell_operator_ws_util import get_cell_operator_by_ws, validate_workstation_for_supported_operation
+from trackerx_live.trackerx_live.utils.operation_map_util import OperationMapManager
 import json
 
 @frappe.whitelist()
@@ -29,8 +29,8 @@ def initiate_unlink_link(tags, workstation, device_id=None, forcefully=False):
         ws_info = ws_info_list[0]
         current_operation = ws_info["operation_name"]
         validate_workstation_for_supported_operation(
-            workstation=workstation, 
-            operation=current_operation, 
+            workstation=workstation,
+            operation=current_operation,
             api_source="Unlink Link"
         )
 
@@ -46,6 +46,7 @@ def initiate_unlink_link(tags, workstation, device_id=None, forcefully=False):
         }
 
         component_map = {}
+        settings = frappe.get_single("TrackerX Live Settings")
 
         # initial component map
         for tag_number in tags:
@@ -60,7 +61,7 @@ def initiate_unlink_link(tags, workstation, device_id=None, forcefully=False):
                 prod_item = frappe.get_value(
                     "Production Item",
                     {"tracking_tag": tag_id},
-                    ["name", "component", "production_item_number", "quantity", "type", "status"],
+                    ["name", "component", "production_item_number", "quantity", "type", "status", "tracking_order", "tracking_tag"],
                     as_dict=True
                 )
                 if not prod_item:
@@ -68,6 +69,13 @@ def initiate_unlink_link(tags, workstation, device_id=None, forcefully=False):
                         _(f"No Production Item found for tag: {tag_number}"),
                         frappe.ValidationError
                     )
+
+                tag_doc = frappe.get_doc("Tracking Tag", prod_item.tracking_tag)
+                op_map = OperationMapManager().get_operation_map(prod_item.tracking_order)
+                is_final_op = op_map.is_final_operation(current_operation, prod_item.component)
+
+                if not (is_final_op and settings.auto_unlink_at_final_operation and tag_doc.tag_type in ["NFC", "RFID"]):
+                    continue
 
                 comp_id = prod_item.component
                 comp_name = frappe.get_value("Tracking Component", comp_id, "component_name")
@@ -131,7 +139,6 @@ def initiate_unlink_link(tags, workstation, device_id=None, forcefully=False):
                 "forcefully": forcefully,
                 "scan_complete": scan_complete
             }]
-            # not used for now
             if forcefully:
                 for comp in component_map.values():
                     for pu in comp["production_units"]:
