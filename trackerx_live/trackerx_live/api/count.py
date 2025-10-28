@@ -42,6 +42,7 @@ def count_tags(tag_numbers, ws_name):
         physical_cell = ws_info["cell_id"]
         current_workstation = ws_info["workstation"]
 
+        all_scanned_units_info = []
 
         current_unit_count = 0
         for tag_number in tag_numbers:
@@ -93,11 +94,27 @@ def count_tags(tag_numbers, ws_name):
             new_scan_log.log_status = "Completed"
             new_scan_log.log_type = "User Scanned"
             new_scan_log.production_item_type = production_item_doc.type
-          
+
             new_scan_log.insert()
             created_logs.append({"tag": tag_number, "log": new_scan_log.name})
 
             current_unit_count += production_item_doc.quantity
+
+            tracking_order_doc = frappe.get_doc("Tracking Order", production_item_doc.tracking_order)
+
+            fg_item_doc = frappe.get_doc("Item", tracking_order_doc.item)
+
+            unit_info = {
+                "operation_name": current_operation,
+                "production_type": production_item_doc.type or "",
+                "bundle_count": 1,
+                "total_count": production_item_doc.quantity,
+                "product_code": production_item_doc.production_item_number,
+                "style": fg_item_doc.custom_style_master or "",
+                "colour_name": fg_item_doc.custom_colour_name or "",
+                "material_composition": fg_item_doc.custom_material_composition or "",
+                "components": []
+            }
 
             # Track component-wise totals
             comp_name = frappe.db.get_value("Tracking Component", production_item_doc.component, "component_name")
@@ -140,6 +157,10 @@ def count_tags(tag_numbers, ws_name):
         }
 
         # Compute current_bundle_count for this session
+
+        
+
+        all_scanned_units_info.append(unit_info)
         
         frappe.db.commit()
         return {
@@ -155,7 +176,7 @@ def count_tags(tag_numbers, ws_name):
             "counted_info": counted_info_data,          
             "logged_tags_info": created_logs,
             "errors_info": errors,
-            "operations": today_info.get("operations")
+            "operations": all_scanned_units_info
         }
 
     except frappe.ValidationError as e:
