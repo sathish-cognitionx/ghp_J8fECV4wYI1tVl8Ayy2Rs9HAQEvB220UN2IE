@@ -7,7 +7,6 @@ app_license = "mit"
 
 
 fixtures = [
-    "Role",
     {
         "dt": "Custom Field",
         "filters": [
