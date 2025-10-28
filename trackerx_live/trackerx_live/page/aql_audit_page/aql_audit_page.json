@@ -1,0 +1,25 @@
+{
+ "content": null,
+ "creation": "2025-10-24 11:37:20.451349",
+ "docstatus": 0,
+ "doctype": "Page",
+ "idx": 0,
+ "modified": "2025-10-27 13:35:53.178684",
+ "modified_by": "Administrator",
+ "module": "TrackerX Live",
+ "name": "aql-audit-page",
+ "owner": "Administrator",
+ "page_name": "aql-audit-page",
+ "roles": [
+  {
+   "role": "Vendor AQL Audit Supervisor"
+  },
+  {
+   "role": "Supervisor"
+  }
+ ],
+ "script": null,
+ "standard": "Yes",
+ "style": null,
+ "system_page": 0
+}
