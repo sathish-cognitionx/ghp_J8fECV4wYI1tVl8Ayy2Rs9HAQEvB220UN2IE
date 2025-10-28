@@ -141,10 +141,12 @@ def auto_unlink_tags(tag_numbers, ws_name=None):
 
     except frappe.ValidationError as e:
         frappe.log_error(frappe.get_traceback(), "auto_unlink_tags() error")
+        frappe.db.rollback()
         frappe.local.response.http_status_code = 400
         return {"status": "error", "message": str(e)}
 
     except Exception as e:
         frappe.log_error(frappe.get_traceback(), "auto_unlink_tags() error")
+        frappe.db.rollback()
         frappe.local.response.http_status_code = 500
         return {"status": "error", "message": str(e)}

@@ -273,9 +273,11 @@ def create_production_item(tracking_order, component_name, tracking_tags,
     except frappe.ValidationError as e:
         frappe.log_error(frappe.get_traceback(), "create_production_item() error")
         frappe.local.response.http_status_code = 400
+        frappe.db.rollback()
         return {"status": "error", "message": str(e)}
 
     except Exception as e:
         frappe.log_error(frappe.get_traceback(), "create_production_item() error")
         frappe.local.response.http_status_code = 500
+        frappe.db.rollback()
         return {"status": "error", "message": str(e)}

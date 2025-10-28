@@ -162,9 +162,11 @@ def get_bundle_configuration_info(tracking_order, component_name):
     except frappe.ValidationError as e:
         frappe.log_error(frappe.get_traceback(), "get_bundle_configuration_info() error")
         frappe.local.response.http_status_code = 400
+        frappe.db.rollback()
         return {"status": "error", "message": str(e)}
 
     except Exception as e:
         frappe.log_error(frappe.get_traceback(), "get_bundle_configuration_info() error")
+        frappe.db.rollback()
         frappe.local.response.http_status_code = 500
         return {"status": "error", "message": str(e)}
