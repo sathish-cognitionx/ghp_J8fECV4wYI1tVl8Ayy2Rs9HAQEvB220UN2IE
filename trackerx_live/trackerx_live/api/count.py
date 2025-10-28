@@ -154,7 +154,8 @@ def count_tags(tag_numbers, ws_name):
             "component_wise_current_count": current_components_map,
             "counted_info": counted_info_data,          
             "logged_tags_info": created_logs,
-            "errors_info": errors
+            "errors_info": errors,
+            "operations": today_info.get("operations")
         }
 
     except frappe.ValidationError as e:
