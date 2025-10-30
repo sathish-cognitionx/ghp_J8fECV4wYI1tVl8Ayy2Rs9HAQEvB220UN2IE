@@ -86,10 +86,11 @@ def get_item_information(tags, workstation, remarks=None):
 
                 physical_cell_doc = frappe.get_doc("Physical Cell", physical_cell)
 
-                from trackerx_live.trackerx_live.utils.operation_map_util import OperationMapManager
-                operation_map_manager = OperationMapManager()
-                operation_map = operation_map_manager.get_operation_map(tracking_order_number=tracking_order_doc.name)
-                prev_operations = operation_map.get_all_previous_operations(current_operation=operation, component=production_item_doc.component,sequence_no=1)
+                prev_operations = []
+                # from trackerx_live.trackerx_live.utils.operation_map_util import OperationMapManager
+                # operation_map_manager = OperationMapManager()
+                # operation_map = operation_map_manager.get_operation_map(tracking_order_number=tracking_order_doc.name)
+                # prev_operations = operation_map.get_all_previous_operations(current_operation=operation, component=production_item_doc.component,sequence_no=1)
 
                 last_scan_log_doc = frappe.get_doc("Item Scan Log", production_item_doc.last_scan_log) if production_item_doc.last_scan_log else None
 
