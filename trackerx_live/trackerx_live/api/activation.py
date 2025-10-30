@@ -189,8 +189,10 @@ def create_production_item(tracking_order, component_name, tracking_tags,
             first_row = tracking_order_doc.operation_map[0].as_dict()
             next_operation = first_row.get("next_operation")
 
-        if not current_operation or not next_operation:
-            frappe.throw(_("Operation map missing"), ValidationError)
+        # if not current_operation or not next_operation:
+        #     frappe.throw(_("Operation map missing"), ValidationError)
+        if not next_operation:
+            next_operation = current_operation
 
         # ---------------------------
         # Status always "Activated"
