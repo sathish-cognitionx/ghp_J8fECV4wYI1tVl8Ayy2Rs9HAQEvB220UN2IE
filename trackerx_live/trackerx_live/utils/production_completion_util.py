@@ -5,7 +5,41 @@ def check_and_complete_production_item(production_item_doc, current_operation):
     try:
         tracking_order = frappe.get_doc("Tracking Order", production_item_doc.tracking_order)
 
+        frappe.get_doc
+
+        result = None
+
+        try:
+            result = frappe.db.sql("""
+                select ccpbd.operation_map as operation_map from `tabCut Kit Plan Bundle Details` ccpbd 
+                inner join `tabCut Kit Plan` ccp on ccp.name = ccpdb.`parent`
+                where ccpdb.production_item_id = %(production_item)s
+            """, {'production_item': production_item_doc.name}, as_dict=True)
+
+        except Exception:
+            frappe.log_error(
+                message=frappe.get_traceback(),
+                title="No Production item by id during check_and_complete_production_item"
+            )
+
+        if not result:
+            # check by production item number 
+            result = frappe.db.sql("""
+                    select ccpbd.operation_map as operation_map from `tabCut Kit Plan Bundle Details` ccpbd 
+                    inner join `tabCut Kit Plan` ccp on ccp.name = ccpdb.`parent`
+                    where ccpdb.production_item_number = %(production_item_number)s
+                """, {'production_item_number': production_item_doc.production_item_number}, as_dict=True)
+
+        if not result:
+            raise Exception("Operation Map is not mapped this bundle/unit")
+        
+        operation_map_name = result[0].operation_map
+
+        
+
         op_map = OperationMapManager().get_operation_map(tracking_order.name)
+
+        
 
         if not op_map.is_final_operation(current_operation, production_item_doc.component):
             return

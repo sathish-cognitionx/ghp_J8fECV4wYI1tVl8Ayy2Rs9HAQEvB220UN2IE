@@ -124,7 +124,8 @@ def count_tags(tag_numbers, ws_name):
                 current_components_map[comp_name] += production_item_doc.quantity
 
             # Check and complete production item
-            check_and_complete_production_item(production_item_doc, current_operation)
+            #TODO : commenting for now 
+            # check_and_complete_production_item(production_item_doc, current_operation)
 
         # if created_logs:
         #     frappe.db.commit()
