@@ -153,7 +153,8 @@ def count_tags(tag_numbers, ws_name):
         counted_info_data = {
             "total_count": current_unit_count,
             "bundle_count": current_bundle_count,
-            "components": transformed_list
+            "components": transformed_list,
+            "operations": all_scanned_units_info
         }
 
         # Compute current_bundle_count for this session
@@ -175,8 +176,8 @@ def count_tags(tag_numbers, ws_name):
             "component_wise_current_count": current_components_map,
             "counted_info": counted_info_data,          
             "logged_tags_info": created_logs,
-            "errors_info": errors,
-            "operations": all_scanned_units_info
+            "errors_info": errors
+            
         }
 
     except frappe.ValidationError as e:
