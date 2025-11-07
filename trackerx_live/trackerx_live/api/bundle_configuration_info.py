@@ -94,7 +94,8 @@ def get_bundle_configuration_info(tracking_order, component_name):
                 "parent": tracking_order,
                 "parenttype": "Tracking Order",
                 "parentfield": "component_bundle_configurations",
-                "component": component_id
+                "component": component_id,
+                "source": "Activation"
             },
             fields=[
                 "name", "bc_name", "size", "bundle_quantity", "number_of_bundles",
