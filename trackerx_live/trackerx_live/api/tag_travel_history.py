@@ -28,12 +28,20 @@ def tag_travel_history(tag_number):
                 frappe.ValidationError
             )
 
-        production_item_name = frappe.db.get_value(
-            "Production Item",
+        production_item_name, is_active = frappe.db.get_value(
+            "Production Item Tag Map",
             {"tracking_tag": tag_id},
-            "name",
+            ["production_item","is_active"],
             order_by="creation desc"
         )
+        
+
+        # production_item_name = frappe.db.get_value(
+        #     "Production Item",
+        #     {"tracking_tag": tag_id},
+        #     "name",
+        #     order_by="creation desc"
+        # )
 
         if not production_item_name:
             frappe.throw(
@@ -49,7 +57,14 @@ def tag_travel_history(tag_number):
         if getattr(fg_item_doc, "custom_style_master", None):
             style_master_doc = frappe.get_doc("Style Master", fg_item_doc.custom_style_master)
 
-        coupled_status = "active" if production_item_doc.tracking_status == "Active" else "unlinked"
+        coupled_status = "active" if is_active else "unlinked"
+
+        # get parent items
+        from trackerx_live.trackerx_live.utils.switch_log_util import get_all_parent_production_items
+        parent_production_items = get_all_parent_production_items(production_item_name=production_item_name)
+
+        all_production_items = parent_production_items.copy()
+        all_production_items.append(production_item_name)
 
         quality_status = frappe.db.get_value(
             "Item Scan Log",
@@ -80,7 +95,7 @@ def tag_travel_history(tag_number):
 
         scan_logs = frappe.get_all(
             "Item Scan Log",
-            filters={"production_item": production_item_doc.name},
+            filters={"production_item": ("in", all_production_items)},
             fields=[
                 "name", "operation", "workstation", "physical_cell", "scanned_by",
                 "scan_time", "logged_time", "status", "remarks", "log_type", "log_status"
