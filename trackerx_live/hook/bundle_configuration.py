@@ -59,6 +59,11 @@ def create_tracking_order_from_bundle_creation(doc, method=None):
 
                 bundle_config_row = frappe.new_doc("Tracking Order Bundle Configuration")
                 bundle_config_row.bc_name = f"BC-{bundle_item.size}-{bundle_item.shade}"
+                name_generator_list = ["BC", bundle_item.size ]
+                if bundle_item.shade:
+                    name_generator_list.append(bundle_item.shade)
+                bc_name = "-".join(name_generator_list)
+                bundle_config_row.bc_name = bc_name
                 bundle_config_row.size = bundle_item.size
                 bundle_config_row.bundle_quantity = bundle_item.unitsbundle
                 bundle_config_row.number_of_bundles = full_bundles
@@ -82,6 +87,7 @@ def create_tracking_order_from_bundle_creation(doc, method=None):
                 if pending_units_in_odd_bundle > 0:
                     odd_bundle_config_row = frappe.new_doc("Tracking Order Bundle Configuration")
                     odd_bundle_config_row.bc_name = f"BC-{bundle_item.size}-{bundle_item.shade}-O"
+                    odd_bundle_config_row.bc_name = f"{bc_name}-O"
                     odd_bundle_config_row.size = bundle_item.size
                     odd_bundle_config_row.bundle_quantity = pending_units_in_odd_bundle
                     odd_bundle_config_row.number_of_bundles = 1
