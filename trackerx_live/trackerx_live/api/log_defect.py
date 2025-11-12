@@ -144,6 +144,7 @@ def log_defective_units(scan_id=None, defective_units=None, device_id=None):
             
             child_bc_name = child_bc.name
 
+            child_prod_items = []
             for unit in defective_units:
                 unit_defect_type = (unit.get("defect_type") or "QC Rework").strip()
 
@@ -209,6 +210,7 @@ def log_defective_units(scan_id=None, defective_units=None, device_id=None):
                 }
                 new_prod = frappe.get_doc(new_prod_fields)
                 new_prod.insert(ignore_permissions=True)
+                child_prod_items.append(new_prod)
 
                 pi_tag_map = frappe.get_doc({
                     "doctype": "Production Item Tag Map",
@@ -269,7 +271,7 @@ def log_defective_units(scan_id=None, defective_units=None, device_id=None):
 
             if is_partial_bundle_allowed:
                 ''' Partial bundle is enabled, so reduced the bundles to good units and mark them as passed '''
-                reduced_the_bundle_to_good_units_bundle(parent_scan, parent_prod, parent_bc, defective_units, is_dut_on)
+                reduced_the_bundle_to_good_units_bundle(parent_scan, parent_prod, parent_bc, defective_units, is_dut_on, child_prod_items)
 
             frappe.db.commit()
             return {
@@ -292,7 +294,7 @@ def log_defective_units(scan_id=None, defective_units=None, device_id=None):
         frappe.local.response.http_status_code = 500
         return {"status": "error", "message": str(e)} 
 
-def reduced_the_bundle_to_good_units_bundle(parent_scan, parent_prod, parent_bc, defective_units, is_dut_on):
+def reduced_the_bundle_to_good_units_bundle(parent_scan, parent_prod, parent_bc, defective_units, is_dut_on, unit_child_prod_items):
     # If partial bundle is enabled then reduce the parent into Good units and defective units as seperate scannable units
     reduced_qty = parent_bc.bundle_quantity - len(defective_units)
 
@@ -355,6 +357,20 @@ def reduced_the_bundle_to_good_units_bundle(parent_scan, parent_prod, parent_bc,
         item_scan_log.device_id = parent_scan.device_id
         item_scan_log.insert(ignore_permissions=True)
 
+        # add information into swith log
+        all_child_items = unit_child_prod_items.copy()
+        all_child_items.append(new_parent_bc)
+
+        parent_production_items = [parent_prod]
+        child_production_items = all_child_items
+        switch_log = frappe.new_doc("Switch Log")
+        switch_log.switch_type = "Partial Bundle"
+        switch_log.from_production_items = parent_production_items
+        switch_log.to_production_items = child_production_items
+        switch_log.switched_on= frappe.utils.now_datetime()
+        switch_log.switched_by = None
+        switch_log.remarks = "Partial bundle reduce"
+        switch_log.insert(ignore_permissions=True)
 
 
 

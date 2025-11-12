@@ -54,7 +54,7 @@ def create_tracking_order_from_bundle_creation(doc, method=None):
         
         for bundle_item in doc.table_bundle_creation_item:
             if bundle_item.no_of_bundles and bundle_item.unitsbundle:
-                qty = bundle_item.shade_cut_quantity
+                qty = bundle_item.shade_cut_quantity if bundle_item.shade_cut_quantity > 0 else bundle_item.cut_quantity
                 full_bundles =math.floor(qty / bundle_item.unitsbundle)
 
                 bundle_config_row = frappe.new_doc("Tracking Order Bundle Configuration")
