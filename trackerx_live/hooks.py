@@ -172,11 +172,11 @@ doc_events = {
         "before_cancel": "trackerx_live.hook.bundle_configuration.cuttingx_bundle_configuration_before_cancel",
         "on_cancel": "trackerx_live.hook.bundle_configuration.cuttingx_bundle_configuration_before_on_cancel",
         "before_delete": "trackerx_live.hook.bundle_configuration.cuttingx_bundle_configuration_before_delete"
-    },
-    "Cut Kit Plan": {
-        "on_submit": "trackerx_live.hook.cut_kit_plan.cuttingx_cut_kit_plan_on_submit"
-       
     }
+    # "Cut Kit Plan": {
+    #     "on_submit": "trackerx_live.hook.cut_kit_plan.cuttingx_cut_kit_plan_on_submit"
+       
+    # }
 }
 
 
