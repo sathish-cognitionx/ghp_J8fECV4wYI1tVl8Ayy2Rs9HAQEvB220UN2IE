@@ -53,9 +53,9 @@ def get_qc_rejected_units(view="list"):
         dict: Hierarchical structure with counts at each level
     """
     try:
-        # Query to get production items with QC Reject or QC Recut status
+        # Query to get production items with QC Reject or QC Recut status with real data
         query = """
-            SELECT 
+            SELECT
                 pi.name as production_item,
                 pi.production_item_number,
                 pi.tracking_order,
@@ -75,16 +75,34 @@ def get_qc_rejected_units(view="list"):
                 isl.status as scan_status,
                 isl.scan_time,
                 isl.scanned_by,
-                isl.remarks
-            FROM 
+                isl.remarks,
+
+                -- OPTIMIZED: Real data fields (replacing hardcoded values)
+                COALESCE(soi.custom_style, 'N/A') as style,
+                COALESCE(soi.custom_color, 'N/A') as color,
+                COALESCE(so.name, 'N/A') as so_number,
+                COALESCE(soi.custom_lineitem, 'N/A') as line_item_number
+
+            FROM
                 `tabProduction Item` pi
-            INNER JOIN 
+            INNER JOIN
                 `tabItem Scan Log` isl ON pi.last_scan_log = isl.name
-            WHERE 
+
+            -- OPTIMIZED: Extended JOINs to fetch real data
+            LEFT JOIN
+                `tabTracking Order Bundle Configuration` tbc ON tbc.name = pi.bundle_configuration
+            LEFT JOIN
+                `tabWork Order` wo ON wo.name = tbc.work_order
+            LEFT JOIN
+                `tabSales Order` so ON so.name = wo.sales_order
+            LEFT JOIN
+                `tabSales Order Item` soi ON soi.name = wo.sales_order_item
+
+            WHERE
                 pi.status = 'In Production'
                 AND isl.status IN ('QC Rejected', 'QC Recut')
                 AND isl.log_status = 'Completed'
-            ORDER BY 
+            ORDER BY
                 isl.physical_cell, isl.operation, isl.workstation
         """
         
@@ -153,10 +171,10 @@ def get_qc_rejected_units(view="list"):
                 "scanned_by": item.scanned_by,
                 "remarks": item.remarks,
                 "scan_log_id": item.scan_log_id,
-                "style": "Style",
-                "color": "Color",
-                "so_number": "SO Number",
-                "line_item_number": "Line Item Number",
+                "style": item.style,
+                "color": item.color,
+                "so_number": item.so_number,
+                "line_item_number": item.line_item_number,
                 "cell": physical_cell,
                 "operation": operation,
                 "workstation": workstation,
