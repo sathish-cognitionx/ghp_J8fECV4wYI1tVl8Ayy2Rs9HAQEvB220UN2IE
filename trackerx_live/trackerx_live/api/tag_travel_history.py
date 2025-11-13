@@ -73,8 +73,11 @@ def tag_travel_history(tag_number):
             order_by="logged_time desc"
         )
 
+        from trackerx_live.trackerx_live.utils.tracking_tag_util import get_tags_by_production_item
+        tags = get_tags_by_production_item(production_item_doc.name)
+        tag = tags[0].tag_number
         item_status = {
-            "rfidTagNo": tag_id,
+            "rfidTagNo": tag,
             "itemNo": production_item_doc.production_item_number,
             "woNo": tracking_order_doc.reference_order_number,
             "ftyProdId": production_item_doc.name,
@@ -149,7 +152,7 @@ def tag_travel_history(tag_number):
                 "processId": log.operation,
                 "process": log.operation,
                 "processType": process_type,
-                "rfid": tag_id,
+                "rfid": tag_number,
                 "type": log.log_type,
                 "parentTagNo": None,
                 "productionUnitType": (
