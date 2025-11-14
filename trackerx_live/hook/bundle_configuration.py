@@ -62,6 +62,7 @@ def create_tracking_order_from_bundle_creation(doc, method=None):
                 name_generator_list = ["BC", bundle_item.size ]
                 if bundle_item.shade:
                     name_generator_list.append(bundle_item.shade)
+                    name_generator_list.append(bundle_item.idx)
                 bc_name = "-".join(name_generator_list)
                 bundle_config_row.bc_name = bc_name
                 bundle_config_row.size = bundle_item.size
@@ -82,28 +83,28 @@ def create_tracking_order_from_bundle_creation(doc, method=None):
                 
                 tracking_order.bundle_configurations.append(bundle_config_row)
 
-                # add odd bundles if any
-                pending_units_in_odd_bundle = qty - full_bundles * bundle_item.unitsbundle
-                if pending_units_in_odd_bundle > 0:
-                    odd_bundle_config_row = frappe.new_doc("Tracking Order Bundle Configuration")
-                    odd_bundle_config_row.bc_name = f"BC-{bundle_item.size}-{bundle_item.shade}-O"
-                    odd_bundle_config_row.bc_name = f"{bc_name}-O"
-                    odd_bundle_config_row.size = bundle_item.size
-                    odd_bundle_config_row.bundle_quantity = pending_units_in_odd_bundle
-                    odd_bundle_config_row.number_of_bundles = 1
-                    odd_bundle_config_row.component = "__Default__"
-                    odd_bundle_config_row.production_type = "Bundle"
-                    odd_bundle_config_row.parent = tracking_order.name
-                    odd_bundle_config_row.parenttype = "Tracking Order"
-                    odd_bundle_config_row.parentfield = "bundle_configurations"
-                    odd_bundle_config_row.source = "Configuration"
-                    odd_bundle_config_row.work_order = bundle_item.work_order
-                    odd_bundle_config_row.sales_order = bundle_item.sales_order
-                    odd_bundle_config_row.shade = bundle_item.shade
+                # # add odd bundles if any
+                # pending_units_in_odd_bundle = qty - full_bundles * bundle_item.unitsbundle
+                # if pending_units_in_odd_bundle > 0:
+                #     odd_bundle_config_row = frappe.new_doc("Tracking Order Bundle Configuration")
+                #     odd_bundle_config_row.bc_name = f"BC-{bundle_item.size}-{bundle_item.shade}-O"
+                #     odd_bundle_config_row.bc_name = f"{bc_name}-O"
+                #     odd_bundle_config_row.size = bundle_item.size
+                #     odd_bundle_config_row.bundle_quantity = pending_units_in_odd_bundle
+                #     odd_bundle_config_row.number_of_bundles = 1
+                #     odd_bundle_config_row.component = "__Default__"
+                #     odd_bundle_config_row.production_type = "Bundle"
+                #     odd_bundle_config_row.parent = tracking_order.name
+                #     odd_bundle_config_row.parenttype = "Tracking Order"
+                #     odd_bundle_config_row.parentfield = "bundle_configurations"
+                #     odd_bundle_config_row.source = "Configuration"
+                #     odd_bundle_config_row.work_order = bundle_item.work_order
+                #     odd_bundle_config_row.sales_order = bundle_item.sales_order
+                #     odd_bundle_config_row.shade = bundle_item.shade
 
-                    tracking_order.bundle_configurations.append(odd_bundle_config_row)
+                #     tracking_order.bundle_configurations.append(odd_bundle_config_row)
 
-                    total_quantity += odd_bundle_config_row.bundle_quantity * odd_bundle_config_row.number_of_bundles
+                #     total_quantity += odd_bundle_config_row.bundle_quantity * odd_bundle_config_row.number_of_bundles
 
         
         tracking_order.quantity = total_quantity
