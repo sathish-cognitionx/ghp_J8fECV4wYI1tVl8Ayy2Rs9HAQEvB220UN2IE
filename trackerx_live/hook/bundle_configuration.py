@@ -62,7 +62,7 @@ def create_tracking_order_from_bundle_creation(doc, method=None):
                 name_generator_list = ["BC", bundle_item.size ]
                 if bundle_item.shade:
                     name_generator_list.append(bundle_item.shade)
-                    name_generator_list.append(bundle_item.idx)
+                    name_generator_list.append(str(bundle_item.idx))
                 bc_name = "-".join(name_generator_list)
                 bundle_config_row.bc_name = bc_name
                 bundle_config_row.size = bundle_item.size
