@@ -368,7 +368,7 @@ def reduced_the_bundle_to_good_units_bundle(parent_scan, parent_prod, parent_bc,
         switch_log.from_production_items = parent_production_items
         switch_log.to_production_items = child_production_items
         switch_log.switched_on= frappe.utils.now_datetime()
-        switch_log.switched_by = None
+        switch_log.switched_by = frappe.session.user
         switch_log.remarks = "Partial bundle reduce"
         switch_log.insert(ignore_permissions=True)
 
