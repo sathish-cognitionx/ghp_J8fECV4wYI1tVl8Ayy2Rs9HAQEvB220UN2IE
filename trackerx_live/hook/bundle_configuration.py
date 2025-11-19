@@ -40,14 +40,20 @@ def create_tracking_order_from_bundle_creation(doc, method=None):
         current_company = frappe.defaults.get_user_default("company")
         tracking_order.company = current_company
 
-        
+        # main_component = None
+        # fg_item = frappe.get_doc("Item", tracking_order.item)
+        # if fg_item.custom_fg_components:
+        #     for fg_component in fg_item.custom_fg_components:
+        #         if fg_component.is_main_component:
+        #             main_component = fg_component.component_name
 
+        # Fetching Main Component from Bundle Configuration Components child table
         main_component = None
-        fg_item = frappe.get_doc("Item", tracking_order.item)
-        if fg_item.custom_fg_components:
-            for fg_component in fg_item.custom_fg_components:
-                if fg_component.is_main_component:
-                    main_component = fg_component.component_name
+        if doc.get("table_bundle_creation_components"):
+            for comp_row in doc.table_bundle_creation_components:
+                if comp_row.get("is_main"):
+                    main_component = comp_row.component_name
+                    break                    
 
         total_quantity = 0
         # Create Bundle Configurations from Bundle Creation Items
