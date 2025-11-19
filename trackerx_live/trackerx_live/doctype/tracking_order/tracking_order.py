@@ -50,6 +50,7 @@ class TrackingOrder(Document):
                     "The sum of (Units per Bundle * Number of Bundles) "
                     f"({total_bundled_quantity}) does not match the Tracking Order Quantity ({self.quantity})."
                 )
+                
 
     def validate_tracking_components(self):
         # --- Validation: Tracking Components ---
@@ -83,8 +84,6 @@ class TrackingOrder(Document):
         if main_component and main_component in parent_components:
             frappe.throw(f"The main component '{main_component}' cannot be a parent to another component. It must be a leaf node.")
 
-        
-
 
     def before_save(self):
 		# set the production type to bundle configurations
@@ -108,11 +107,7 @@ class TrackingOrder(Document):
 
             frappe.log_error("Single Unit Bundle Created", f"Tracking Order: {self.name}, Quantity: {self.quantity}")
         
-        
-        
-
-
-	
+        	
     def set_production_type_on_children(self):
         for row in self.bundle_configurations:
             row.production_type = self.production_type
